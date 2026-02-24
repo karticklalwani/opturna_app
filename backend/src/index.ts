@@ -1,0 +1,657 @@
+import "@vibecodeapp/proxy"; // DO NOT REMOVE OTHERWISE VIBECODE PROXY WILL NOT WORK
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { auth } from "./auth";
+import { prisma } from "./prisma";
+import { env } from "./env";
+
+type Variables = {
+  user: typeof auth.$Infer.Session.user | null;
+  session: typeof auth.$Infer.Session.session | null;
+};
+
+const app = new Hono<{ Variables: Variables }>();
+
+// CORS
+app.use("*", cors({
+  origin: (origin) => {
+    if (!origin) return origin;
+    if (
+      origin.includes(".vibecode.run") ||
+      origin.includes(".vibecodeapp.com") ||
+      origin.includes(".vibecode.dev") ||
+      origin.startsWith("http://localhost") ||
+      origin.startsWith("http://127.0.0.1")
+    ) return origin;
+    return origin;
+  },
+  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  exposeHeaders: ["Set-Cookie"],
+  credentials: true,
+}));
+
+// Auth middleware
+app.use("*", async (c, next) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session) {
+    c.set("user", null);
+    c.set("session", null);
+  } else {
+    c.set("user", session.user);
+    c.set("session", session.session);
+  }
+  await next();
+});
+
+// Mount auth handler
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+// Health
+app.get("/health", (c) => c.json({ status: "ok", service: "opturna-api" }));
+
+// ===== USER ROUTES =====
+app.get("/api/me", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const profile = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true, name: true, email: true, image: true, username: true,
+      bio: true, coverImage: true, mainAmbition: true, currentGoals: true,
+      isPublic: true, role: true, isVerified: true, externalLinks: true,
+      interests: true, createdAt: true,
+      _count: { select: { followers: true, following: true, posts: true } }
+    }
+  });
+  return c.json({ data: profile });
+});
+
+app.patch("/api/me", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    name?: string; bio?: string; username?: string; mainAmbition?: string;
+    currentGoals?: string; isPublic?: boolean; interests?: string[];
+    externalLinks?: Array<{ label: string; url: string }>; image?: string; coverImage?: string;
+  };
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      name: body.name,
+      bio: body.bio,
+      username: body.username,
+      mainAmbition: body.mainAmbition,
+      currentGoals: body.currentGoals,
+      isPublic: body.isPublic,
+      interests: body.interests ? JSON.stringify(body.interests) : undefined,
+      externalLinks: body.externalLinks ? JSON.stringify(body.externalLinks) : undefined,
+      image: body.image,
+      coverImage: body.coverImage,
+    }
+  });
+  return c.json({ data: updated });
+});
+
+app.get("/api/users/search", async (c) => {
+  const q = c.req.query("q") || "";
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { name: { contains: q } },
+        { username: { contains: q } },
+      ]
+    },
+    select: { id: true, name: true, image: true, username: true, isVerified: true, role: true },
+    take: 20,
+  });
+  return c.json({ data: users });
+});
+
+app.get("/api/users/:id", async (c) => {
+  const userId = c.req.param("id");
+  const profile = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true, name: true, image: true, username: true, bio: true,
+      coverImage: true, mainAmbition: true, currentGoals: true, isPublic: true,
+      role: true, isVerified: true, interests: true, createdAt: true,
+      _count: { select: { followers: true, following: true, posts: true } }
+    }
+  });
+  if (!profile) return c.json({ error: { message: "User not found" } }, 404);
+  return c.json({ data: profile });
+});
+
+// Follow
+app.post("/api/users/:id/follow", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const followingId = c.req.param("id");
+  const existing = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: user.id, followingId } }
+  });
+  if (existing) {
+    await prisma.follow.delete({ where: { id: existing.id } });
+    return c.json({ data: { following: false } });
+  }
+  await prisma.follow.create({ data: { followerId: user.id, followingId } });
+  return c.json({ data: { following: true } });
+});
+
+// ===== POSTS ROUTES =====
+app.get("/api/posts", async (c) => {
+  const user = c.get("user");
+  const category = c.req.query("category");
+  const cursor = c.req.query("cursor");
+  const limit = 20;
+
+  const posts = await prisma.post.findMany({
+    where: {
+      ...(category && { category }),
+      isPublic: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    ...(cursor && { skip: 1, cursor: { id: cursor } }),
+    include: {
+      author: { select: { id: true, name: true, image: true, username: true, isVerified: true, role: true } },
+      _count: { select: { comments: true, reactions: true } },
+      ...(user ? { reactions: { where: { userId: user.id } } } : {}),
+    }
+  });
+  return c.json({ data: posts });
+});
+
+app.post("/api/posts", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    content?: string; type?: string; category?: string;
+    mediaUrls?: string[]; pollData?: unknown; hashtags?: string[]; isPublic?: boolean;
+  };
+  const post = await prisma.post.create({
+    data: {
+      authorId: user.id,
+      content: body.content,
+      type: body.type || "text",
+      category: body.category || "progress",
+      mediaUrls: body.mediaUrls ? JSON.stringify(body.mediaUrls) : null,
+      pollData: body.pollData ? JSON.stringify(body.pollData) : null,
+      hashtags: body.hashtags ? JSON.stringify(body.hashtags) : null,
+      isPublic: body.isPublic ?? true,
+    },
+    include: {
+      author: { select: { id: true, name: true, image: true, username: true, isVerified: true } }
+    }
+  });
+  return c.json({ data: post }, 201);
+});
+
+app.delete("/api/posts/:id", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const post = await prisma.post.findUnique({ where: { id: c.req.param("id") } });
+  if (!post || post.authorId !== user.id) return c.json({ error: { message: "Forbidden" } }, 403);
+  await prisma.post.delete({ where: { id: c.req.param("id") } });
+  return c.body(null, 204);
+});
+
+// Post reactions
+app.post("/api/posts/:id/react", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const { type } = await c.req.json() as { type: string };
+  const postId = c.req.param("id");
+  const existing = await prisma.reaction.findUnique({
+    where: { postId_userId: { postId, userId: user.id } }
+  });
+  if (existing) {
+    if (existing.type === type) {
+      await prisma.reaction.delete({ where: { id: existing.id } });
+      return c.json({ data: { reacted: false } });
+    }
+    await prisma.reaction.update({ where: { id: existing.id }, data: { type } });
+  } else {
+    await prisma.reaction.create({ data: { postId, userId: user.id, type } });
+  }
+  return c.json({ data: { reacted: true, type } });
+});
+
+// Post comments
+app.get("/api/posts/:id/comments", async (c) => {
+  const comments = await prisma.comment.findMany({
+    where: { postId: c.req.param("id"), parentId: null },
+    include: {
+      author: { select: { id: true, name: true, image: true, username: true } },
+      replies: {
+        include: { author: { select: { id: true, name: true, image: true, username: true } } }
+      }
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  return c.json({ data: comments });
+});
+
+app.post("/api/posts/:id/comments", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const { content, parentId } = await c.req.json() as { content: string; parentId?: string };
+  const comment = await prisma.comment.create({
+    data: { postId: c.req.param("id"), authorId: user.id, content, parentId },
+    include: { author: { select: { id: true, name: true, image: true, username: true } } }
+  });
+  return c.json({ data: comment }, 201);
+});
+
+// Save post
+app.post("/api/posts/:id/save", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const postId = c.req.param("id");
+  const existing = await prisma.savedPost.findUnique({
+    where: { userId_postId: { userId: user.id, postId } }
+  });
+  if (existing) {
+    await prisma.savedPost.delete({ where: { id: existing.id } });
+    return c.json({ data: { saved: false } });
+  }
+  await prisma.savedPost.create({ data: { userId: user.id, postId } });
+  return c.json({ data: { saved: true } });
+});
+
+// ===== GOALS ROUTES =====
+app.get("/api/goals", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const goals = await prisma.goal.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" }
+  });
+  return c.json({ data: goals });
+});
+
+app.post("/api/goals", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    title: string; description?: string; category?: string;
+    dueDate?: string; milestones?: Array<{ title: string; done: boolean }>;
+  };
+  const goal = await prisma.goal.create({
+    data: {
+      userId: user.id,
+      title: body.title,
+      description: body.description,
+      category: body.category,
+      dueDate: body.dueDate ? new Date(body.dueDate) : null,
+      milestones: body.milestones ? JSON.stringify(body.milestones) : null,
+    }
+  });
+  return c.json({ data: goal }, 201);
+});
+
+app.patch("/api/goals/:id", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    title?: string; description?: string; progress?: number;
+    isCompleted?: boolean; milestones?: Array<{ title: string; done: boolean }>;
+  };
+  const goal = await prisma.goal.update({
+    where: { id: c.req.param("id") },
+    data: {
+      title: body.title,
+      description: body.description,
+      progress: body.progress,
+      isCompleted: body.isCompleted,
+      milestones: body.milestones ? JSON.stringify(body.milestones) : undefined,
+    }
+  });
+  return c.json({ data: goal });
+});
+
+app.delete("/api/goals/:id", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  await prisma.goal.delete({ where: { id: c.req.param("id") } });
+  return c.body(null, 204);
+});
+
+// ===== SPRINTS ROUTES =====
+app.get("/api/sprints", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const sprints = await prisma.sprint.findMany({
+    where: {
+      members: { some: { userId: user.id } }
+    },
+    include: {
+      creator: { select: { id: true, name: true, image: true } },
+      _count: { select: { members: true, checkIns: true } },
+      members: { where: { userId: user.id } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+  return c.json({ data: sprints });
+});
+
+app.post("/api/sprints", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    title: string; description?: string; duration?: number; isPublic?: boolean;
+  };
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + (body.duration || 7));
+
+  const sprint = await prisma.sprint.create({
+    data: {
+      creatorId: user.id,
+      title: body.title,
+      description: body.description,
+      duration: body.duration || 7,
+      startDate,
+      endDate,
+      isPublic: body.isPublic ?? false,
+      members: { create: { userId: user.id, role: "creator" } }
+    },
+    include: {
+      creator: { select: { id: true, name: true, image: true } },
+      _count: { select: { members: true, checkIns: true } }
+    }
+  });
+  return c.json({ data: sprint }, 201);
+});
+
+app.post("/api/sprints/:id/checkin", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    content: string; evidence?: { url: string; type: string }; mood?: number;
+  };
+  const checkIn = await prisma.checkIn.create({
+    data: {
+      sprintId: c.req.param("id"),
+      userId: user.id,
+      content: body.content,
+      evidence: body.evidence ? JSON.stringify(body.evidence) : null,
+      mood: body.mood,
+    }
+  });
+  // Update streak
+  await prisma.sprintMember.updateMany({
+    where: { sprintId: c.req.param("id"), userId: user.id },
+    data: { streak: { increment: 1 } }
+  });
+  return c.json({ data: checkIn }, 201);
+});
+
+app.get("/api/sprints/:id/checkins", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const checkIns = await prisma.checkIn.findMany({
+    where: { sprintId: c.req.param("id"), userId: user.id },
+    orderBy: { createdAt: "desc" }
+  });
+  return c.json({ data: checkIns });
+});
+
+// ===== NOTIFICATIONS ROUTES =====
+app.get("/api/notifications", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const notifications = await prisma.notification.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  return c.json({ data: notifications });
+});
+
+app.patch("/api/notifications/read-all", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  await prisma.notification.updateMany({
+    where: { userId: user.id, isRead: false },
+    data: { isRead: true }
+  });
+  return c.json({ data: { success: true } });
+});
+
+// ===== CHATS ROUTES =====
+app.get("/api/chats", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const chats = await prisma.chat.findMany({
+    where: { members: { some: { userId: user.id } } },
+    include: {
+      members: {
+        include: { user: { select: { id: true, name: true, image: true, username: true } } }
+      },
+      messages: { orderBy: { createdAt: "desc" }, take: 1 }
+    },
+    orderBy: { updatedAt: "desc" }
+  });
+  return c.json({ data: chats });
+});
+
+app.post("/api/chats", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    type?: string; recipientId?: string; name?: string; memberIds?: string[];
+  };
+
+  // Check if DM already exists
+  if (body.type === "direct" && body.recipientId) {
+    const existing = await prisma.chat.findFirst({
+      where: {
+        type: "direct",
+        AND: [
+          { members: { some: { userId: user.id } } },
+          { members: { some: { userId: body.recipientId } } }
+        ]
+      },
+      include: { members: { include: { user: { select: { id: true, name: true, image: true } } } } }
+    });
+    if (existing) return c.json({ data: existing });
+  }
+
+  const memberIds = body.type === "direct"
+    ? [user.id, body.recipientId!]
+    : [user.id, ...(body.memberIds || [])];
+
+  const chat = await prisma.chat.create({
+    data: {
+      type: body.type || "direct",
+      name: body.name,
+      members: {
+        create: memberIds.map((id: string) => ({
+          userId: id,
+          role: id === user.id ? "admin" : "member"
+        }))
+      }
+    },
+    include: { members: { include: { user: { select: { id: true, name: true, image: true } } } } }
+  });
+  return c.json({ data: chat }, 201);
+});
+
+app.get("/api/chats/:id/messages", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const messages = await prisma.message.findMany({
+    where: { chatId: c.req.param("id") },
+    include: { sender: { select: { id: true, name: true, image: true, username: true } } },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+  });
+  return c.json({ data: messages });
+});
+
+app.post("/api/chats/:id/messages", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as { content?: string; type?: string };
+  const message = await prisma.message.create({
+    data: {
+      chatId: c.req.param("id"),
+      senderId: user.id,
+      content: body.content,
+      type: body.type || "text",
+    },
+    include: { sender: { select: { id: true, name: true, image: true, username: true } } }
+  });
+  await prisma.chat.update({ where: { id: c.req.param("id") }, data: { updatedAt: new Date() } });
+  return c.json({ data: message }, 201);
+});
+
+// ===== COURSES ROUTES =====
+app.get("/api/courses", async (c) => {
+  const courses = await prisma.course.findMany({
+    where: { isPublished: true },
+    include: {
+      creator: { select: { id: true, name: true, image: true, isVerified: true } },
+      _count: { select: { lessons: true, enrollments: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+  return c.json({ data: courses });
+});
+
+app.get("/api/courses/:id", async (c) => {
+  const course = await prisma.course.findUnique({
+    where: { id: c.req.param("id") },
+    include: {
+      creator: { select: { id: true, name: true, image: true, isVerified: true } },
+      lessons: { orderBy: { order: "asc" } },
+      _count: { select: { enrollments: true } }
+    }
+  });
+  if (!course) return c.json({ error: { message: "Not found" } }, 404);
+  return c.json({ data: course });
+});
+
+app.post("/api/courses", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    title: string; description?: string; category?: string; access?: string; thumbnail?: string;
+  };
+  const course = await prisma.course.create({
+    data: {
+      creatorId: user.id,
+      title: body.title,
+      description: body.description,
+      category: body.category,
+      access: body.access || "free",
+      thumbnail: body.thumbnail,
+    }
+  });
+  return c.json({ data: course }, 201);
+});
+
+// ===== EVENTS ROUTES =====
+app.get("/api/events", async (c) => {
+  const events = await prisma.event.findMany({
+    where: { isPublic: true, startAt: { gte: new Date() } },
+    include: {
+      creator: { select: { id: true, name: true, image: true } },
+      _count: { select: { rsvps: true } }
+    },
+    orderBy: { startAt: "asc" }
+  });
+  return c.json({ data: events });
+});
+
+app.post("/api/events", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    title: string; description?: string; type?: string; startAt: string;
+    endAt?: string; location?: string; isPublic?: boolean;
+  };
+  const event = await prisma.event.create({
+    data: {
+      creatorId: user.id,
+      title: body.title,
+      description: body.description,
+      type: body.type || "online",
+      startAt: new Date(body.startAt),
+      endAt: body.endAt ? new Date(body.endAt) : null,
+      location: body.location,
+      isPublic: body.isPublic ?? true,
+    }
+  });
+  return c.json({ data: event }, 201);
+});
+
+app.post("/api/events/:id/rsvp", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const { status } = await c.req.json() as { status: string };
+  const rsvp = await prisma.eventRsvp.upsert({
+    where: { eventId_userId: { eventId: c.req.param("id"), userId: user.id } },
+    create: { eventId: c.req.param("id"), userId: user.id, status },
+    update: { status }
+  });
+  return c.json({ data: rsvp });
+});
+
+// ===== CIRCLES ROUTES =====
+app.get("/api/circles", async (c) => {
+  const circles = await prisma.circle.findMany({
+    where: { isPrivate: false },
+    include: { _count: { select: { members: true } } },
+    orderBy: { createdAt: "desc" }
+  });
+  return c.json({ data: circles });
+});
+
+app.post("/api/circles", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    name: string; description?: string; topic?: string; city?: string; isPrivate?: boolean;
+  };
+  const circle = await prisma.circle.create({
+    data: {
+      name: body.name,
+      description: body.description,
+      topic: body.topic,
+      city: body.city,
+      isPrivate: body.isPrivate ?? false,
+      members: { create: { userId: user.id, role: "admin" } }
+    }
+  });
+  return c.json({ data: circle }, 201);
+});
+
+// Reports
+app.post("/api/reports", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const body = await c.req.json() as {
+    reportedUserId?: string; postId?: string; reason: string; description?: string;
+  };
+  const report = await prisma.report.create({
+    data: {
+      reporterId: user.id,
+      reportedUserId: body.reportedUserId,
+      postId: body.postId,
+      reason: body.reason,
+      description: body.description,
+    }
+  });
+  return c.json({ data: report }, 201);
+});
+
+const port = Number(env.PORT) || 3000;
+console.log(`Opturna API running on port ${port}`);
+
+export default {
+  port,
+  fetch: app.fetch,
+};

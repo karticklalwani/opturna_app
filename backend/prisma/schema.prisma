@@ -1,0 +1,409 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ AUTH MODELS (Better Auth) ============
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Profile extensions
+  bio           String?
+  username      String?   @unique
+  coverImage    String?
+  mainAmbition  String?
+  currentGoals  String?
+  isPublic      Boolean   @default(true)
+  role          String    @default("user") // user | mentor | admin
+  isVerified    Boolean   @default(false)
+  externalLinks String?   // JSON array of {label, url}
+  interests     String?   // JSON array of tag strings
+
+  // Relations
+  posts         Post[]
+  comments      Comment[]
+  reactions     Reaction[]
+  goals         Goal[]
+  sprints       Sprint[]
+  sprintMembers SprintMember[]
+  sentMessages  Message[]     @relation("MessageSender")
+  chatMembers   ChatMember[]
+  followers     Follow[]      @relation("Following")
+  following     Follow[]      @relation("Follower")
+  notifications Notification[]
+  files         UploadedFile[]
+  courseCreated Course[]
+  enrollments   Enrollment[]
+  events        Event[]
+  eventRsvps    EventRsvp[]
+  circles       CircleMember[]
+  reports       Report[]      @relation("ReportedBy")
+  reportedBy    Report[]      @relation("ReportedUser")
+  collections   Collection[]
+  savedPosts    SavedPost[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ============ SOCIAL ============
+model Post {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content     String?
+  type        String    @default("text") // text | image | carousel | video | poll | checkin | file
+  category    String    @default("progress") // progress | learning | question | inspiration
+  mediaUrls   String?   // JSON array
+  fileId      String?
+  pollData    String?   // JSON: {question, options: [{text, votes}]}
+  isPublic    Boolean   @default(true)
+  hashtags    String?   // JSON array
+
+  comments    Comment[]
+  reactions   Reaction[]
+  saves       SavedPost[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // useful | inspired | good_progress | interesting
+
+  @@unique([postId, userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model SavedPost {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId       String
+  post         Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Collection {
+  id        String      @id @default(cuid())
+  createdAt DateTime    @default(now())
+  name      String
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  saves     SavedPost[]
+}
+
+// ============ GOALS & SPRINTS ============
+model Goal {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  progress    Int      @default(0) // 0-100
+  category    String?
+  dueDate     DateTime?
+  isCompleted Boolean  @default(false)
+  milestones  String?  // JSON array of {title, done}
+}
+
+model Sprint {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  creatorId   String
+  creator     User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  duration    Int           // 7, 14, or 30 days
+  startDate   DateTime
+  endDate     DateTime
+  isPublic    Boolean       @default(false)
+  status      String        @default("active") // active | completed | cancelled
+  members     SprintMember[]
+  checkIns    CheckIn[]
+}
+
+model SprintMember {
+  id       String @id @default(cuid())
+  sprintId String
+  sprint   Sprint @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streak   Int    @default(0)
+  role     String @default("member") // creator | member | buddy
+
+  @@unique([sprintId, userId])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  sprintId  String
+  sprint    Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String
+  evidence  String?  // JSON: {url, type}
+  mood      Int?     // 1-5
+}
+
+// ============ MESSAGING ============
+model Chat {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  type      String       @default("direct") // direct | group | room
+  name      String?
+  image     String?
+  topic     String?
+  members   ChatMember[]
+  messages  Message[]
+}
+
+model ChatMember {
+  id       String   @id @default(cuid())
+  chatId   String
+  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("member") // admin | member
+  joinedAt DateTime @default(now())
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content   String?
+  type      String   @default("text") // text | image | audio | file | emoji
+  fileId    String?
+  isRead    Boolean  @default(false)
+}
+
+// ============ ACADEMY / COURSES ============
+model Course {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  creatorId   String
+  creator     User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  thumbnail   String?
+  category    String?
+  access      String     @default("free") // free | followers | pro
+  isPublished Boolean    @default(false)
+  lessons     Lesson[]
+  enrollments Enrollment[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  videoUrl    String?
+  duration    Int?     // seconds
+  order       Int      @default(0)
+  fileId      String?
+  isPublished Boolean  @default(false)
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress  Int      @default(0)
+
+  @@unique([userId, courseId])
+}
+
+// ============ FILES ============
+model UploadedFile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  uploaderId String
+  uploader  User     @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  url       String
+  name      String
+  size      Int?
+  mimeType  String?
+  type      String   @default("file") // image | video | audio | pdf | doc | file
+}
+
+// ============ EVENTS ============
+model Event {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  creatorId   String
+  creator     User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  type        String      @default("online") // online | irl | ama
+  startAt     DateTime
+  endAt       DateTime?
+  location    String?
+  coverImage  String?
+  isPublic    Boolean     @default(true)
+  maxRsvp     Int?
+  rsvps       EventRsvp[]
+}
+
+model EventRsvp {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("going") // going | maybe | not_going
+
+  @@unique([eventId, userId])
+}
+
+// ============ CIRCLES (COMMUNITIES) ============
+model Circle {
+  id          String         @id @default(cuid())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  name        String
+  description String?
+  image       String?
+  topic       String?
+  city        String?
+  isPrivate   Boolean        @default(false)
+  members     CircleMember[]
+}
+
+model CircleMember {
+  id       String @id @default(cuid())
+  circleId String
+  circle   Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String @default("member") // admin | member
+
+  @@unique([circleId, userId])
+}
+
+// ============ NOTIFICATIONS ============
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // follow | comment | mention | message | sprint | live | reaction
+  title     String
+  body      String?
+  data      String?  // JSON metadata
+  isRead    Boolean  @default(false)
+}
+
+// ============ REPORTS ============
+model Report {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  reporterId   String
+  reporter     User     @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String?
+  reportedUser User?    @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  postId       String?
+  reason       String
+  description  String?
+  status       String   @default("pending") // pending | reviewed | resolved
+}
