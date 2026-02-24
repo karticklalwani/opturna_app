@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  TextInput,
-  Image,
-  Modal,
-  ScrollView,
+  View, Text, FlatList, TouchableOpacity, RefreshControl,
+  ActivityIndicator, TextInput, Image, Modal, ScrollView,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
@@ -17,131 +9,84 @@ import { useSession } from "@/lib/auth/use-session";
 import { Post } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  Heart,
-  MessageCircle,
-  Bookmark,
-  MoreHorizontal,
-  Lightbulb,
-  TrendingUp,
-  Sparkles,
-  HelpCircle,
-  Plus,
-  Bell,
-  Search,
-  X,
-  CheckCircle,
+  TrendingUp, Lightbulb, HelpCircle, Heart, Sparkles,
+  Plus, Bell, Search, X, Bookmark, MessageCircle,
+  MoreHorizontal, CheckCircle, Send,
 } from "lucide-react-native";
-import { formatDistanceToNow } from "date-fns";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
+import { useTheme, DARK } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n";
 
-const CATEGORIES = [
-  { id: "all", label: "For You", icon: Sparkles },
-  { id: "progress", label: "Progress", icon: TrendingUp },
-  { id: "learning", label: "Learning", icon: Lightbulb },
-  { id: "question", label: "Questions", icon: HelpCircle },
-  { id: "inspiration", label: "Inspire", icon: Heart },
-];
+type Colors = typeof DARK;
 
 const REACTION_TYPES = [
-  { id: "useful", emoji: "💡", label: "Useful" },
-  { id: "inspired", emoji: "🔥", label: "Inspired" },
-  { id: "good_progress", emoji: "🎯", label: "Progress" },
-  { id: "interesting", emoji: "✨", label: "Interesting" },
+  { id: "useful", emoji: "💡" },
+  { id: "inspired", emoji: "🔥" },
+  { id: "good_progress", emoji: "🎯" },
+  { id: "interesting", emoji: "✨" },
 ];
 
-function PostCard({ post, currentUserId }: { post: Post; currentUserId: string }) {
+function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: string; colors: Colors }) {
   const queryClient = useQueryClient();
   const [showReactions, setShowReactions] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
   const myReaction = post.reactions?.[0];
 
   const reactMutation = useMutation({
     mutationFn: (type: string) => api.post(`/api/posts/${post.id}/react`, { type }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
   });
-
   const saveMutation = useMutation({
     mutationFn: () => api.post(`/api/posts/${post.id}/save`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
   });
+  const commentMutation = useMutation({
+    mutationFn: () => api.post(`/api/posts/${post.id}/comments`, { content: commentText }),
+    onSuccess: () => { setCommentText(""); queryClient.invalidateQueries({ queryKey: ["comments", post.id] }); },
+  });
 
-  const timeAgo = (() => {
-    try {
-      return formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
-    } catch {
-      return "";
-    }
-  })();
+  const { data: comments } = useQuery({
+    queryKey: ["comments", post.id],
+    queryFn: () => api.get<any[]>(`/api/posts/${post.id}/comments`),
+    enabled: showComments,
+  });
 
   const categoryColors: Record<string, string> = {
-    progress: "#22C55E",
-    learning: "#3B82F6",
-    question: "#8B5CF6",
-    inspiration: "#F59E0B",
+    progress: colors.success, learning: colors.info,
+    question: "#8B5CF6", inspiration: colors.accent,
   };
+  const catColor = categoryColors[post.category] || colors.accent;
 
   // suppress unused variable warning
   void currentUserId;
 
   return (
     <Animated.View entering={FadeInDown.duration(300)}>
-      <View style={{ backgroundColor: "#141414", borderRadius: 16, marginHorizontal: 16, marginBottom: 12, overflow: "hidden" }} testID="post-card">
-        {/* Category indicator */}
-        <View style={{ height: 2, backgroundColor: categoryColors[post.category] || "#F59E0B" }} />
-
+      <View style={{ backgroundColor: colors.card, borderRadius: 16, marginHorizontal: 16, marginBottom: 12, overflow: "hidden" }} testID="post-card">
+        <View style={{ height: 2, backgroundColor: catColor }} />
         <View style={{ padding: 16 }}>
-          {/* Author row */}
+          {/* Author */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <View style={{
-              width: 40, height: 40, borderRadius: 20,
-              backgroundColor: "#27272A", overflow: "hidden",
-              marginRight: 12,
-            }}>
-              {post.author?.image ? (
-                <Image source={{ uri: post.author.image }} style={{ width: 40, height: 40 }} />
-              ) : (
-                <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ color: "#F59E0B", fontWeight: "700", fontSize: 16 }}>
-                    {post.author?.name?.[0]?.toUpperCase() || "?"}
-                  </Text>
-                </View>
-              )}
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bg3, overflow: "hidden", marginRight: 12, alignItems: "center", justifyContent: "center" }}>
+              {post.author?.image
+                ? <Image source={{ uri: post.author.image }} style={{ width: 40, height: 40 }} />
+                : <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 16 }}>{post.author?.name?.[0]?.toUpperCase()}</Text>
+              }
             </View>
-
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Text style={{ color: "#FAFAFA", fontWeight: "600", fontSize: 14 }}>
-                  {post.author?.name || "Unknown"}
-                </Text>
-                {post.author?.isVerified ? (
-                  <CheckCircle size={13} color="#F59E0B" fill="#F59E0B" />
-                ) : null}
-                {post.author?.role === "mentor" ? (
-                  <View style={{ backgroundColor: "#1A1A00", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                    <Text style={{ color: "#F59E0B", fontSize: 10, fontWeight: "700" }}>MENTOR</Text>
-                  </View>
-                ) : null}
+                <Text style={{ color: colors.text, fontWeight: "600", fontSize: 14 }}>{post.author?.name}</Text>
+                {post.author?.isVerified ? <CheckCircle size={13} color={colors.accent} fill={colors.accent} /> : null}
               </View>
-              <Text style={{ color: "#52525B", fontSize: 12 }}>{timeAgo}</Text>
+              <Text style={{ color: colors.text4, fontSize: 12 }}>{post.category}</Text>
             </View>
-
-            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-              <View style={{
-                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-                backgroundColor: `${categoryColors[post.category] || "#F59E0B"}18`,
-              }}>
-                <Text style={{ color: categoryColors[post.category] || "#F59E0B", fontSize: 10, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  {post.category}
-                </Text>
-              </View>
-              <TouchableOpacity>
-                <MoreHorizontal size={18} color="#52525B" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity><MoreHorizontal size={18} color={colors.text4} /></TouchableOpacity>
           </View>
 
           {/* Content */}
           {post.content ? (
-            <Text style={{ color: "#E4E4E7", fontSize: 15, lineHeight: 24, marginBottom: 12 }}>
+            <Text style={{ color: colors.text2, fontSize: 15, lineHeight: 24, marginBottom: 10 }}>
               {post.content}
             </Text>
           ) : null}
@@ -151,72 +96,85 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string }
             try {
               const tags: string[] = JSON.parse(post.hashtags);
               return (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-                  {tags.map((tag) => (
-                    <Text key={tag} style={{ color: "#F59E0B", fontSize: 13, fontWeight: "500" }}>
-                      #{tag}
-                    </Text>
-                  ))}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                  {tags.map((tag) => <Text key={tag} style={{ color: colors.accent, fontSize: 13 }}>#{tag}</Text>)}
                 </View>
               );
             } catch { return null; }
           })() : null}
 
-          {/* Action bar */}
-          <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 12, borderTopWidth: 1, borderTopColor: "#1C1C1E", gap: 6 }}>
+          {/* Actions */}
+          <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border, gap: 4 }}>
             <TouchableOpacity
               onPress={() => setShowReactions(!showReactions)}
-              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: myReaction ? "#1A1A00" : "transparent" }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: myReaction ? `${colors.accent}22` : "transparent" }}
               testID="react-button"
             >
-              <Text style={{ fontSize: 16 }}>
-                {myReaction ? REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡" : "💡"}
-              </Text>
-              <Text style={{ color: myReaction ? "#F59E0B" : "#52525B", fontSize: 13, fontWeight: "600" }}>
-                {post._count?.reactions || 0}
-              </Text>
+              <Text style={{ fontSize: 16 }}>{myReaction ? REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡" : "💡"}</Text>
+              <Text style={{ color: myReaction ? colors.accent : colors.text4, fontSize: 13, fontWeight: "600" }}>{post._count?.reactions || 0}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={() => setShowComments(!showComments)}
               style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 6, paddingHorizontal: 10 }}
               testID="comment-button"
             >
-              <MessageCircle size={17} color="#52525B" />
-              <Text style={{ color: "#52525B", fontSize: 13, fontWeight: "600" }}>{post._count?.comments || 0}</Text>
+              <MessageCircle size={17} color={showComments ? colors.accent : colors.text4} />
+              <Text style={{ color: showComments ? colors.accent : colors.text4, fontSize: 13, fontWeight: "600" }}>{post._count?.comments || 0}</Text>
             </TouchableOpacity>
 
             <View style={{ flex: 1 }} />
-
-            <TouchableOpacity
-              onPress={() => saveMutation.mutate()}
-              style={{ padding: 6 }}
-              testID="save-button"
-            >
-              <Bookmark size={17} color="#52525B" />
+            <TouchableOpacity onPress={() => saveMutation.mutate()} style={{ padding: 6 }} testID="save-button">
+              <Bookmark size={17} color={colors.text4} />
             </TouchableOpacity>
           </View>
 
           {/* Reaction picker */}
           {showReactions ? (
-            <Animated.View entering={FadeIn.duration(150)}
-              style={{ flexDirection: "row", gap: 8, marginTop: 10, flexWrap: "wrap" }}
-            >
+            <Animated.View entering={FadeIn.duration(150)} style={{ flexDirection: "row", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
               {REACTION_TYPES.map((r) => (
                 <TouchableOpacity
                   key={r.id}
                   onPress={() => { reactMutation.mutate(r.id); setShowReactions(false); }}
-                  style={{
-                    flexDirection: "row", alignItems: "center", gap: 5,
-                    paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10,
-                    backgroundColor: myReaction?.type === r.id ? "#1A1A00" : "#1C1C1E",
-                    borderWidth: 1, borderColor: myReaction?.type === r.id ? "#F59E0B" : "#27272A",
-                  }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: myReaction?.type === r.id ? `${colors.accent}22` : colors.bg3, borderWidth: 1, borderColor: myReaction?.type === r.id ? colors.accent : colors.border }}
                 >
-                  <Text style={{ fontSize: 15 }}>{r.emoji}</Text>
-                  <Text style={{ color: "#A1A1AA", fontSize: 12 }}>{r.label}</Text>
+                  <Text style={{ fontSize: 16 }}>{r.emoji}</Text>
                 </TouchableOpacity>
               ))}
             </Animated.View>
+          ) : null}
+
+          {/* Comments */}
+          {showComments ? (
+            <View style={{ marginTop: 12 }}>
+              {(comments || []).map((c: any) => (
+                <View key={c.id} style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: colors.bg3, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "700" }}>{c.author?.name?.[0]}</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: colors.bg3, borderRadius: 10, padding: 8 }}>
+                    <Text style={{ color: colors.text3, fontSize: 11, fontWeight: "600", marginBottom: 2 }}>{c.author?.name}</Text>
+                    <Text style={{ color: colors.text2, fontSize: 13 }}>{c.content}</Text>
+                  </View>
+                </View>
+              ))}
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+                <TextInput
+                  value={commentText}
+                  onChangeText={setCommentText}
+                  placeholder="Add a comment..."
+                  placeholderTextColor={colors.text4}
+                  style={{ flex: 1, backgroundColor: colors.bg3, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, color: colors.text, fontSize: 13 }}
+                />
+                <TouchableOpacity
+                  onPress={() => commentMutation.mutate()}
+                  disabled={!commentText.trim()}
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: commentText.trim() ? colors.accent : colors.bg3, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Send size={15} color={commentText.trim() ? "#0A0A0A" : colors.text4} />
+                </TouchableOpacity>
+              </View>
+            </View>
           ) : null}
         </View>
       </View>
@@ -224,10 +182,22 @@ function PostCard({ post, currentUserId }: { post: Post; currentUserId: string }
   );
 }
 
+const CATEGORIES = [
+  { id: "all", labelKey: "forYou" as const, icon: Sparkles },
+  { id: "progress", labelKey: "progress" as const, icon: TrendingUp },
+  { id: "learning", labelKey: "learning" as const, icon: Lightbulb },
+  { id: "question", labelKey: "questions" as const, icon: HelpCircle },
+  { id: "inspiration", labelKey: "inspiration" as const, icon: Heart },
+];
+
 export default function FeedScreen() {
   const { data: session } = useSession();
+  const { colors } = useTheme();
+  const { t } = useI18n();
   const [category, setCategory] = useState("all");
   const [showCompose, setShowCompose] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
   const [newPost, setNewPost] = useState({ content: "", category: "progress", hashtags: "" });
   const queryClient = useQueryClient();
 
@@ -236,11 +206,17 @@ export default function FeedScreen() {
     queryFn: () => api.get<Post[]>(`/api/posts${category !== "all" ? `?category=${category}` : ""}`),
   });
 
+  const { data: searchResults } = useQuery({
+    queryKey: ["search-users", searchQ],
+    queryFn: () => api.get<any[]>(`/api/users/search?q=${searchQ}`),
+    enabled: searchQ.length > 1,
+  });
+
   const createPost = useMutation({
     mutationFn: () => api.post("/api/posts", {
       content: newPost.content,
       category: newPost.category,
-      hashtags: newPost.hashtags ? newPost.hashtags.split(",").map(t => t.trim()).filter(Boolean) : [],
+      hashtags: newPost.hashtags ? newPost.hashtags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : [],
       type: "text",
     }),
     onSuccess: () => {
@@ -251,28 +227,19 @@ export default function FeedScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }} testID="feed-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#0A0A0A" }}>
-        {/* Header */}
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="feed-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12 }}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: "#FAFAFA", flex: 1, letterSpacing: -0.5 }}>
-            Opturna
-          </Text>
-          <TouchableOpacity style={{ padding: 8 }}>
-            <Search size={22} color="#71717A" />
+          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.text, flex: 1, letterSpacing: -0.5 }}>Opturna</Text>
+          <TouchableOpacity onPress={() => setShowSearch(true)} style={{ padding: 8 }}>
+            <Search size={22} color={colors.text3} />
           </TouchableOpacity>
           <TouchableOpacity style={{ padding: 8, marginLeft: 4 }}>
-            <Bell size={22} color="#71717A" />
+            <Bell size={22} color={colors.text3} />
           </TouchableOpacity>
         </View>
 
-        {/* Category tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0 }}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}>
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isActive = category === cat.id;
@@ -280,53 +247,33 @@ export default function FeedScreen() {
               <TouchableOpacity
                 key={cat.id}
                 onPress={() => setCategory(cat.id)}
-                style={{
-                  flexDirection: "row", alignItems: "center", gap: 6,
-                  paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                  backgroundColor: isActive ? "#F59E0B" : "#1C1C1E",
-                  borderWidth: 1, borderColor: isActive ? "#F59E0B" : "#27272A",
-                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: isActive ? colors.accent : colors.bg3, borderWidth: 1, borderColor: isActive ? colors.accent : colors.border }}
               >
-                <Icon size={14} color={isActive ? "#0A0A0A" : "#71717A"} />
-                <Text style={{ color: isActive ? "#0A0A0A" : "#71717A", fontSize: 13, fontWeight: "600" }}>
-                  {cat.label}
-                </Text>
+                <Icon size={14} color={isActive ? "#0A0A0A" : colors.text3} />
+                <Text style={{ color: isActive ? "#0A0A0A" : colors.text3, fontSize: 13, fontWeight: "600" }}>{t(cat.labelKey)}</Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
       </SafeAreaView>
 
-      {/* Feed */}
       {isLoading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-          <ActivityIndicator color="#F59E0B" size="large" />
+          <ActivityIndicator color={colors.accent} size="large" />
         </View>
       ) : (
         <FlatList
           data={posts || []}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <PostCard post={item} currentUserId={session?.user?.id || ""} />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor="#F59E0B"
-            />
-          }
+          renderItem={({ item }) => <PostCard post={item} currentUserId={session?.user?.id || ""} colors={colors} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.accent} />}
           contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
           testID="posts-list"
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }}>
               <Text style={{ fontSize: 40, marginBottom: 16 }}>🌟</Text>
-              <Text style={{ color: "#FAFAFA", fontSize: 18, fontWeight: "700", marginBottom: 8, textAlign: "center" }}>
-                No posts yet
-              </Text>
-              <Text style={{ color: "#52525B", fontSize: 14, textAlign: "center", lineHeight: 22 }}>
-                Be the first to share your progress, goals, or inspiration.
-              </Text>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8, textAlign: "center" }}>{t("noFeed")}</Text>
+              <Text style={{ color: colors.text4, fontSize: 14, textAlign: "center", lineHeight: 22 }}>{t("noFeedDesc")}</Text>
             </View>
           }
         />
@@ -336,128 +283,113 @@ export default function FeedScreen() {
       <TouchableOpacity
         onPress={() => setShowCompose(true)}
         testID="compose-button"
-        style={{
-          position: "absolute",
-          bottom: 100,
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 18,
-          backgroundColor: "#F59E0B",
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: "#F59E0B",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.4,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
+        style={{ position: "absolute", bottom: 100, right: 20, width: 56, height: 56, borderRadius: 18, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", shadowColor: colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 8 }}
       >
         <Plus size={24} color="#0A0A0A" strokeWidth={2.5} />
       </TouchableOpacity>
 
+      {/* Search Modal */}
+      <Modal visible={showSearch} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: colors.bg, padding: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: colors.bg3, borderRadius: 12, paddingHorizontal: 14, gap: 10 }}>
+              <Search size={18} color={colors.text4} />
+              <TextInput
+                value={searchQ}
+                onChangeText={setSearchQ}
+                placeholder={t("searchUsers")}
+                placeholderTextColor={colors.text4}
+                style={{ flex: 1, color: colors.text, fontSize: 15, paddingVertical: 12 }}
+                autoFocus
+              />
+            </View>
+            <TouchableOpacity onPress={() => { setShowSearch(false); setSearchQ(""); }}>
+              <X size={22} color={colors.text3} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={searchResults || []}
+            keyExtractor={(u) => u.id}
+            renderItem={({ item }) => (
+              <View style={{ flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg3, marginRight: 14, alignItems: "center", justifyContent: "center" }}>
+                  {item.image ? <Image source={{ uri: item.image }} style={{ width: 44, height: 44, borderRadius: 22 }} /> : (
+                    <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 17 }}>{item.name?.[0]}</Text>
+                  )}
+                </View>
+                <View>
+                  <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{item.name}</Text>
+                  {item.username ? <Text style={{ color: colors.text3, fontSize: 13 }}>@{item.username}</Text> : null}
+                </View>
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
+
       {/* Compose Modal */}
       <Modal visible={showCompose} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: "#0F0F0F" }}>
-          {/* Header */}
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: "#1C1C1E" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <TouchableOpacity onPress={() => setShowCompose(false)} style={{ marginRight: 16 }}>
-              <X size={22} color="#71717A" />
+              <X size={22} color={colors.text3} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, color: "#FAFAFA", fontSize: 17, fontWeight: "600" }}>New Post</Text>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>{t("newPost")}</Text>
             <TouchableOpacity
               onPress={() => createPost.mutate()}
               disabled={!newPost.content.trim() || createPost.isPending}
               testID="submit-post-button"
-              style={{
-                backgroundColor: "#F59E0B",
-                paddingHorizontal: 18,
-                paddingVertical: 8,
-                borderRadius: 10,
-                opacity: !newPost.content.trim() || createPost.isPending ? 0.5 : 1,
-              }}
+              style={{ backgroundColor: colors.accent, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 10, opacity: !newPost.content.trim() || createPost.isPending ? 0.5 : 1 }}
             >
-              {createPost.isPending ? (
-                <ActivityIndicator color="#0A0A0A" size="small" />
-              ) : (
-                <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 14 }}>Post</Text>
+              {createPost.isPending ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
+                <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 14 }}>{t("post")}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-            {/* Author */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#F59E0B", alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 18 }}>
-                  {session?.user?.name?.[0]?.toUpperCase() || "U"}
-                </Text>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 18 }}>{session?.user?.name?.[0]?.toUpperCase()}</Text>
               </View>
               <View>
-                <Text style={{ color: "#FAFAFA", fontWeight: "600", fontSize: 15 }}>{session?.user?.name}</Text>
-                <Text style={{ color: "#52525B", fontSize: 12 }}>Sharing with your network</Text>
+                <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{session?.user?.name}</Text>
+                <Text style={{ color: colors.text4, fontSize: 12 }}>{t("sharingWith")}</Text>
               </View>
             </View>
 
-            {/* Content input */}
             <TextInput
               value={newPost.content}
-              onChangeText={(t) => setNewPost(p => ({ ...p, content: t }))}
-              placeholder="What are you working on? Share your progress, insights, or questions..."
-              placeholderTextColor="#3F3F46"
+              onChangeText={(text) => setNewPost(p => ({ ...p, content: text }))}
+              placeholder={t("shareSomething")}
+              placeholderTextColor={colors.text4}
               multiline
               testID="post-content-input"
-              style={{
-                color: "#FAFAFA",
-                fontSize: 16,
-                lineHeight: 26,
-                minHeight: 120,
-                marginBottom: 24,
-              }}
+              style={{ color: colors.text, fontSize: 16, lineHeight: 26, minHeight: 120, marginBottom: 24 }}
               autoFocus
             />
 
-            {/* Category */}
-            <Text style={{ color: "#71717A", fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>
-              Category
-            </Text>
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>{t("category")}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
               {CATEGORIES.filter(c => c.id !== "all").map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   onPress={() => setNewPost(p => ({ ...p, category: cat.id }))}
-                  style={{
-                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-                    backgroundColor: newPost.category === cat.id ? "#F59E0B" : "#1C1C1E",
-                    borderWidth: 1,
-                    borderColor: newPost.category === cat.id ? "#F59E0B" : "#27272A",
-                  }}
+                  style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: newPost.category === cat.id ? colors.accent : colors.bg3, borderWidth: 1, borderColor: newPost.category === cat.id ? colors.accent : colors.border }}
                 >
-                  <Text style={{ color: newPost.category === cat.id ? "#0A0A0A" : "#71717A", fontSize: 13, fontWeight: "600" }}>
-                    {cat.label}
-                  </Text>
+                  <Text style={{ color: newPost.category === cat.id ? "#0A0A0A" : colors.text3, fontSize: 13, fontWeight: "600" }}>{t(cat.labelKey)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Hashtags */}
-            <Text style={{ color: "#71717A", fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>
-              Hashtags (optional, comma separated)
-            </Text>
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>{t("hashtags")}</Text>
             <TextInput
               value={newPost.hashtags}
-              onChangeText={(t) => setNewPost(p => ({ ...p, hashtags: t }))}
-              placeholder="productivity, mindset, business"
-              placeholderTextColor="#3F3F46"
+              onChangeText={(text) => setNewPost(p => ({ ...p, hashtags: text }))}
+              placeholder="productivity, mindset, negocios"
+              placeholderTextColor={colors.text4}
               testID="hashtags-input"
-              style={{
-                backgroundColor: "#1C1C1E",
-                borderRadius: 12,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                color: "#FAFAFA",
-                fontSize: 14,
-              }}
+              style={{ backgroundColor: colors.bg3, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontSize: 14 }}
             />
           </ScrollView>
         </View>

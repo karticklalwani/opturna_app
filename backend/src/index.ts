@@ -388,6 +388,16 @@ app.post("/api/sprints/:id/checkin", async (c) => {
   return c.json({ data: checkIn }, 201);
 });
 
+// Delete sprint
+app.delete("/api/sprints/:id", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const sprint = await prisma.sprint.findUnique({ where: { id: c.req.param("id") } });
+  if (!sprint || sprint.creatorId !== user.id) return c.json({ error: { message: "Forbidden" } }, 403);
+  await prisma.sprint.delete({ where: { id: c.req.param("id") } });
+  return c.body(null, 204);
+});
+
 app.get("/api/sprints/:id/checkins", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
