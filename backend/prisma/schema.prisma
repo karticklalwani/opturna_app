@@ -256,16 +256,19 @@ model ChatMember {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  senderId  String
-  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  content   String?
-  type      String   @default("text") // text | image | audio | file | emoji
-  fileId    String?
-  isRead    Boolean  @default(false)
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  chatId      String
+  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content     String?
+  type        String   @default("text") // text | image | audio | video | file | emoji
+  fileId      String?
+  fileUrl     String?
+  fileName    String?
+  fileMimeType String?
+  isRead      Boolean  @default(false)
 }
 
 // ============ ACADEMY / COURSES ============

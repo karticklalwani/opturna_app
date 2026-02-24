@@ -504,13 +504,16 @@ app.get("/api/chats/:id/messages", async (c) => {
 app.post("/api/chats/:id/messages", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
-  const body = await c.req.json() as { content?: string; type?: string };
+  const body = await c.req.json() as { content?: string; type?: string; fileUrl?: string; fileName?: string; fileMimeType?: string };
   const message = await prisma.message.create({
     data: {
       chatId: c.req.param("id"),
       senderId: user.id,
       content: body.content,
       type: body.type || "text",
+      fileUrl: body.fileUrl,
+      fileName: body.fileName,
+      fileMimeType: body.fileMimeType,
     },
     include: { sender: { select: { id: true, name: true, image: true, username: true } } }
   });
@@ -656,6 +659,59 @@ app.post("/api/reports", async (c) => {
     }
   });
   return c.json({ data: report }, 201);
+});
+
+// ===== FILE UPLOAD =====
+app.post("/api/upload", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+
+  const formData = await c.req.formData();
+  const file = formData.get("file");
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: { message: "No file provided" } }, 400);
+  }
+
+  const storageForm = new FormData();
+  storageForm.append("file", file);
+
+  const response = await fetch("https://storage.vibecodeapp.com/v1/files/upload", {
+    method: "POST",
+    body: storageForm,
+  });
+
+  if (!response.ok) {
+    const error = await response.json() as { error?: string };
+    return c.json({ error: { message: error.error || "Upload failed" } }, 500);
+  }
+
+  const result = await response.json() as {
+    file: {
+      url: string;
+      originalFilename: string;
+      sizeBytes: number;
+      contentType: string;
+    };
+  };
+
+  // Save to DB
+  const asset = await prisma.uploadedFile.create({
+    data: {
+      uploaderId: user.id,
+      url: result.file.url,
+      name: result.file.originalFilename,
+      size: result.file.sizeBytes,
+      mimeType: result.file.contentType,
+      type: result.file.contentType?.startsWith("image/") ? "image"
+        : result.file.contentType?.startsWith("video/") ? "video"
+        : result.file.contentType?.startsWith("audio/") ? "audio"
+        : result.file.contentType === "application/pdf" ? "pdf"
+        : "file",
+    },
+  });
+
+  return c.json({ data: { id: asset.id, url: asset.url, name: asset.name, mimeType: asset.mimeType, type: asset.type } });
 });
 
 const port = Number(env.PORT) || 3000;

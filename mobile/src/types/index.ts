@@ -98,6 +98,9 @@ export interface Message {
   type: string;
   senderId: string;
   sender: Pick<User, 'id' | 'name' | 'image' | 'username'>;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileMimeType?: string | null;
 }
 
 export interface Notification {
