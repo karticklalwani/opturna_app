@@ -14,21 +14,23 @@ import { useI18n } from "@/lib/i18n";
 
 type Colors = typeof DARK;
 
-const HUD = {
-  bg: "#020B18",
-  card: "#041525",
+const DS = {
+  bg: "#0A0F1E",
+  card: "#111827",
+  cardAlt: "#0F172A",
   cyan: "#00B4D8",
-  cyanDim: "#00B4D820",
-  cyanGlow: "#00B4D840",
-  iceBlue: "#C8E8FF",
-  statBlue: "#7DB8D9",
+  cyanSoft: "rgba(0,180,216,0.12)",
+  cyanBorder: "rgba(0,180,216,0.25)",
   red: "#FF3B30",
-  redGlow: "#FF3B3040",
-  darkTrack: "#0A2233",
-  border: "#0A3550",
-  text4: "#3A6680",
+  redSoft: "rgba(255,59,48,0.10)",
+  redBorder: "rgba(255,59,48,0.30)",
   success: "#00E5A0",
-  successDim: "#00E5A020",
+  successSoft: "rgba(0,229,160,0.10)",
+  textPrimary: "#F1F5F9",
+  textSecondary: "#94A3B8",
+  textMuted: "#475569",
+  border: "rgba(255,255,255,0.06)",
+  track: "#1E293B",
 };
 
 function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: (key: any) => string }) {
@@ -67,68 +69,71 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
     <Animated.View entering={FadeInDown.duration(300)}>
       <View
         style={{
-          backgroundColor: HUD.card,
-          borderRadius: 4,
-          borderLeftWidth: 2,
-          borderLeftColor: HUD.cyan,
-          borderTopWidth: 1,
-          borderTopColor: HUD.border,
-          borderRightWidth: 1,
-          borderRightColor: HUD.border,
-          borderBottomWidth: 1,
-          borderBottomColor: HUD.border,
-          padding: 16,
-          marginBottom: 12,
+          backgroundColor: DS.card,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: DS.border,
+          borderLeftWidth: 3,
+          borderLeftColor: DS.cyan,
+          padding: 18,
+          marginBottom: 14,
+          shadowColor: "#000",
+          shadowOpacity: 0.15,
+          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 4 },
         }}
         testID="sprint-card"
       >
         {/* Header row */}
-        <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 14 }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: HUD.iceBlue, fontSize: 15, fontWeight: "700", letterSpacing: 0.5, marginBottom: 4 }}>
+            <Text style={{ color: DS.textPrimary, fontSize: 16, fontWeight: "700", marginBottom: 4, letterSpacing: 0.2 }}>
               {sprint.title}
             </Text>
             {sprint.description ? (
-              <Text style={{ color: HUD.statBlue, fontSize: 12, lineHeight: 18 }}>{sprint.description}</Text>
+              <Text style={{ color: DS.textSecondary, fontSize: 13, lineHeight: 19 }}>{sprint.description}</Text>
             ) : null}
           </View>
-          {/* Streak */}
+          {/* Streak pill */}
           <View style={{
+            flexDirection: "row",
             alignItems: "center",
-            backgroundColor: streak > 0 ? HUD.cyanDim : "transparent",
+            gap: 5,
+            backgroundColor: streak > 0 ? DS.cyanSoft : "rgba(255,255,255,0.04)",
             borderWidth: 1,
-            borderColor: streak > 0 ? HUD.cyan : HUD.border,
-            borderRadius: 2,
-            paddingHorizontal: 10,
+            borderColor: streak > 0 ? DS.cyanBorder : DS.border,
+            borderRadius: 100,
+            paddingHorizontal: 12,
             paddingVertical: 6,
             marginLeft: 12,
           }}>
-            <Flame size={14} color={streak > 0 ? HUD.cyan : HUD.text4} />
-            <Text style={{ color: streak > 0 ? HUD.cyan : HUD.text4, fontSize: 14, fontWeight: "700", fontVariant: ["tabular-nums"] }}>
+            <Flame size={13} color={streak > 0 ? DS.cyan : DS.textMuted} />
+            <Text style={{ color: streak > 0 ? DS.cyan : DS.textMuted, fontSize: 13, fontWeight: "700" }}>
               {streak}
             </Text>
           </View>
         </View>
 
         {/* Day counter + progress */}
-        <View style={{ marginBottom: 12 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <Text style={{ color: HUD.cyan, fontSize: 11, fontWeight: "700", letterSpacing: 2, fontVariant: ["tabular-nums"] }}>
-              {"DAY " + String(daysPassed).padStart(2, "0") + " / " + String(sprint.duration).padStart(2, "0")}
+        <View style={{ marginBottom: 14 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <Text style={{ color: DS.textSecondary, fontSize: 12, fontWeight: "500" }}>
+              Day {daysPassed} of {sprint.duration}
             </Text>
-            <Text style={{ color: HUD.cyan, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>
+            <Text style={{ color: DS.cyan, fontSize: 12, fontWeight: "700" }}>
               {progress}%
             </Text>
           </View>
           {/* Progress bar */}
-          <View style={{ height: 4, backgroundColor: HUD.darkTrack, borderRadius: 0 }}>
+          <View style={{ height: 6, backgroundColor: DS.track, borderRadius: 100 }}>
             <View style={{
               width: `${progress}%`,
-              height: 4,
-              backgroundColor: HUD.cyan,
-              shadowColor: HUD.cyan,
-              shadowOpacity: 0.8,
-              shadowRadius: 4,
+              height: 6,
+              backgroundColor: DS.cyan,
+              borderRadius: 100,
+              shadowColor: DS.cyan,
+              shadowOpacity: 0.4,
+              shadowRadius: 6,
               shadowOffset: { width: 0, height: 0 },
             }} />
           </View>
@@ -137,8 +142,8 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
         {/* Footer row */}
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Calendar size={12} color={HUD.text4} />
-            <Text style={{ color: HUD.statBlue, fontSize: 11, letterSpacing: 1 }}>
+            <Calendar size={12} color={DS.textMuted} />
+            <Text style={{ color: DS.textSecondary, fontSize: 12 }}>
               {daysLeft} {t("daysLeft")}
             </Text>
           </View>
@@ -146,35 +151,31 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
             <TouchableOpacity
               onPress={confirmDelete}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                backgroundColor: HUD.redGlow,
+                width: 36,
+                height: 36,
+                borderRadius: 100,
+                backgroundColor: DS.redSoft,
                 borderWidth: 1,
-                borderColor: HUD.red,
+                borderColor: DS.redBorder,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Trash2 size={14} color={HUD.red} />
+              <Trash2 size={14} color={DS.red} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowCheckin(true)}
               style={{
-                backgroundColor: HUD.cyanDim,
+                backgroundColor: DS.cyanSoft,
                 borderWidth: 1,
-                borderColor: HUD.cyan,
-                borderRadius: 2,
-                paddingHorizontal: 14,
-                paddingVertical: 7,
-                shadowColor: HUD.cyan,
-                shadowOpacity: 0.4,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
+                borderColor: DS.cyanBorder,
+                borderRadius: 100,
+                paddingHorizontal: 18,
+                paddingVertical: 8,
               }}
               testID="check-in-button"
             >
-              <Text style={{ color: HUD.cyan, fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
+              <Text style={{ color: DS.cyan, fontSize: 13, fontWeight: "600" }}>
                 {t("checkin")}
               </Text>
             </TouchableOpacity>
@@ -184,61 +185,59 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
 
       {/* Check-in Modal */}
       <Modal visible={showCheckin} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg, padding: 24, borderTopWidth: 1, borderTopColor: HUD.cyan }}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
+        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 24 }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 28 }}>
             <TouchableOpacity
               onPress={() => setShowCheckin(false)}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
+                width: 36,
+                height: 36,
+                borderRadius: 100,
                 borderWidth: 1,
-                borderColor: HUD.border,
+                borderColor: DS.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color={HUD.statBlue} />
+              <X size={16} color={DS.textSecondary} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: "center", color: HUD.iceBlue, fontSize: 13, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+            <Text style={{ flex: 1, textAlign: "center", color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>
               {t("checkInTitle")}
             </Text>
-            <View style={{ width: 32 }} />
+            <View style={{ width: 36 }} />
           </View>
 
-          {/* Dot prefix label */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("howWasToday")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+            {t("howWasToday")}
+          </Text>
           <TextInput
             value={checkinContent}
             onChangeText={setCheckinContent}
             placeholder={t("howWasToday")}
-            placeholderTextColor={HUD.text4}
+            placeholderTextColor={DS.textMuted}
             multiline
             autoFocus
             style={{
-              backgroundColor: HUD.card,
+              backgroundColor: DS.card,
               borderWidth: 1,
-              borderColor: HUD.border,
-              borderRadius: 4,
+              borderColor: DS.border,
+              borderRadius: 12,
               padding: 14,
-              color: HUD.iceBlue,
+              color: DS.textPrimary,
               fontSize: 14,
+              lineHeight: 20,
               minHeight: 100,
               marginBottom: 24,
+              textAlignVertical: "top",
             }}
           />
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("mood")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 12 }}>
+            {t("mood")}
+          </Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 32 }}>
             {["😞", "😐", "🙂", "😊", "🔥"].map((emoji, i) => (
               <TouchableOpacity
@@ -246,19 +245,15 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
                 onPress={() => setMood(i + 1)}
                 style={{
                   flex: 1,
-                  paddingVertical: 14,
-                  borderRadius: 2,
+                  paddingVertical: 16,
+                  borderRadius: 16,
                   alignItems: "center",
-                  backgroundColor: mood === i + 1 ? HUD.cyanDim : HUD.card,
-                  borderWidth: mood === i + 1 ? 1.5 : 1,
-                  borderColor: mood === i + 1 ? HUD.cyan : HUD.border,
-                  shadowColor: mood === i + 1 ? HUD.cyan : "transparent",
-                  shadowOpacity: mood === i + 1 ? 0.6 : 0,
-                  shadowRadius: 6,
-                  shadowOffset: { width: 0, height: 0 },
+                  backgroundColor: mood === i + 1 ? DS.cyanSoft : DS.card,
+                  borderWidth: 1.5,
+                  borderColor: mood === i + 1 ? DS.cyan : DS.border,
                 }}
               >
-                <Text style={{ fontSize: 20 }}>{emoji}</Text>
+                <Text style={{ fontSize: 22 }}>{emoji}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -266,23 +261,21 @@ function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: Colors; t: 
             onPress={() => checkinMutation.mutate()}
             disabled={!checkinContent.trim() || checkinMutation.isPending}
             style={{
-              backgroundColor: HUD.cyanDim,
-              borderWidth: 1,
-              borderColor: HUD.cyan,
-              borderRadius: 2,
+              backgroundColor: DS.cyan,
+              borderRadius: 100,
               paddingVertical: 17,
               alignItems: "center",
               opacity: !checkinContent.trim() ? 0.4 : 1,
-              shadowColor: HUD.cyan,
-              shadowOpacity: 0.5,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
+              shadowColor: DS.cyan,
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
             }}
           >
             {checkinMutation.isPending ? (
-              <ActivityIndicator color={HUD.cyan} />
+              <ActivityIndicator color="#0A0F1E" />
             ) : (
-              <Text style={{ color: HUD.cyan, fontSize: 13, fontWeight: "700", letterSpacing: 2 }}>
+              <Text style={{ color: "#0A0F1E", fontSize: 15, fontWeight: "700" }}>
                 {t("checkin")}
               </Text>
             )}
@@ -311,86 +304,83 @@ function GoalCard({ goal, colors, t }: { goal: Goal; colors: Colors; t: (key: an
     ]);
   };
 
-  const barColor = goal.progress >= 100 ? HUD.success : HUD.cyan;
+  const barColor = goal.progress >= 100 ? DS.success : DS.cyan;
+  const accentColor = goal.isCompleted ? DS.success : DS.cyan;
 
   return (
     <View
       style={{
-        backgroundColor: HUD.card,
-        borderRadius: 4,
-        borderLeftWidth: 2,
-        borderLeftColor: goal.isCompleted ? HUD.success : HUD.cyan,
-        borderTopWidth: 1,
-        borderTopColor: HUD.border,
-        borderRightWidth: 1,
-        borderRightColor: HUD.border,
-        borderBottomWidth: 1,
-        borderBottomColor: HUD.border,
-        padding: 16,
-        marginBottom: 10,
+        backgroundColor: DS.card,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: DS.border,
+        borderLeftWidth: 3,
+        borderLeftColor: accentColor,
+        padding: 18,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 4 },
       }}
       testID="goal-card"
     >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
         <View style={{
-          width: 32,
-          height: 32,
-          borderRadius: 2,
+          width: 36,
+          height: 36,
+          borderRadius: 100,
           marginRight: 12,
-          backgroundColor: goal.isCompleted ? HUD.successDim : HUD.cyanDim,
+          backgroundColor: goal.isCompleted ? DS.successSoft : DS.cyanSoft,
           borderWidth: 1,
-          borderColor: goal.isCompleted ? HUD.success : HUD.cyan,
+          borderColor: goal.isCompleted ? DS.success : DS.cyanBorder,
           alignItems: "center",
           justifyContent: "center",
         }}>
-          <Target size={16} color={goal.isCompleted ? HUD.success : HUD.cyan} />
+          <Target size={16} color={accentColor} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{
-            color: goal.isCompleted ? HUD.statBlue : HUD.iceBlue,
+            color: goal.isCompleted ? DS.textSecondary : DS.textPrimary,
             fontSize: 14,
             fontWeight: "600",
-            letterSpacing: 0.3,
             textDecorationLine: goal.isCompleted ? "line-through" : "none",
           }}>
             {goal.title}
           </Text>
           {goal.category ? (
-            <Text style={{ color: HUD.text4, fontSize: 11, marginTop: 2, letterSpacing: 1, textTransform: "uppercase" }}>
+            <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 2 }}>
               {goal.category}
             </Text>
           ) : null}
         </View>
-        <Text style={{ color: goal.progress >= 100 ? HUD.success : HUD.cyan, fontSize: 14, fontWeight: "700", marginRight: 10, fontVariant: ["tabular-nums"] }}>
+        <Text style={{ color: barColor, fontSize: 14, fontWeight: "700", marginRight: 10 }}>
           {goal.progress}%
         </Text>
         <TouchableOpacity
           onPress={confirmDelete}
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: 2,
-            backgroundColor: HUD.redGlow,
+            width: 32,
+            height: 32,
+            borderRadius: 100,
+            backgroundColor: DS.redSoft,
             borderWidth: 1,
-            borderColor: HUD.red,
+            borderColor: DS.redBorder,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Trash2 size={13} color={HUD.red} />
+          <Trash2 size={13} color={DS.red} />
         </TouchableOpacity>
       </View>
 
       {/* Progress bar */}
-      <View style={{ height: 4, backgroundColor: HUD.darkTrack, borderRadius: 0, marginBottom: 12 }}>
+      <View style={{ height: 6, backgroundColor: DS.track, borderRadius: 100, marginBottom: 12 }}>
         <View style={{
           width: `${goal.progress}%`,
-          height: 4,
+          height: 6,
           backgroundColor: barColor,
-          shadowColor: barColor,
-          shadowOpacity: 0.8,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: 0 },
+          borderRadius: 100,
         }} />
       </View>
 
@@ -402,15 +392,15 @@ function GoalCard({ goal, colors, t }: { goal: Goal; colors: Colors; t: (key: an
             onPress={() => updateGoal.mutate(val)}
             style={{
               flex: 1,
-              paddingVertical: 6,
-              borderRadius: 2,
-              backgroundColor: goal.progress >= val ? HUD.cyanDim : HUD.darkTrack,
+              paddingVertical: 7,
+              borderRadius: 100,
+              backgroundColor: goal.progress >= val ? DS.cyanSoft : "rgba(255,255,255,0.04)",
               alignItems: "center",
               borderWidth: 1,
-              borderColor: goal.progress >= val ? HUD.cyan : HUD.border,
+              borderColor: goal.progress >= val ? DS.cyanBorder : DS.border,
             }}
           >
-            <Text style={{ color: goal.progress >= val ? HUD.cyan : HUD.text4, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>
+            <Text style={{ color: goal.progress >= val ? DS.cyan : DS.textMuted, fontSize: 11, fontWeight: "600" }}>
               {val}%
             </Text>
           </TouchableOpacity>
@@ -443,27 +433,23 @@ export default function SprintsScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD.bg }} testID="sprints-screen">
+    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="sprints-screen">
       <SafeAreaView edges={["top"]}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}>
-          {/* HUD Title */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 18 }}>
-            <View style={{ width: 3, height: 20, backgroundColor: HUD.cyan }} />
-            <Text style={{ fontSize: 18, fontWeight: "800", color: HUD.iceBlue, letterSpacing: 3, textTransform: "uppercase" }}>
-              {t("accountability")}
-            </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: HUD.border, marginLeft: 4 }} />
-          </View>
+        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
+          {/* Title */}
+          <Text style={{ fontSize: 28, fontWeight: "800", color: DS.textPrimary, letterSpacing: -0.5, marginBottom: 16 }}>
+            {t("accountability")}
+          </Text>
 
-          {/* Tab switcher */}
+          {/* Tab switcher - pill style */}
           <View style={{
             flexDirection: "row",
-            backgroundColor: HUD.card,
+            backgroundColor: DS.card,
             borderWidth: 1,
-            borderColor: HUD.border,
-            borderRadius: 4,
-            padding: 3,
-            gap: 3,
+            borderColor: DS.border,
+            borderRadius: 100,
+            padding: 4,
+            gap: 4,
           }}>
             {(["sprints", "goals"] as const).map((tab) => (
               <TouchableOpacity
@@ -473,23 +459,15 @@ export default function SprintsScreen() {
                 style={{
                   flex: 1,
                   paddingVertical: 9,
-                  borderRadius: 2,
+                  borderRadius: 100,
                   alignItems: "center",
-                  backgroundColor: activeTab === tab ? HUD.cyanDim : "transparent",
-                  borderWidth: activeTab === tab ? 1 : 0,
-                  borderColor: HUD.cyan,
-                  shadowColor: activeTab === tab ? HUD.cyan : "transparent",
-                  shadowOpacity: 0.5,
-                  shadowRadius: 6,
-                  shadowOffset: { width: 0, height: 0 },
+                  backgroundColor: activeTab === tab ? DS.cyan : "transparent",
                 }}
               >
                 <Text style={{
-                  color: activeTab === tab ? HUD.cyan : HUD.text4,
-                  fontSize: 11,
+                  color: activeTab === tab ? "#0A0F1E" : DS.textMuted,
+                  fontSize: 13,
                   fontWeight: "700",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
                 }}>
                   {t(tab)}
                 </Text>
@@ -500,85 +478,85 @@ export default function SprintsScreen() {
       </SafeAreaView>
 
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={false}
             onRefresh={() => activeTab === "sprints" ? rs() : rg()}
-            tintColor={HUD.cyan}
+            tintColor={DS.cyan}
           />
         }
       >
         {activeTab === "sprints" ? (
           <>
             {/* Stats row */}
-            <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
               <View style={{
                 flex: 1,
-                backgroundColor: HUD.card,
-                borderRadius: 4,
-                borderLeftWidth: 2,
-                borderLeftColor: HUD.cyan,
-                borderTopWidth: 1,
-                borderTopColor: HUD.border,
-                borderRightWidth: 1,
-                borderRightColor: HUD.border,
-                borderBottomWidth: 1,
-                borderBottomColor: HUD.border,
-                padding: 14,
+                backgroundColor: DS.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: DS.border,
+                padding: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 2 },
               }}>
-                <Flame size={18} color={HUD.cyan} />
-                <Text style={{ color: HUD.cyan, fontSize: 24, fontWeight: "700", marginTop: 8, fontVariant: ["tabular-nums"] }}>
+                <Flame size={18} color={DS.cyan} />
+                <Text style={{ color: DS.textPrimary, fontSize: 26, fontWeight: "800", marginTop: 8, letterSpacing: -1 }}>
                   {sprints?.reduce((max, s) => Math.max(max, s.members?.[0]?.streak || 0), 0) || 0}
                 </Text>
-                <Text style={{ color: HUD.statBlue, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginTop: 2 }}>
+                <Text style={{ color: DS.textSecondary, fontSize: 11, marginTop: 2 }}>
                   {t("bestStreak")}
                 </Text>
               </View>
               <View style={{
                 flex: 1,
-                backgroundColor: HUD.card,
-                borderRadius: 4,
-                borderLeftWidth: 2,
-                borderLeftColor: HUD.statBlue,
-                borderTopWidth: 1,
-                borderTopColor: HUD.border,
-                borderRightWidth: 1,
-                borderRightColor: HUD.border,
-                borderBottomWidth: 1,
-                borderBottomColor: HUD.border,
-                padding: 14,
+                backgroundColor: DS.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: DS.border,
+                padding: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 2 },
               }}>
-                <Zap size={18} color={HUD.statBlue} />
-                <Text style={{ color: HUD.cyan, fontSize: 24, fontWeight: "700", marginTop: 8, fontVariant: ["tabular-nums"] }}>
+                <Zap size={18} color={DS.cyan} />
+                <Text style={{ color: DS.textPrimary, fontSize: 26, fontWeight: "800", marginTop: 8, letterSpacing: -1 }}>
                   {sprints?.length || 0}
                 </Text>
-                <Text style={{ color: HUD.statBlue, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginTop: 2 }}>
+                <Text style={{ color: DS.textSecondary, fontSize: 11, marginTop: 2 }}>
                   {t("activeSprintsLabel")}
                 </Text>
               </View>
             </View>
 
-            {/* Section header */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-              <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-                ACTIVE PROTOCOLS
-              </Text>
-            </View>
+            {/* Section label */}
+            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
+              Active sprints
+            </Text>
 
             {sl ? (
-              <View style={{ alignItems: "center", paddingVertical: 32 }}>
-                <ActivityIndicator color={HUD.cyan} testID="loading-indicator" />
-                <Text style={{ color: HUD.statBlue, fontSize: 11, letterSpacing: 2, marginTop: 12, textTransform: "uppercase" }}>
-                  INITIALIZING SYSTEMS...
-                </Text>
+              <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                <ActivityIndicator color={DS.cyan} testID="loading-indicator" />
+                <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 12 }}>Loading...</Text>
               </View>
             ) : (sprints || []).length === 0 ? (
-              <View style={{ alignItems: "center", paddingVertical: 40, borderWidth: 1, borderColor: HUD.border, borderStyle: "dashed", borderRadius: 4, marginBottom: 12 }}>
-                <Text style={{ color: HUD.text4, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
-                  NO ACTIVE PROTOCOLS
-                </Text>
+              <View style={{
+                alignItems: "center",
+                paddingVertical: 48,
+                backgroundColor: DS.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: DS.border,
+                borderStyle: "dashed",
+                marginBottom: 16,
+              }}>
+                <Text style={{ fontSize: 36, marginBottom: 12 }}>🏃</Text>
+                <Text style={{ color: DS.textPrimary, fontSize: 16, fontWeight: "700", marginBottom: 6 }}>No active sprints</Text>
+                <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", paddingHorizontal: 24 }}>Start a sprint to build momentum and track your daily progress.</Text>
               </View>
             ) : (
               (sprints || []).map((s) => <SprintCard key={s.id} sprint={s} colors={colors} t={t} />)
@@ -593,19 +571,17 @@ export default function SprintsScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
-                backgroundColor: HUD.redGlow,
-                borderRadius: 4,
-                borderWidth: 1,
-                borderColor: HUD.red,
-                padding: 16,
-                shadowColor: HUD.red,
-                shadowOpacity: 0.4,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 0 },
+                backgroundColor: DS.cyan,
+                borderRadius: 100,
+                padding: 17,
+                shadowColor: DS.cyan,
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
               }}
             >
-              <Plus size={16} color={HUD.red} />
-              <Text style={{ color: HUD.red, fontSize: 12, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+              <Plus size={18} color="#0A0F1E" />
+              <Text style={{ color: "#0A0F1E", fontSize: 15, fontWeight: "700" }}>
                 {t("newSprint")}
               </Text>
             </TouchableOpacity>
@@ -614,30 +590,24 @@ export default function SprintsScreen() {
           <>
             {/* Goals stats */}
             <View style={{
-              backgroundColor: HUD.card,
-              borderRadius: 4,
-              borderLeftWidth: 2,
-              borderLeftColor: HUD.cyan,
-              borderTopWidth: 1,
-              borderTopColor: HUD.border,
-              borderRightWidth: 1,
-              borderRightColor: HUD.border,
-              borderBottomWidth: 1,
-              borderBottomColor: HUD.border,
-              padding: 14,
-              marginBottom: 20,
+              backgroundColor: DS.card,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: DS.border,
+              padding: 18,
+              marginBottom: 24,
             }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
                 {[
-                  { value: goals?.length || 0, label: "Total", color: HUD.cyan },
-                  { value: goals?.filter(g => g.isCompleted).length || 0, label: t("goalsCompleted"), color: HUD.success },
-                  { value: goals?.filter(g => !g.isCompleted).length || 0, label: t("inProgress"), color: HUD.statBlue },
+                  { value: goals?.length || 0, label: "Total", color: DS.cyan },
+                  { value: goals?.filter(g => g.isCompleted).length || 0, label: t("goalsCompleted"), color: DS.success },
+                  { value: goals?.filter(g => !g.isCompleted).length || 0, label: t("inProgress"), color: DS.textSecondary },
                 ].map((stat, i) => (
                   <View key={i} style={{ alignItems: "center" }}>
-                    <Text style={{ color: stat.color, fontSize: 22, fontWeight: "700", fontVariant: ["tabular-nums"] }}>
+                    <Text style={{ color: stat.color, fontSize: 24, fontWeight: "800", letterSpacing: -0.5 }}>
                       {stat.value}
                     </Text>
-                    <Text style={{ color: HUD.text4, fontSize: 10, textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>
+                    <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 3 }}>
                       {stat.label}
                     </Text>
                   </View>
@@ -645,26 +615,30 @@ export default function SprintsScreen() {
               </View>
             </View>
 
-            {/* Section header */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-              <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-                MISSION OBJECTIVES
-              </Text>
-            </View>
+            {/* Section label */}
+            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
+              Your goals
+            </Text>
 
             {gl ? (
-              <View style={{ alignItems: "center", paddingVertical: 32 }}>
-                <ActivityIndicator color={HUD.cyan} testID="loading-indicator" />
-                <Text style={{ color: HUD.statBlue, fontSize: 11, letterSpacing: 2, marginTop: 12, textTransform: "uppercase" }}>
-                  INITIALIZING SYSTEMS...
-                </Text>
+              <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                <ActivityIndicator color={DS.cyan} testID="loading-indicator" />
+                <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 12 }}>Loading...</Text>
               </View>
             ) : (goals || []).length === 0 ? (
-              <View style={{ alignItems: "center", paddingVertical: 40, borderWidth: 1, borderColor: HUD.border, borderStyle: "dashed", borderRadius: 4, marginBottom: 12 }}>
-                <Text style={{ color: HUD.text4, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
-                  NO ACTIVE PROTOCOLS
-                </Text>
+              <View style={{
+                alignItems: "center",
+                paddingVertical: 48,
+                backgroundColor: DS.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: DS.border,
+                borderStyle: "dashed",
+                marginBottom: 16,
+              }}>
+                <Text style={{ fontSize: 36, marginBottom: 12 }}>🎯</Text>
+                <Text style={{ color: DS.textPrimary, fontSize: 16, fontWeight: "700", marginBottom: 6 }}>No goals yet</Text>
+                <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", paddingHorizontal: 24 }}>Define your goals and track your progress toward achieving them.</Text>
               </View>
             ) : (
               (goals || []).map((g) => <GoalCard key={g.id} goal={g} colors={colors} t={t} />)
@@ -678,19 +652,17 @@ export default function SprintsScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
-                backgroundColor: HUD.redGlow,
-                borderRadius: 4,
-                borderWidth: 1,
-                borderColor: HUD.red,
-                padding: 16,
-                shadowColor: HUD.red,
-                shadowOpacity: 0.4,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 0 },
+                backgroundColor: DS.cyan,
+                borderRadius: 100,
+                padding: 17,
+                shadowColor: DS.cyan,
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
               }}
             >
-              <Plus size={16} color={HUD.red} />
-              <Text style={{ color: HUD.red, fontSize: 12, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+              <Plus size={18} color="#0A0F1E" />
+              <Text style={{ color: "#0A0F1E", fontSize: 15, fontWeight: "700" }}>
                 {t("newGoal")}
               </Text>
             </TouchableOpacity>
@@ -700,106 +672,97 @@ export default function SprintsScreen() {
 
       {/* New Sprint Modal */}
       <Modal visible={showNewSprint} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg, padding: 24, borderTopWidth: 1, borderTopColor: HUD.cyan }}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
+        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 24 }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 28 }}>
             <TouchableOpacity
               onPress={() => setShowNewSprint(false)}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
+                width: 36,
+                height: 36,
+                borderRadius: 100,
                 borderWidth: 1,
-                borderColor: HUD.border,
+                borderColor: DS.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color={HUD.statBlue} />
+              <X size={16} color={DS.textSecondary} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: "center", color: HUD.iceBlue, fontSize: 13, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+            <Text style={{ flex: 1, textAlign: "center", color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>
               {t("newSprint")}
             </Text>
-            <View style={{ width: 32 }} />
+            <View style={{ width: 36 }} />
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("sprintTitle")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+            {t("sprintTitle")}
+          </Text>
           <TextInput
             value={newSprint.title}
             onChangeText={(v) => setNewSprint(p => ({ ...p, title: v }))}
-            placeholder="ej. Hábito matutino"
-            placeholderTextColor={HUD.text4}
+            placeholder="e.g. Morning habit"
+            placeholderTextColor={DS.textMuted}
             testID="sprint-title-input"
             style={{
-              backgroundColor: HUD.card,
+              backgroundColor: DS.card,
               borderWidth: 1,
-              borderColor: HUD.border,
-              borderRadius: 4,
+              borderColor: DS.border,
+              borderRadius: 12,
               padding: 14,
-              color: HUD.iceBlue,
+              color: DS.textPrimary,
               fontSize: 14,
               marginBottom: 20,
             }}
           />
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("description")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+            {t("description")}
+          </Text>
           <TextInput
             value={newSprint.description}
             onChangeText={(v) => setNewSprint(p => ({ ...p, description: v }))}
             placeholder={t("sprintDesc")}
-            placeholderTextColor={HUD.text4}
+            placeholderTextColor={DS.textMuted}
             multiline
             style={{
-              backgroundColor: HUD.card,
+              backgroundColor: DS.card,
               borderWidth: 1,
-              borderColor: HUD.border,
-              borderRadius: 4,
+              borderColor: DS.border,
+              borderRadius: 12,
               padding: 14,
-              color: HUD.iceBlue,
+              color: DS.textPrimary,
               fontSize: 14,
               minHeight: 80,
               marginBottom: 20,
+              textAlignVertical: "top",
             }}
           />
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("duration")}
-            </Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8, marginBottom: 32 }}>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 12 }}>
+            {t("duration")}
+          </Text>
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 32 }}>
             {[7, 14, 30].map((d) => (
               <TouchableOpacity
                 key={d}
                 onPress={() => setNewSprint(p => ({ ...p, duration: d }))}
                 style={{
                   flex: 1,
-                  paddingVertical: 14,
-                  borderRadius: 2,
+                  paddingVertical: 16,
+                  borderRadius: 16,
                   alignItems: "center",
-                  backgroundColor: newSprint.duration === d ? HUD.cyanDim : HUD.card,
-                  borderWidth: newSprint.duration === d ? 1.5 : 1,
-                  borderColor: newSprint.duration === d ? HUD.cyan : HUD.border,
-                  shadowColor: newSprint.duration === d ? HUD.cyan : "transparent",
-                  shadowOpacity: newSprint.duration === d ? 0.5 : 0,
-                  shadowRadius: 6,
-                  shadowOffset: { width: 0, height: 0 },
+                  backgroundColor: newSprint.duration === d ? DS.cyanSoft : DS.card,
+                  borderWidth: 1.5,
+                  borderColor: newSprint.duration === d ? DS.cyan : DS.border,
                 }}
               >
-                <Text style={{ color: newSprint.duration === d ? HUD.cyan : HUD.statBlue, fontWeight: "700", fontSize: 20, fontVariant: ["tabular-nums"] }}>
+                <Text style={{ color: newSprint.duration === d ? DS.cyan : DS.textPrimary, fontWeight: "800", fontSize: 22, letterSpacing: -0.5 }}>
                   {d}
                 </Text>
-                <Text style={{ color: newSprint.duration === d ? HUD.cyan : HUD.text4, fontSize: 10, marginTop: 2, letterSpacing: 1, textTransform: "uppercase" }}>
+                <Text style={{ color: newSprint.duration === d ? DS.cyan : DS.textMuted, fontSize: 12, marginTop: 2 }}>
                   {t("days")}
                 </Text>
               </TouchableOpacity>
@@ -811,23 +774,21 @@ export default function SprintsScreen() {
             disabled={!newSprint.title.trim() || createSprint.isPending}
             testID="start-sprint-button"
             style={{
-              backgroundColor: HUD.cyanDim,
-              borderWidth: 1,
-              borderColor: HUD.cyan,
-              borderRadius: 2,
+              backgroundColor: DS.cyan,
+              borderRadius: 100,
               paddingVertical: 17,
               alignItems: "center",
               opacity: !newSprint.title.trim() ? 0.4 : 1,
-              shadowColor: HUD.cyan,
-              shadowOpacity: 0.5,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
+              shadowColor: DS.cyan,
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
             }}
           >
             {createSprint.isPending ? (
-              <ActivityIndicator color={HUD.cyan} />
+              <ActivityIndicator color="#0A0F1E" />
             ) : (
-              <Text style={{ color: HUD.cyan, fontSize: 13, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+              <Text style={{ color: "#0A0F1E", fontSize: 15, fontWeight: "700" }}>
                 {t("startSprint")}
               </Text>
             )}
@@ -837,71 +798,68 @@ export default function SprintsScreen() {
 
       {/* New Goal Modal */}
       <Modal visible={showNewGoal} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg, padding: 24, borderTopWidth: 1, borderTopColor: HUD.cyan }}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
+        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 24 }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 28 }}>
             <TouchableOpacity
               onPress={() => setShowNewGoal(false)}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
+                width: 36,
+                height: 36,
+                borderRadius: 100,
                 borderWidth: 1,
-                borderColor: HUD.border,
+                borderColor: DS.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color={HUD.statBlue} />
+              <X size={16} color={DS.textSecondary} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, textAlign: "center", color: HUD.iceBlue, fontSize: 13, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+            <Text style={{ flex: 1, textAlign: "center", color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>
               {t("newGoal")}
             </Text>
-            <View style={{ width: 32 }} />
+            <View style={{ width: 36 }} />
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("goalTitle")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+            {t("goalTitle")}
+          </Text>
           <TextInput
             value={newGoal.title}
             onChangeText={(v) => setNewGoal(p => ({ ...p, title: v }))}
-            placeholder="ej. Lanzar mi primer producto"
-            placeholderTextColor={HUD.text4}
+            placeholder="e.g. Launch my first product"
+            placeholderTextColor={DS.textMuted}
             testID="goal-title-input"
             style={{
-              backgroundColor: HUD.card,
+              backgroundColor: DS.card,
               borderWidth: 1,
-              borderColor: HUD.border,
-              borderRadius: 4,
+              borderColor: DS.border,
+              borderRadius: 12,
               padding: 14,
-              color: HUD.iceBlue,
+              color: DS.textPrimary,
               fontSize: 14,
               marginBottom: 20,
             }}
           />
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: HUD.cyan }} />
-            <Text style={{ color: HUD.statBlue, fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
-              {t("goalCategory")}
-            </Text>
-          </View>
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+            {t("goalCategory")}
+          </Text>
           <TextInput
             value={newGoal.category}
             onChangeText={(v) => setNewGoal(p => ({ ...p, category: v }))}
-            placeholder="Negocios, Salud, Aprendizaje..."
-            placeholderTextColor={HUD.text4}
+            placeholder="Business, Health, Learning..."
+            placeholderTextColor={DS.textMuted}
             testID="category-input"
             style={{
-              backgroundColor: HUD.card,
+              backgroundColor: DS.card,
               borderWidth: 1,
-              borderColor: HUD.border,
-              borderRadius: 4,
+              borderColor: DS.border,
+              borderRadius: 12,
               padding: 14,
-              color: HUD.iceBlue,
+              color: DS.textPrimary,
               fontSize: 14,
               marginBottom: 32,
             }}
@@ -912,23 +870,21 @@ export default function SprintsScreen() {
             disabled={!newGoal.title.trim() || createGoal.isPending}
             testID="create-goal-button"
             style={{
-              backgroundColor: HUD.cyanDim,
-              borderWidth: 1,
-              borderColor: HUD.cyan,
-              borderRadius: 2,
+              backgroundColor: DS.cyan,
+              borderRadius: 100,
               paddingVertical: 17,
               alignItems: "center",
               opacity: !newGoal.title.trim() ? 0.4 : 1,
-              shadowColor: HUD.cyan,
-              shadowOpacity: 0.5,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
+              shadowColor: DS.cyan,
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
             }}
           >
             {createGoal.isPending ? (
-              <ActivityIndicator color={HUD.cyan} />
+              <ActivityIndicator color="#0A0F1E" />
             ) : (
-              <Text style={{ color: HUD.cyan, fontSize: 13, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>
+              <Text style={{ color: "#0A0F1E", fontSize: 15, fontWeight: "700" }}>
                 {t("createGoal")}
               </Text>
             )}

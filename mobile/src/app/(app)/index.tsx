@@ -21,19 +21,23 @@ import { uploadFile } from "@/lib/upload";
 
 type Colors = typeof DARK;
 
-// HUD color palette
-const HUD = {
-  bg: "#020B18",
-  card: "#041525",
+// Dark iOS Premium palette
+const P = {
+  bg: "#080D1A",
+  card: "#0D1526",
+  cardElevated: "#121A2E",
   accent: "#00B4D8",
-  accentDim: "#0D3A55",
-  text: "#C8E8FF",
-  text2: "#7DB8D9",
-  text3: "#4A7A99",
-  border: "#0D3A55",
-  error: "#FF3B30",
-  success: "#00D9A3",
-  warning: "#FFB800",
+  accentSoft: "rgba(0, 180, 216, 0.12)",
+  accentMid: "rgba(0, 180, 216, 0.22)",
+  text: "#EDF2F7",
+  text2: "#94A3B8",
+  text3: "#4A5C72",
+  border: "rgba(255,255,255,0.06)",
+  borderAccent: "rgba(0, 180, 216, 0.3)",
+  error: "#FF453A",
+  success: "#30D158",
+  warning: "#FFD60A",
+  purple: "#BF5AF2",
 };
 
 const REACTION_TYPES = [
@@ -43,30 +47,41 @@ const REACTION_TYPES = [
   { id: "interesting", emoji: "✨" },
 ];
 
-function HudScanLine() {
+const categoryColors: Record<string, string> = {
+  progress: P.success,
+  learning: P.accent,
+  question: P.purple,
+  inspiration: P.warning,
+};
+
+function Avatar({ uri, name, size = 38, radius = 50 }: { uri?: string | null; name?: string | null; size?: number; radius?: number }) {
   return (
-    <View style={{ height: 1, marginHorizontal: 0, marginVertical: 0, flexDirection: "row", alignItems: "center" }}>
-      <View style={{ flex: 1, height: 1, backgroundColor: HUD.accentDim }} />
-      <View style={{ width: 4, height: 4, backgroundColor: HUD.accent, transform: [{ rotate: "45deg" }], marginHorizontal: 6 }} />
-      <View style={{ flex: 1, height: 1, backgroundColor: HUD.accentDim }} />
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        backgroundColor: P.accentSoft,
+        borderWidth: 1.5,
+        borderColor: P.borderAccent,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {uri ? (
+        <Image source={{ uri }} style={{ width: size, height: size }} />
+      ) : (
+        <Text style={{ color: P.accent, fontWeight: "700", fontSize: size * 0.38 }}>
+          {name?.[0]?.toUpperCase() ?? "?"}
+        </Text>
+      )}
     </View>
   );
 }
 
-function HudCornerBox({ children, style }: { children: React.ReactNode; style?: object }) {
-  return (
-    <View style={[{ position: "relative" }, style]}>
-      {/* Top-left corner */}
-      <View style={{ position: "absolute", top: 0, left: 0, width: 10, height: 10, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderColor: HUD.accent, zIndex: 2 }} />
-      {/* Top-right corner */}
-      <View style={{ position: "absolute", top: 0, right: 0, width: 10, height: 10, borderTopWidth: 1.5, borderRightWidth: 1.5, borderColor: HUD.accent, zIndex: 2 }} />
-      {/* Bottom-left corner */}
-      <View style={{ position: "absolute", bottom: 0, left: 0, width: 10, height: 10, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderColor: HUD.accent, zIndex: 2 }} />
-      {/* Bottom-right corner */}
-      <View style={{ position: "absolute", bottom: 0, right: 0, width: 10, height: 10, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderColor: HUD.accent, zIndex: 2 }} />
-      {children}
-    </View>
-  );
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: P.border, marginVertical: 12 }} />;
 }
 
 function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: string; colors: Colors }) {
@@ -118,77 +133,71 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
     ]);
   };
 
-  const categoryColors: Record<string, string> = {
-    progress: HUD.success,
-    learning: HUD.accent,
-    question: "#A78BFA",
-    inspiration: HUD.warning,
-  };
-  const catColor = categoryColors[post.category] || HUD.accent;
+  const catColor = categoryColors[post.category] || P.accent;
+  const catLabel = post.category
+    ? post.category.charAt(0).toUpperCase() + post.category.slice(1)
+    : "Post";
 
-  // Parse media urls
   const mediaUrls: string[] = (() => {
     try { return post.mediaUrls ? JSON.parse(post.mediaUrls) : []; } catch { return []; }
   })();
 
-  const categoryLabel = post.category ? post.category.toUpperCase() : "DATA";
-
   return (
-    <Animated.View entering={FadeInDown.duration(300)}>
+    <Animated.View entering={FadeInDown.duration(280).springify()}>
       <View
         style={{
-          backgroundColor: HUD.card,
-          borderRadius: 4,
-          marginHorizontal: 12,
-          marginBottom: 10,
+          backgroundColor: P.card,
+          borderRadius: 20,
+          marginHorizontal: 16,
+          marginBottom: 12,
           overflow: "hidden",
           borderWidth: 1,
-          borderColor: HUD.border,
+          borderColor: P.border,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 4,
         }}
         testID="post-card"
       >
-        {/* Glowing cyan top border */}
-        <View style={{ height: 2, backgroundColor: catColor, shadowColor: catColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 6 }} />
-
-        <View style={{ padding: 14 }}>
+        <View style={{ padding: 16 }}>
           {/* Author row */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            {/* Avatar with cyan ring */}
-            <View style={{ width: 38, height: 38, borderRadius: 4, borderWidth: 1.5, borderColor: HUD.accent, overflow: "hidden", marginRight: 10, alignItems: "center", justifyContent: "center", backgroundColor: HUD.accentDim, shadowColor: HUD.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 4 }}>
-              {post.author?.image
-                ? <Image source={{ uri: post.author.image }} style={{ width: 38, height: 38 }} />
-                : <Text style={{ color: HUD.accent, fontWeight: "700", fontSize: 15, fontVariant: ["small-caps"] }}>{post.author?.name?.[0]?.toUpperCase()}</Text>
-              }
-            </View>
-            <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            <Avatar uri={post.author?.image} name={post.author?.name} size={40} radius={50} />
+            <View style={{ flex: 1, marginLeft: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Text style={{ color: HUD.text, fontWeight: "700", fontSize: 13, letterSpacing: 0.5 }}>{post.author?.name}</Text>
-                {post.author?.isVerified ? <CheckCircle size={12} color={HUD.accent} fill={HUD.accent} /> : null}
+                <Text style={{ color: P.text, fontWeight: "600", fontSize: 14, letterSpacing: 0.1 }}>
+                  {post.author?.name}
+                </Text>
+                {post.author?.isVerified ? (
+                  <CheckCircle size={13} color={P.accent} fill={P.accent} />
+                ) : null}
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 1 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 1, backgroundColor: catColor }} />
-                <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "600" }}>{categoryLabel}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catColor }} />
+                <Text style={{ color: P.text3, fontSize: 12, fontWeight: "500" }}>{catLabel}</Text>
               </View>
             </View>
             {isMyPost ? (
-              <TouchableOpacity onPress={handleMorePress} testID="more-options-button" style={{ padding: 4 }}>
-                <MoreHorizontal size={16} color={HUD.text3} />
+              <TouchableOpacity onPress={handleMorePress} testID="more-options-button" style={{ padding: 6 }}>
+                <MoreHorizontal size={17} color={P.text3} />
               </TouchableOpacity>
             ) : (
-              <MoreHorizontal size={16} color="transparent" />
+              <View style={{ width: 29 }} />
             )}
           </View>
 
           {/* Content */}
           {post.content ? (
-            <Text style={{ color: HUD.text2, fontSize: 14, lineHeight: 22, marginBottom: 10, letterSpacing: 0.2 }}>
+            <Text style={{ color: P.text2, fontSize: 15, lineHeight: 23, marginBottom: 12 }}>
               {post.content}
             </Text>
           ) : null}
 
           {/* Media */}
           {mediaUrls.length > 0 ? (
-            <View style={{ marginBottom: 10, borderRadius: 4, overflow: "hidden", borderWidth: 1, borderColor: HUD.border }}>
+            <View style={{ marginBottom: 12, borderRadius: 12, overflow: "hidden" }}>
               <Image source={{ uri: mediaUrls[0] }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
             </View>
           ) : null}
@@ -198,9 +207,9 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
             try {
               const tags: string[] = JSON.parse(post.hashtags);
               return (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                   {tags.map((tag) => (
-                    <Text key={tag} style={{ color: HUD.accent, fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase", fontWeight: "600" }}>
+                    <Text key={tag} style={{ color: P.accent, fontSize: 13, fontWeight: "500" }}>
                       #{tag}
                     </Text>
                   ))}
@@ -209,74 +218,93 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
             } catch { return null; }
           })() : null}
 
-          {/* Circuit divider */}
-          <HudScanLine />
+          <Divider />
 
-          {/* Actions */}
-          <View style={{ flexDirection: "row", alignItems: "center", paddingTop: 10, gap: 4 }}>
+          {/* Actions row */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <TouchableOpacity
               onPress={() => setShowReactions(!showReactions)}
               style={{
-                flexDirection: "row", alignItems: "center", gap: 5,
-                paddingVertical: 5, paddingHorizontal: 10,
-                borderRadius: 2,
-                backgroundColor: myReaction ? `${HUD.accent}18` : "transparent",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 100,
+                backgroundColor: myReaction ? P.accentMid : P.cardElevated,
                 borderWidth: 1,
-                borderColor: myReaction ? HUD.accent : HUD.border,
+                borderColor: myReaction ? P.borderAccent : P.border,
               }}
               testID="react-button"
             >
-              <Text style={{ fontSize: 13 }}>{myReaction ? REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡" : "💡"}</Text>
-              <Text style={{ color: myReaction ? HUD.accent : HUD.text3, fontSize: 11, fontWeight: "700", fontVariant: ["tabular-nums"], letterSpacing: 0.5 }}>
-                SYS:{post._count?.reactions || 0}
+              <Text style={{ fontSize: 14 }}>
+                {myReaction ? REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡" : "💡"}
+              </Text>
+              <Text style={{ color: myReaction ? P.accent : P.text3, fontSize: 13, fontWeight: "500" }}>
+                {post._count?.reactions || 0}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setShowComments(!showComments)}
               style={{
-                flexDirection: "row", alignItems: "center", gap: 5,
-                paddingVertical: 5, paddingHorizontal: 10,
-                borderRadius: 2,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 100,
+                backgroundColor: showComments ? P.accentMid : P.cardElevated,
                 borderWidth: 1,
-                borderColor: showComments ? HUD.accent : HUD.border,
-                backgroundColor: showComments ? `${HUD.accent}18` : "transparent",
+                borderColor: showComments ? P.borderAccent : P.border,
               }}
               testID="comment-button"
             >
-              <MessageCircle size={13} color={showComments ? HUD.accent : HUD.text3} />
-              <Text style={{ color: showComments ? HUD.accent : HUD.text3, fontSize: 11, fontWeight: "700", fontVariant: ["tabular-nums"], letterSpacing: 0.5 }}>
-                COM:{post._count?.comments || 0}
+              <MessageCircle size={14} color={showComments ? P.accent : P.text3} />
+              <Text style={{ color: showComments ? P.accent : P.text3, fontSize: 13, fontWeight: "500" }}>
+                {post._count?.comments || 0}
               </Text>
             </TouchableOpacity>
 
             <View style={{ flex: 1 }} />
+
             <TouchableOpacity
               onPress={() => saveMutation.mutate()}
-              style={{ padding: 6, borderRadius: 2, borderWidth: 1, borderColor: HUD.border }}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 100,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: P.cardElevated,
+                borderWidth: 1,
+                borderColor: P.border,
+              }}
               testID="save-button"
             >
-              <Bookmark size={14} color={HUD.text3} />
+              <Bookmark size={14} color={P.text3} />
             </TouchableOpacity>
           </View>
 
           {/* Reaction picker */}
           {showReactions ? (
-            <Animated.View entering={FadeIn.duration(150)} style={{ flexDirection: "row", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+            <Animated.View entering={FadeIn.duration(150)} style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
               {REACTION_TYPES.map((r) => (
                 <TouchableOpacity
                   key={r.id}
                   onPress={() => { reactMutation.mutate(r.id); setShowReactions(false); }}
                   style={{
-                    flexDirection: "row", alignItems: "center", gap: 4,
-                    paddingHorizontal: 12, paddingVertical: 7,
-                    borderRadius: 2,
-                    backgroundColor: myReaction?.type === r.id ? `${HUD.accent}22` : HUD.bg,
+                    width: 42,
+                    height: 42,
+                    borderRadius: 100,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: myReaction?.type === r.id ? P.accentMid : P.cardElevated,
                     borderWidth: 1,
-                    borderColor: myReaction?.type === r.id ? HUD.accent : HUD.border,
+                    borderColor: myReaction?.type === r.id ? P.borderAccent : P.border,
                   }}
                 >
-                  <Text style={{ fontSize: 14 }}>{r.emoji}</Text>
+                  <Text style={{ fontSize: 18 }}>{r.emoji}</Text>
                 </TouchableOpacity>
               ))}
             </Animated.View>
@@ -284,32 +312,49 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
 
           {/* Comments */}
           {showComments ? (
-            <View style={{ marginTop: 12 }}>
+            <View style={{ marginTop: 14 }}>
               {(comments || []).map((c: any) => (
-                <View key={c.id} style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-                  <View style={{ width: 26, height: 26, borderRadius: 2, backgroundColor: HUD.accentDim, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: HUD.border }}>
-                    <Text style={{ color: HUD.accent, fontSize: 10, fontWeight: "700" }}>{c.author?.name?.[0]}</Text>
-                  </View>
-                  <View style={{ flex: 1, backgroundColor: HUD.bg, borderRadius: 2, padding: 8, borderWidth: 1, borderColor: HUD.border }}>
-                    <Text style={{ color: HUD.text3, fontSize: 10, fontWeight: "700", marginBottom: 2, letterSpacing: 0.8, textTransform: "uppercase" }}>{c.author?.name}</Text>
-                    <Text style={{ color: HUD.text2, fontSize: 12 }}>{c.content}</Text>
+                <View key={c.id} style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+                  <Avatar uri={c.author?.image} name={c.author?.name} size={28} radius={50} />
+                  <View style={{ flex: 1, backgroundColor: P.cardElevated, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: P.border }}>
+                    <Text style={{ color: P.text2, fontSize: 12, fontWeight: "600", marginBottom: 3 }}>{c.author?.name}</Text>
+                    <Text style={{ color: P.text2, fontSize: 13, lineHeight: 18 }}>{c.content}</Text>
                   </View>
                 </View>
               ))}
-              <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 4, alignItems: "center" }}>
                 <TextInput
                   value={commentText}
                   onChangeText={setCommentText}
-                  placeholder="TRANSMIT MESSAGE..."
-                  placeholderTextColor={HUD.text3}
-                  style={{ flex: 1, backgroundColor: HUD.bg, borderRadius: 2, paddingHorizontal: 12, paddingVertical: 8, color: HUD.text, fontSize: 12, letterSpacing: 0.5, borderWidth: 1, borderColor: HUD.border }}
+                  placeholder="Add a comment..."
+                  placeholderTextColor={P.text3}
+                  style={{
+                    flex: 1,
+                    backgroundColor: P.cardElevated,
+                    borderRadius: 20,
+                    paddingHorizontal: 14,
+                    paddingVertical: 9,
+                    color: P.text,
+                    fontSize: 13,
+                    borderWidth: 1,
+                    borderColor: P.border,
+                  }}
                 />
                 <TouchableOpacity
                   onPress={() => commentMutation.mutate()}
                   disabled={!commentText.trim()}
-                  style={{ width: 36, height: 36, borderRadius: 2, backgroundColor: commentText.trim() ? HUD.accent : HUD.accentDim, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: commentText.trim() ? HUD.accent : HUD.border }}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 100,
+                    backgroundColor: commentText.trim() ? P.accent : P.cardElevated,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 1,
+                    borderColor: commentText.trim() ? P.accent : P.border,
+                  }}
                 >
-                  <Send size={13} color={commentText.trim() ? HUD.bg : HUD.text3} />
+                  <Send size={14} color={commentText.trim() ? "#fff" : P.text3} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -421,7 +466,6 @@ export default function FeedScreen() {
     }
   };
 
-  // Check if there are unread notifications (we use a background query for the badge)
   const { data: notifBadge } = useQuery({
     queryKey: ["notifications-badge"],
     queryFn: () => api.get<Notification[]>("/api/notifications"),
@@ -430,60 +474,74 @@ export default function FeedScreen() {
   const hasUnread = (notifBadge || []).some(n => !n.isRead);
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD.bg }} testID="feed-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: HUD.bg }}>
+    <View style={{ flex: 1, backgroundColor: P.bg }} testID="feed-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: P.bg }}>
         {/* Header */}
-        <View style={{ paddingHorizontal: 14, paddingTop: 10, paddingBottom: 0 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            {/* Left: system label + title */}
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700", marginBottom: 2 }}>
-                ARC REACTOR DATA FEED
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: HUD.accent, shadowColor: HUD.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 6 }} />
-                <Text style={{ fontSize: 20, fontWeight: "800", color: HUD.text, letterSpacing: 4, textTransform: "uppercase" }}>
-                  OPTURNA
-                </Text>
-                <View style={{ backgroundColor: `${HUD.accent}22`, borderWidth: 1, borderColor: HUD.accent, borderRadius: 2, paddingHorizontal: 5, paddingVertical: 1 }}>
-                  <Text style={{ color: HUD.accent, fontSize: 8, letterSpacing: 1.5, fontWeight: "700" }}>LIVE</Text>
-                </View>
-              </View>
-            </View>
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 0 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+            {/* Wordmark */}
+            <Text style={{ flex: 1, fontSize: 24, fontWeight: "800", color: "#FFFFFF", letterSpacing: -0.5 }}>
+              OPTURNA
+            </Text>
 
-            {/* Right: action buttons */}
+            {/* Right icon buttons */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <TouchableOpacity
                 onPress={() => setShowSearch(true)}
-                style={{ padding: 8, borderRadius: 2, borderWidth: 1, borderColor: HUD.border, backgroundColor: HUD.card }}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 100,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: P.card,
+                  borderWidth: 1,
+                  borderColor: P.border,
+                }}
               >
-                <Search size={18} color={HUD.text2} />
+                <Search size={17} color={P.text2} />
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ padding: 8, borderRadius: 2, borderWidth: 1, borderColor: hasUnread ? HUD.accent : HUD.border, backgroundColor: hasUnread ? `${HUD.accent}14` : HUD.card, marginLeft: 2 }}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 100,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: hasUnread ? P.accentSoft : P.card,
+                  borderWidth: 1,
+                  borderColor: hasUnread ? P.borderAccent : P.border,
+                }}
                 onPress={() => setShowNotifications(true)}
                 testID="bell-button"
               >
                 <View>
-                  <Bell size={18} color={hasUnread ? HUD.accent : HUD.text2} />
+                  <Bell size={17} color={hasUnread ? P.accent : P.text2} />
                   {hasUnread ? (
-                    <View style={{ position: "absolute", top: -3, right: -3, width: 7, height: 7, borderRadius: 1, backgroundColor: HUD.error, borderWidth: 1, borderColor: HUD.bg }} />
+                    <View style={{
+                      position: "absolute",
+                      top: -3,
+                      right: -3,
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: P.error,
+                      borderWidth: 1.5,
+                      borderColor: P.bg,
+                    }} />
                   ) : null}
                 </View>
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Scan-line divider */}
-          <HudScanLine />
         </View>
 
-        {/* Category filter bar */}
+        {/* Category filter pills */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ flexGrow: 0 }}
-          contentContainerStyle={{ paddingHorizontal: 14, gap: 6, paddingVertical: 10 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
         >
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -493,20 +551,23 @@ export default function FeedScreen() {
                 key={cat.id}
                 onPress={() => setCategory(cat.id)}
                 style={{
-                  flexDirection: "row", alignItems: "center", gap: 5,
-                  paddingHorizontal: 12, paddingVertical: 6,
-                  borderRadius: 2,
-                  backgroundColor: isActive ? `${HUD.accent}22` : HUD.card,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 100,
+                  backgroundColor: isActive ? P.accentMid : P.card,
                   borderWidth: 1,
-                  borderColor: isActive ? HUD.accent : HUD.border,
-                  shadowColor: isActive ? HUD.accent : "transparent",
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: isActive ? 0.5 : 0,
-                  shadowRadius: isActive ? 8 : 0,
+                  borderColor: isActive ? P.borderAccent : P.border,
                 }}
               >
-                <Icon size={12} color={isActive ? HUD.accent : HUD.text3} />
-                <Text style={{ color: isActive ? HUD.accent : HUD.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1.2, textTransform: "uppercase" }}>
+                <Icon size={13} color={isActive ? P.accent : P.text3} />
+                <Text style={{
+                  color: isActive ? P.accent : P.text3,
+                  fontSize: 13,
+                  fontWeight: isActive ? "600" : "400",
+                }}>
                   {t(cat.labelKey)}
                 </Text>
               </TouchableOpacity>
@@ -517,9 +578,9 @@ export default function FeedScreen() {
 
       {isLoading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-          <ActivityIndicator color={HUD.accent} size="large" />
-          <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginTop: 12, fontWeight: "600" }}>
-            LOADING INTEL...
+          <ActivityIndicator color={P.accent} size="large" />
+          <Text style={{ color: P.text3, fontSize: 13, marginTop: 14, fontWeight: "400" }}>
+            Loading your feed...
           </Text>
         </View>
       ) : (
@@ -527,21 +588,28 @@ export default function FeedScreen() {
           data={posts || []}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <PostCard post={item} currentUserId={session?.user?.id || ""} colors={colors} />}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={HUD.accent} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={P.accent} />}
           contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
           testID="posts-list"
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }}>
-              <View style={{ width: 60, height: 60, borderRadius: 4, borderWidth: 1, borderColor: HUD.accentDim, alignItems: "center", justifyContent: "center", marginBottom: 20, backgroundColor: `${HUD.accent}0A` }}>
-                <Sparkles size={28} color={HUD.text3} />
+              <View style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 20,
+              }}>
+                <Sparkles size={28} color={P.text3} />
               </View>
-              <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700", marginBottom: 8 }}>
-                NO DATA STREAMS
-              </Text>
-              <Text style={{ color: HUD.text, fontSize: 16, fontWeight: "700", marginBottom: 8, textAlign: "center", letterSpacing: 0.5 }}>
+              <Text style={{ color: P.text, fontSize: 18, fontWeight: "700", marginBottom: 8, textAlign: "center" }}>
                 {t("noFeed")}
               </Text>
-              <Text style={{ color: HUD.text3, fontSize: 13, textAlign: "center", lineHeight: 22, letterSpacing: 0.3 }}>
+              <Text style={{ color: P.text3, fontSize: 14, textAlign: "center", lineHeight: 22 }}>
                 {t("noFeedDesc")}
               </Text>
             </View>
@@ -554,15 +622,19 @@ export default function FeedScreen() {
         onPress={() => setShowCompose(true)}
         testID="compose-button"
         style={{
-          position: "absolute", bottom: 100, right: 16,
-          width: 52, height: 52, borderRadius: 4,
-          backgroundColor: HUD.error,
-          alignItems: "center", justifyContent: "center",
-          borderWidth: 1, borderColor: "#FF6B63",
-          shadowColor: HUD.error,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.7,
-          shadowRadius: 14,
+          position: "absolute",
+          bottom: 104,
+          right: 18,
+          width: 52,
+          height: 52,
+          borderRadius: 100,
+          backgroundColor: P.accent,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: P.accent,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.45,
+          shadowRadius: 12,
           elevation: 10,
         }}
       >
@@ -571,64 +643,102 @@ export default function FeedScreen() {
 
       {/* Notifications Modal */}
       <Modal visible={showNotifications} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: HUD.border }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700", marginBottom: 2 }}>SYSTEM</Text>
-              <Text style={{ color: HUD.text, fontSize: 16, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>ALERTS</Text>
-            </View>
+        <View style={{ flex: 1, backgroundColor: P.bg }}>
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: P.border,
+          }}>
+            <Text style={{ flex: 1, color: P.text, fontSize: 20, fontWeight: "700" }}>Notifications</Text>
             <TouchableOpacity
               onPress={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending || unreadCount === 0}
-              style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 2, backgroundColor: HUD.card, borderWidth: 1, borderColor: HUD.accentDim, marginRight: 10 }}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: 100,
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+                marginRight: 10,
+              }}
               testID="mark-all-read-button"
             >
-              <Text style={{ color: HUD.accent, fontSize: 10, fontWeight: "700", letterSpacing: 1 }}>CLEAR ALL</Text>
+              <Text style={{ color: P.accent, fontSize: 13, fontWeight: "500" }}>Mark all read</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowNotifications(false)}
-              style={{ padding: 6, borderRadius: 2, borderWidth: 1, borderColor: HUD.border, backgroundColor: HUD.card }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 100,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+              }}
             >
-              <X size={18} color={HUD.text2} />
+              <X size={16} color={P.text2} />
             </TouchableOpacity>
           </View>
           <FlatList
             data={notifications || []}
             keyExtractor={(n) => n.id}
-            contentContainerStyle={{ padding: 14 }}
+            contentContainerStyle={{ padding: 16 }}
             renderItem={({ item }) => (
               <View
                 testID={`notification-${item.id}`}
                 style={{
-                  flexDirection: "row", alignItems: "flex-start",
-                  padding: 12, borderRadius: 2,
-                  backgroundColor: item.isRead ? HUD.card : `${HUD.accent}0F`,
-                  marginBottom: 6,
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  padding: 14,
+                  borderRadius: 16,
+                  backgroundColor: item.isRead ? P.card : "rgba(0,180,216,0.07)",
+                  marginBottom: 8,
                   borderWidth: 1,
-                  borderColor: item.isRead ? HUD.border : `${HUD.accent}44`,
-                  borderLeftWidth: item.isRead ? 1 : 2,
-                  borderLeftColor: item.isRead ? HUD.border : HUD.accent,
+                  borderColor: item.isRead ? P.border : P.borderAccent,
                 }}
               >
                 {!item.isRead ? (
-                  <View style={{ width: 6, height: 6, borderRadius: 1, backgroundColor: HUD.accent, marginTop: 4, marginRight: 10, shadowColor: HUD.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 4 }} />
+                  <View style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 4,
+                    backgroundColor: P.accent,
+                    marginTop: 5,
+                    marginRight: 10,
+                  }} />
                 ) : (
-                  <View style={{ width: 6, marginRight: 10 }} />
+                  <View style={{ width: 7, marginRight: 10 }} />
                 )}
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: HUD.text, fontWeight: "700", fontSize: 13, marginBottom: 2, letterSpacing: 0.3 }}>{item.title}</Text>
-                  {item.body ? <Text style={{ color: HUD.text3, fontSize: 12, lineHeight: 18, letterSpacing: 0.2 }}>{item.body}</Text> : null}
+                  <Text style={{ color: P.text, fontWeight: "600", fontSize: 14, marginBottom: 3 }}>{item.title}</Text>
+                  {item.body ? <Text style={{ color: P.text3, fontSize: 13, lineHeight: 19 }}>{item.body}</Text> : null}
                 </View>
               </View>
             )}
             ListEmptyComponent={
               <View style={{ alignItems: "center", paddingTop: 60 }}>
-                <View style={{ width: 52, height: 52, borderRadius: 4, borderWidth: 1, borderColor: HUD.accentDim, alignItems: "center", justifyContent: "center", marginBottom: 14, backgroundColor: `${HUD.accent}08` }}>
-                  <Bell size={26} color={HUD.text3} />
+                <View style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 18,
+                  backgroundColor: P.card,
+                  borderWidth: 1,
+                  borderColor: P.border,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 14,
+                }}>
+                  <Bell size={26} color={P.text3} />
                 </View>
-                <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", fontWeight: "600" }}>
-                  NO INCOMING SIGNALS
-                </Text>
+                <Text style={{ color: P.text2, fontSize: 16, fontWeight: "600", marginBottom: 6 }}>All caught up</Text>
+                <Text style={{ color: P.text3, fontSize: 13 }}>No new notifications</Text>
               </View>
             }
           />
@@ -637,31 +747,50 @@ export default function FeedScreen() {
 
       {/* Search Modal */}
       <Modal visible={showSearch} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg, padding: 14 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 }}>
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: HUD.card, borderRadius: 2, paddingHorizontal: 12, gap: 8, borderWidth: 1, borderColor: HUD.accentDim }}>
-              <Search size={15} color={HUD.accent} />
+        <View style={{ flex: 1, backgroundColor: P.bg, padding: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20, marginTop: 8 }}>
+            <View style={{
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: P.card,
+              borderRadius: 14,
+              paddingHorizontal: 12,
+              gap: 8,
+              borderWidth: 1,
+              borderColor: P.border,
+            }}>
+              <Search size={15} color={P.text3} />
               <TextInput
                 value={searchQ}
                 onChangeText={setSearchQ}
-                placeholder={t("searchUsers").toUpperCase()}
-                placeholderTextColor={HUD.text3}
-                style={{ flex: 1, color: HUD.text, fontSize: 13, paddingVertical: 11, letterSpacing: 1 }}
+                placeholder={t("searchUsers")}
+                placeholderTextColor={P.text3}
+                style={{ flex: 1, color: P.text, fontSize: 15, paddingVertical: 12 }}
                 autoFocus
               />
             </View>
             <TouchableOpacity
               onPress={() => { setShowSearch(false); setSearchQ(""); }}
-              style={{ padding: 8, borderRadius: 2, borderWidth: 1, borderColor: HUD.border, backgroundColor: HUD.card }}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 100,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+              }}
             >
-              <X size={18} color={HUD.text2} />
+              <X size={16} color={P.text2} />
             </TouchableOpacity>
           </View>
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700" }}>
-              AGENT DIRECTORY
-            </Text>
-          </View>
+          {searchQ.length < 2 ? (
+            <View style={{ alignItems: "center", paddingTop: 60 }}>
+              <Text style={{ color: P.text3, fontSize: 14 }}>Start typing to find people</Text>
+            </View>
+          ) : null}
           <FlatList
             data={searchResults || []}
             keyExtractor={(u) => u.id}
@@ -669,16 +798,23 @@ export default function FeedScreen() {
               <Pressable
                 onPress={() => { setSelectedUser(item); setShowSearch(false); }}
                 testID={`search-result-${item.id}`}
-                style={{ flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: HUD.border }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  borderRadius: 14,
+                  backgroundColor: P.card,
+                  marginBottom: 8,
+                  borderWidth: 1,
+                  borderColor: P.border,
+                }}
               >
-                <View style={{ width: 40, height: 40, borderRadius: 2, borderWidth: 1.5, borderColor: HUD.accent, marginRight: 12, alignItems: "center", justifyContent: "center", backgroundColor: HUD.accentDim, overflow: "hidden" }}>
-                  {item.image ? <Image source={{ uri: item.image }} style={{ width: 40, height: 40 }} /> : (
-                    <Text style={{ color: HUD.accent, fontWeight: "700", fontSize: 15 }}>{item.name?.[0]}</Text>
-                  )}
-                </View>
-                <View>
-                  <Text style={{ color: HUD.text, fontWeight: "700", fontSize: 14, letterSpacing: 0.5 }}>{item.name}</Text>
-                  {item.username ? <Text style={{ color: HUD.text3, fontSize: 11, letterSpacing: 0.5 }}>@{item.username}</Text> : null}
+                <Avatar uri={item.image} name={item.name} size={44} radius={50} />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={{ color: P.text, fontWeight: "600", fontSize: 15 }}>{item.name}</Text>
+                  {item.username ? (
+                    <Text style={{ color: P.text3, fontSize: 13, marginTop: 1 }}>@{item.username}</Text>
+                  ) : null}
                 </View>
               </Pressable>
             )}
@@ -686,61 +822,88 @@ export default function FeedScreen() {
         </View>
       </Modal>
 
-      {/* User Profile Modal (from search) */}
+      {/* User Profile Modal */}
       <Modal visible={!!selectedUser} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: HUD.border }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700", marginBottom: 2 }}>AGENT</Text>
-              <Text style={{ color: HUD.text, fontSize: 16, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>PROFILE</Text>
-            </View>
+        <View style={{ flex: 1, backgroundColor: P.bg }}>
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: P.border,
+          }}>
+            <Text style={{ flex: 1, color: P.text, fontSize: 20, fontWeight: "700" }}>Profile</Text>
             <TouchableOpacity
               onPress={() => setSelectedUser(null)}
-              style={{ padding: 8, borderRadius: 2, borderWidth: 1, borderColor: HUD.border, backgroundColor: HUD.card }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 100,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+              }}
             >
-              <X size={18} color={HUD.text2} />
+              <X size={16} color={P.text2} />
             </TouchableOpacity>
           </View>
-          <ScrollView contentContainerStyle={{ padding: 20 }}>
+          <ScrollView contentContainerStyle={{ padding: 24 }}>
             {selectedUserProfile ? (
               <>
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  {/* Avatar with HUD ring */}
-                  <View style={{ position: "relative", marginBottom: 14 }}>
-                    <View style={{ width: 84, height: 84, borderRadius: 4, borderWidth: 2, borderColor: HUD.accent, alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: HUD.accentDim, shadowColor: HUD.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 }}>
-                      {selectedUserProfile.image
-                        ? <Image source={{ uri: selectedUserProfile.image }} style={{ width: 84, height: 84 }} />
-                        : <Text style={{ color: HUD.accent, fontWeight: "800", fontSize: 32 }}>{selectedUserProfile.name?.[0]?.toUpperCase()}</Text>
-                      }
-                    </View>
-                    {/* Corner accents */}
-                    <View style={{ position: "absolute", top: -3, left: -3, width: 10, height: 10, borderTopWidth: 2, borderLeftWidth: 2, borderColor: HUD.accent }} />
-                    <View style={{ position: "absolute", top: -3, right: -3, width: 10, height: 10, borderTopWidth: 2, borderRightWidth: 2, borderColor: HUD.accent }} />
-                    <View style={{ position: "absolute", bottom: -3, left: -3, width: 10, height: 10, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: HUD.accent }} />
-                    <View style={{ position: "absolute", bottom: -3, right: -3, width: 10, height: 10, borderBottomWidth: 2, borderRightWidth: 2, borderColor: HUD.accent }} />
-                  </View>
-
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <Text style={{ color: HUD.text, fontWeight: "800", fontSize: 18, letterSpacing: 1 }}>{selectedUserProfile.name}</Text>
-                    {selectedUserProfile.isVerified ? <CheckCircle size={14} color={HUD.accent} fill={HUD.accent} /> : null}
+                <View style={{ alignItems: "center", marginBottom: 24 }}>
+                  <Avatar
+                    uri={selectedUserProfile.image}
+                    name={selectedUserProfile.name}
+                    size={86}
+                    radius={50}
+                  />
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 14, marginBottom: 4 }}>
+                    <Text style={{ color: P.text, fontWeight: "700", fontSize: 20 }}>{selectedUserProfile.name}</Text>
+                    {selectedUserProfile.isVerified ? (
+                      <CheckCircle size={15} color={P.accent} fill={P.accent} />
+                    ) : null}
                   </View>
                   {selectedUserProfile.username ? (
-                    <Text style={{ color: HUD.text3, fontSize: 12, marginBottom: 8, letterSpacing: 1 }}>@{selectedUserProfile.username}</Text>
+                    <Text style={{ color: P.text3, fontSize: 14, marginBottom: 10 }}>@{selectedUserProfile.username}</Text>
                   ) : null}
                   {selectedUserProfile.bio ? (
-                    <Text style={{ color: HUD.text2, fontSize: 13, lineHeight: 20, textAlign: "center", marginBottom: 16, letterSpacing: 0.2 }}>{selectedUserProfile.bio}</Text>
+                    <Text style={{ color: P.text2, fontSize: 14, lineHeight: 21, textAlign: "center", marginBottom: 20 }}>
+                      {selectedUserProfile.bio}
+                    </Text>
                   ) : null}
 
                   {/* Stats */}
-                  <View style={{ flexDirection: "row", gap: 1, marginBottom: 20, borderWidth: 1, borderColor: HUD.border, borderRadius: 2, overflow: "hidden" }}>
+                  <View style={{
+                    flexDirection: "row",
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: P.border,
+                    overflow: "hidden",
+                    backgroundColor: P.card,
+                    marginBottom: 24,
+                    width: "100%",
+                  }}>
                     {[
-                      { label: "FOLLOWERS", value: selectedUserProfile._count?.followers ?? 0 },
-                      { label: "FOLLOWING", value: selectedUserProfile._count?.following ?? 0 },
-                      { label: "POSTS", value: selectedUserProfile._count?.posts ?? 0 },
+                      { label: "Followers", value: selectedUserProfile._count?.followers ?? 0 },
+                      { label: "Following", value: selectedUserProfile._count?.following ?? 0 },
+                      { label: "Posts", value: selectedUserProfile._count?.posts ?? 0 },
                     ].map((stat, i) => (
-                      <View key={stat.label} style={{ flex: 1, alignItems: "center", paddingVertical: 12, backgroundColor: HUD.card, borderRightWidth: i < 2 ? 1 : 0, borderRightColor: HUD.border }}>
-                        <Text style={{ color: HUD.accent, fontWeight: "800", fontSize: 18, fontVariant: ["tabular-nums"] }}>{stat.value}</Text>
-                        <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2, fontWeight: "600" }}>{stat.label}</Text>
+                      <View
+                        key={stat.label}
+                        style={{
+                          flex: 1,
+                          alignItems: "center",
+                          paddingVertical: 14,
+                          borderRightWidth: i < 2 ? 1 : 0,
+                          borderRightColor: P.border,
+                        }}
+                      >
+                        <Text style={{ color: P.text, fontWeight: "700", fontSize: 20 }}>{stat.value}</Text>
+                        <Text style={{ color: P.text3, fontSize: 11, marginTop: 2, fontWeight: "500" }}>{stat.label}</Text>
                       </View>
                     ))}
                   </View>
@@ -750,32 +913,30 @@ export default function FeedScreen() {
                     disabled={followMutation.isPending}
                     testID="follow-button"
                     style={{
-                      flexDirection: "row", alignItems: "center", gap: 8,
-                      backgroundColor: `${HUD.accent}22`,
-                      paddingHorizontal: 28, paddingVertical: 12,
-                      borderRadius: 2,
-                      borderWidth: 1, borderColor: HUD.accent,
-                      shadowColor: HUD.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      backgroundColor: P.accent,
+                      paddingHorizontal: 32,
+                      paddingVertical: 13,
+                      borderRadius: 100,
                     }}
                   >
-                    {followMutation.isPending
-                      ? <ActivityIndicator color={HUD.accent} size="small" />
-                      : (
-                        <>
-                          <UserPlus size={15} color={HUD.accent} />
-                          <Text style={{ color: HUD.accent, fontWeight: "700", fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>FOLLOW</Text>
-                        </>
-                      )
-                    }
+                    {followMutation.isPending ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <UserPlus size={15} color="#fff" />
+                        <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>Follow</Text>
+                      </>
+                    )}
                   </TouchableOpacity>
                 </View>
               </>
             ) : (
               <View style={{ alignItems: "center", paddingTop: 40 }}>
-                <ActivityIndicator color={HUD.accent} />
-                <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginTop: 10, fontWeight: "600" }}>
-                  LOADING AGENT DATA...
-                </Text>
+                <ActivityIndicator color={P.accent} />
+                <Text style={{ color: P.text3, fontSize: 13, marginTop: 12 }}>Loading profile...</Text>
               </View>
             )}
           </ScrollView>
@@ -784,49 +945,66 @@ export default function FeedScreen() {
 
       {/* Compose Modal */}
       <Modal visible={showCompose} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: HUD.border }}>
+        <View style={{ flex: 1, backgroundColor: P.bg }}>
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: P.border,
+          }}>
             <TouchableOpacity
               onPress={() => { setShowCompose(false); setPickedMedia(null); }}
-              style={{ marginRight: 14, padding: 6, borderRadius: 2, borderWidth: 1, borderColor: HUD.border, backgroundColor: HUD.card }}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 100,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: P.card,
+                borderWidth: 1,
+                borderColor: P.border,
+                marginRight: 14,
+              }}
             >
-              <X size={16} color={HUD.text2} />
+              <X size={16} color={P.text2} />
             </TouchableOpacity>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: HUD.text3, fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontWeight: "700", marginBottom: 1 }}>TRANSMIT</Text>
-              <Text style={{ color: HUD.text, fontSize: 14, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>{t("newPost")}</Text>
-            </View>
+            <Text style={{ flex: 1, color: P.text, fontSize: 17, fontWeight: "700" }}>{t("newPost")}</Text>
             <TouchableOpacity
               onPress={() => createPost.mutate()}
               disabled={!newPost.content.trim() || createPost.isPending || uploadingMedia}
               testID="submit-post-button"
               style={{
-                backgroundColor: !newPost.content.trim() || createPost.isPending ? HUD.card : `${HUD.accent}22`,
-                paddingHorizontal: 16, paddingVertical: 8, borderRadius: 2,
-                borderWidth: 1,
-                borderColor: !newPost.content.trim() || createPost.isPending ? HUD.border : HUD.accent,
-                opacity: !newPost.content.trim() || createPost.isPending ? 0.5 : 1,
-                shadowColor: HUD.accent,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: newPost.content.trim() ? 0.4 : 0,
-                shadowRadius: 8,
+                backgroundColor: !newPost.content.trim() || createPost.isPending ? P.card : P.accent,
+                paddingHorizontal: 18,
+                paddingVertical: 9,
+                borderRadius: 100,
+                opacity: !newPost.content.trim() ? 0.5 : 1,
               }}
             >
-              {createPost.isPending || uploadingMedia ? <ActivityIndicator color={HUD.accent} size="small" /> : (
-                <Text style={{ color: HUD.accent, fontWeight: "700", fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>{t("post")}</Text>
+              {createPost.isPending || uploadingMedia ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={{
+                  color: !newPost.content.trim() ? P.text3 : "#fff",
+                  fontWeight: "600",
+                  fontSize: 14,
+                }}>
+                  {t("post")}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
             {/* Author row */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 18 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 2, borderWidth: 1.5, borderColor: HUD.accent, alignItems: "center", justifyContent: "center", backgroundColor: HUD.accentDim }}>
-                <Text style={{ color: HUD.accent, fontWeight: "700", fontSize: 16 }}>{session?.user?.name?.[0]?.toUpperCase()}</Text>
-              </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <Avatar uri={null} name={session?.user?.name} size={42} radius={50} />
               <View>
-                <Text style={{ color: HUD.text, fontWeight: "700", fontSize: 14, letterSpacing: 0.5 }}>{session?.user?.name}</Text>
-                <Text style={{ color: HUD.text3, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase" }}>{t("sharingWith")}</Text>
+                <Text style={{ color: P.text, fontWeight: "600", fontSize: 15 }}>{session?.user?.name}</Text>
+                <Text style={{ color: P.text3, fontSize: 12, marginTop: 1 }}>{t("sharingWith")}</Text>
               </View>
             </View>
 
@@ -834,76 +1012,114 @@ export default function FeedScreen() {
               value={newPost.content}
               onChangeText={(text) => setNewPost(p => ({ ...p, content: text }))}
               placeholder={t("shareSomething")}
-              placeholderTextColor={HUD.text3}
+              placeholderTextColor={P.text3}
               multiline
               testID="post-content-input"
-              style={{ color: HUD.text, fontSize: 15, lineHeight: 24, minHeight: 120, marginBottom: 16, letterSpacing: 0.3 }}
+              style={{
+                color: P.text,
+                fontSize: 16,
+                lineHeight: 25,
+                minHeight: 120,
+                marginBottom: 16,
+              }}
               autoFocus
             />
 
-            <HudScanLine />
+            <Divider />
 
-            {/* Media picker */}
-            <View style={{ marginVertical: 18 }}>
+            {/* Media */}
+            <View style={{ marginVertical: 16 }}>
               {pickedMedia ? (
-                <View style={{ borderRadius: 4, overflow: "hidden", marginBottom: 10, position: "relative", borderWidth: 1, borderColor: HUD.accentDim }}>
+                <View style={{ borderRadius: 14, overflow: "hidden", marginBottom: 12, position: "relative" }}>
                   <Image source={{ uri: pickedMedia.uri }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
                   <TouchableOpacity
                     onPress={() => setPickedMedia(null)}
-                    style={{ position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: 2, backgroundColor: "rgba(2,11,24,0.85)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: HUD.error }}
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 100,
+                      backgroundColor: "rgba(0,0,0,0.6)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    <X size={12} color={HUD.error} />
+                    <X size={13} color="#fff" />
                   </TouchableOpacity>
                 </View>
               ) : null}
               <TouchableOpacity
                 onPress={pickMedia}
                 testID="pick-media-button"
-                style={{ flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 2, backgroundColor: HUD.card, borderWidth: 1, borderColor: HUD.border, alignSelf: "flex-start" }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 7,
+                  paddingHorizontal: 14,
+                  paddingVertical: 9,
+                  borderRadius: 100,
+                  backgroundColor: P.card,
+                  borderWidth: 1,
+                  borderColor: P.border,
+                  alignSelf: "flex-start",
+                }}
               >
-                <ImageIcon size={14} color={HUD.text3} />
-                <Text style={{ color: HUD.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>
-                  {pickedMedia ? "CHANGE MEDIA" : "ATTACH MEDIA"}
+                <ImageIcon size={14} color={P.text3} />
+                <Text style={{ color: P.text3, fontSize: 13, fontWeight: "500" }}>
+                  {pickedMedia ? "Change media" : "Add media"}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={{ color: HUD.text3, fontSize: 9, fontWeight: "700", letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 }}>
-              CLASSIFY // {t("category")}
+            <Text style={{ color: P.text3, fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+              {t("category")}
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
               {CATEGORIES.filter(c => c.id !== "all").map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   onPress={() => setNewPost(p => ({ ...p, category: cat.id }))}
                   style={{
-                    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 2,
-                    backgroundColor: newPost.category === cat.id ? `${HUD.accent}22` : HUD.card,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 100,
+                    backgroundColor: newPost.category === cat.id ? P.accentMid : P.card,
                     borderWidth: 1,
-                    borderColor: newPost.category === cat.id ? HUD.accent : HUD.border,
-                    shadowColor: newPost.category === cat.id ? HUD.accent : "transparent",
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: newPost.category === cat.id ? 0.4 : 0,
-                    shadowRadius: 6,
+                    borderColor: newPost.category === cat.id ? P.borderAccent : P.border,
                   }}
                 >
-                  <Text style={{ color: newPost.category === cat.id ? HUD.accent : HUD.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>
+                  <Text style={{
+                    color: newPost.category === cat.id ? P.accent : P.text3,
+                    fontSize: 13,
+                    fontWeight: newPost.category === cat.id ? "600" : "400",
+                  }}>
                     {t(cat.labelKey)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={{ color: HUD.text3, fontSize: 9, fontWeight: "700", letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 }}>
-              TAG PROTOCOLS // {t("hashtags")}
+            <Text style={{ color: P.text3, fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+              {t("hashtags")}
             </Text>
             <TextInput
               value={newPost.hashtags}
               onChangeText={(text) => setNewPost(p => ({ ...p, hashtags: text }))}
               placeholder="productivity, mindset, negocios"
-              placeholderTextColor={HUD.text3}
+              placeholderTextColor={P.text3}
               testID="hashtags-input"
-              style={{ backgroundColor: HUD.card, borderRadius: 2, paddingHorizontal: 12, paddingVertical: 11, color: HUD.text, fontSize: 13, letterSpacing: 0.5, borderWidth: 1, borderColor: HUD.border }}
+              style={{
+                backgroundColor: P.card,
+                borderRadius: 14,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: P.text,
+                fontSize: 14,
+                borderWidth: 1,
+                borderColor: P.border,
+              }}
             />
           </ScrollView>
         </View>

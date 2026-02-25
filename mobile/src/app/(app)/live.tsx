@@ -9,13 +9,21 @@ import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withRepeat, wit
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/auth/use-session";
 
-const HUD_BG = "#020B18";
-const HUD_CARD = "#041525";
-const HUD_ACCENT = "#00B4D8";
-const HUD_RED = "#FF3B30";
-const HUD_TEXT = "#C8E8FF";
-const HUD_TEXT_DIM = "#7DB8D9";
-const HUD_BORDER = "#0A2A40";
+const DS = {
+  bg: "#0A0F1E",
+  card: "#111827",
+  cardAlt: "#0F172A",
+  cyan: "#00B4D8",
+  cyanSoft: "rgba(0,180,216,0.12)",
+  cyanBorder: "rgba(0,180,216,0.25)",
+  red: "#FF3B30",
+  redSoft: "rgba(255,59,48,0.12)",
+  redBorder: "rgba(255,59,48,0.30)",
+  textPrimary: "#F1F5F9",
+  textSecondary: "#94A3B8",
+  textMuted: "#475569",
+  border: "rgba(255,255,255,0.06)",
+};
 
 interface LiveItem {
   id: string;
@@ -47,7 +55,7 @@ function PulsingDot({ color }: { color: string }) {
   return (
     <Animated.View
       style={[
-        { width: 8, height: 8, borderRadius: 4, backgroundColor: color },
+        { width: 8, height: 8, borderRadius: 100, backgroundColor: color },
         animStyle,
       ]}
     />
@@ -77,18 +85,20 @@ function BroadcastingBadge() {
           flexDirection: "row",
           alignItems: "center",
           gap: 6,
-          backgroundColor: "rgba(255,59,48,0.15)",
-          paddingHorizontal: 12,
-          paddingVertical: 6,
+          backgroundColor: DS.redSoft,
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          borderRadius: 100,
           borderWidth: 1,
-          borderColor: HUD_RED,
+          borderColor: DS.redBorder,
+          marginTop: 12,
         },
         animStyle,
       ]}
     >
-      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: HUD_RED }} />
-      <Text style={{ color: HUD_RED, fontWeight: "700", fontSize: 12, letterSpacing: 2 }}>
-        BROADCASTING
+      <View style={{ width: 6, height: 6, borderRadius: 100, backgroundColor: DS.red }} />
+      <Text style={{ color: DS.red, fontWeight: "700", fontSize: 13 }}>
+        Broadcasting
       </Text>
     </Animated.View>
   );
@@ -141,58 +151,25 @@ export default function LiveScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD_BG }} testID="live-screen">
-      {/* Scanline overlay top accent */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 1,
-          backgroundColor: HUD_ACCENT,
-          opacity: 0.4,
-          zIndex: 10,
-        }}
-      />
-
+    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="live-screen">
       <SafeAreaView edges={["top"]}>
         {/* Header */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingTop: 14,
-            paddingBottom: 12,
-            borderBottomWidth: 1,
-            borderBottomColor: HUD_BORDER,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
-            <View>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  color: HUD_ACCENT,
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                  marginBottom: 2,
-                }}
-              >
-                BROADCAST NETWORK
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <PulsingDot color={HUD_RED} />
-                <Text
-                  style={{
-                    fontSize: 22,
-                    fontWeight: "800",
-                    color: HUD_TEXT,
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  LIVE FEED
+        <View style={{
+          paddingHorizontal: 20,
+          paddingTop: 14,
+          paddingBottom: 12,
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <PulsingDot color={DS.red} />
+                <Text style={{
+                  fontSize: 28,
+                  fontWeight: "800",
+                  color: DS.textPrimary,
+                  letterSpacing: -0.5,
+                }}>
+                  Live
                 </Text>
               </View>
             </View>
@@ -204,20 +181,20 @@ export default function LiveScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 6,
-                backgroundColor: pressed ? "#CC2E26" : HUD_RED,
-                paddingHorizontal: 14,
+                backgroundColor: pressed ? "#CC2E26" : DS.red,
+                paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 2,
-                shadowColor: HUD_RED,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.6,
-                shadowRadius: 8,
+                borderRadius: 100,
+                shadowColor: DS.red,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
                 elevation: 6,
               })}
             >
-              <Radio size={13} color="#fff" />
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>
-                INITIATE BROADCAST
+              <Radio size={14} color="#fff" />
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>
+                Go live
               </Text>
             </Pressable>
           </View>
@@ -226,37 +203,30 @@ export default function LiveScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
 
-        {/* Active Transmissions */}
+        {/* Active lives */}
         {activeLives.length > 0 ? (
           <View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <PulsingDot color={HUD_RED} />
-              <Text
-                style={{
-                  color: HUD_RED,
-                  fontWeight: "800",
-                  fontSize: 10,
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                }}
-              >
-                ACTIVE TRANSMISSIONS
+              <PulsingDot color={DS.red} />
+              <Text style={{ color: DS.red, fontWeight: "700", fontSize: 12 }}>
+                Happening now
               </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: HUD_BORDER, marginLeft: 4 }} />
             </View>
             {activeLives.map((live, i) => (
               <Animated.View key={live.id} entering={FadeInDown.duration(300).delay(i * 60)}>
                 <Pressable
                   testID={`live-card-${live.id}`}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#062035" : HUD_CARD,
-                    borderRadius: 4,
-                    marginBottom: 12,
+                    backgroundColor: pressed ? "#161E2E" : DS.card,
+                    borderRadius: 20,
+                    marginBottom: 14,
                     overflow: "hidden",
-                    borderLeftWidth: 2,
-                    borderLeftColor: HUD_RED,
                     borderWidth: 1,
-                    borderColor: HUD_BORDER,
+                    borderColor: DS.border,
+                    shadowColor: "#000",
+                    shadowOpacity: 0.15,
+                    shadowRadius: 20,
+                    shadowOffset: { width: 0, height: 4 },
                   })}
                   onPress={() => Alert.alert(t("livesTitle"), `${t("joinLive")}: ${live.host}`)}
                 >
@@ -264,121 +234,114 @@ export default function LiveScreen() {
                   <View
                     style={{
                       height: 140,
-                      backgroundColor: "#020D18",
+                      backgroundColor: DS.cardAlt,
                       alignItems: "center",
                       justifyContent: "center",
-                      borderBottomWidth: 1,
-                      borderBottomColor: HUD_BORDER,
                     }}
                   >
-                    {/* Corner brackets */}
-                    <View style={{ position: "absolute", top: 8, left: 8, width: 16, height: 16, borderTopWidth: 2, borderLeftWidth: 2, borderColor: HUD_ACCENT, opacity: 0.7 }} />
-                    <View style={{ position: "absolute", top: 8, right: 8, width: 16, height: 16, borderTopWidth: 2, borderRightWidth: 2, borderColor: HUD_ACCENT, opacity: 0.7 }} />
-                    <View style={{ position: "absolute", bottom: 8, left: 8, width: 16, height: 16, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: HUD_ACCENT, opacity: 0.7 }} />
-                    <View style={{ position: "absolute", bottom: 8, right: 8, width: 16, height: 16, borderBottomWidth: 2, borderRightWidth: 2, borderColor: HUD_ACCENT, opacity: 0.7 }} />
-
-                    {/* LIVE badge */}
+                    {/* LIVE badge - red pill with pulse */}
                     <View
                       style={{
                         position: "absolute",
-                        top: 10,
-                        left: 10,
+                        top: 12,
+                        left: 12,
                         flexDirection: "row",
                         alignItems: "center",
                         gap: 5,
-                        backgroundColor: HUD_RED,
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 2,
+                        backgroundColor: DS.red,
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 100,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>● LIVE</Text>
+                      <PulsingDot color="#fff" />
+                      <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>LIVE</Text>
                     </View>
 
                     {/* Viewer count */}
                     <View
                       style={{
                         position: "absolute",
-                        top: 10,
-                        right: 44,
+                        top: 12,
+                        right: 52,
                         flexDirection: "row",
                         alignItems: "center",
                         gap: 4,
-                        backgroundColor: "rgba(0,0,0,0.7)",
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 2,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 100,
                         borderWidth: 1,
-                        borderColor: HUD_BORDER,
+                        borderColor: DS.border,
                       }}
                     >
-                      <Users size={10} color={HUD_ACCENT} />
-                      <Text style={{ color: HUD_TEXT, fontSize: 11, fontWeight: "700" }}>{live.viewers}</Text>
+                      <Users size={10} color={DS.textSecondary} />
+                      <Text style={{ color: DS.textPrimary, fontSize: 11, fontWeight: "700" }}>{live.viewers}</Text>
                     </View>
 
-                    {/* Delete button */}
+                    {/* Delete button - circular */}
                     <Pressable
                       onPress={() => handleDelete(live.id)}
                       testID={`delete-live-${live.id}`}
                       style={({ pressed }) => ({
                         position: "absolute",
-                        top: 8,
-                        right: 8,
-                        width: 30,
-                        height: 30,
-                        borderRadius: 2,
-                        backgroundColor: pressed ? "rgba(255,59,48,0.2)" : "rgba(0,0,0,0.6)",
+                        top: 10,
+                        right: 10,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 100,
+                        backgroundColor: pressed ? DS.redSoft : "rgba(0,0,0,0.6)",
                         alignItems: "center",
                         justifyContent: "center",
                         borderWidth: 1,
-                        borderColor: "rgba(255,59,48,0.4)",
+                        borderColor: DS.redBorder,
                       })}
                     >
-                      <Trash2 size={13} color={HUD_RED} />
+                      <Trash2 size={13} color={DS.red} />
                     </Pressable>
 
-                    {/* Play icon */}
+                    {/* Play icon - circular */}
                     <View
                       style={{
                         width: 52,
                         height: 52,
-                        borderRadius: 2,
-                        backgroundColor: "rgba(0,180,216,0.1)",
+                        borderRadius: 100,
+                        backgroundColor: DS.cyanSoft,
                         alignItems: "center",
                         justifyContent: "center",
                         borderWidth: 1,
-                        borderColor: HUD_ACCENT,
+                        borderColor: DS.cyanBorder,
                       }}
                     >
-                      <Play size={22} color={HUD_ACCENT} fill={HUD_ACCENT} />
+                      <Play size={22} color={DS.cyan} fill={DS.cyan} />
                     </View>
                   </View>
 
                   {/* Card info */}
-                  <View style={{ padding: 12 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <View style={{ padding: 14 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <View
                         style={{
-                          paddingHorizontal: 6,
-                          paddingVertical: 2,
-                          borderRadius: 2,
-                          backgroundColor: "rgba(0,180,216,0.12)",
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 100,
+                          backgroundColor: DS.cyanSoft,
                           borderWidth: 1,
-                          borderColor: "rgba(0,180,216,0.3)",
+                          borderColor: DS.cyanBorder,
                         }}
                       >
-                        <Text style={{ color: HUD_ACCENT, fontSize: 9, fontWeight: "800", letterSpacing: 1.5 }}>
-                          {live.category.toUpperCase()}
+                        <Text style={{ color: DS.cyan, fontSize: 10, fontWeight: "700" }}>
+                          {live.category}
                         </Text>
                       </View>
                       {live.startedAt ? (
-                        <Text style={{ color: HUD_TEXT_DIM, fontSize: 11 }}>{live.startedAt}</Text>
+                        <Text style={{ color: DS.textMuted, fontSize: 11 }}>{live.startedAt}</Text>
                       ) : null}
                     </View>
-                    <Text style={{ color: HUD_TEXT, fontSize: 14, fontWeight: "700", marginBottom: 4, letterSpacing: 0.3 }}>
+                    <Text style={{ color: DS.textPrimary, fontSize: 15, fontWeight: "700", marginBottom: 4, letterSpacing: -0.2 }}>
                       {live.title}
                     </Text>
-                    <Text style={{ color: HUD_TEXT_DIM, fontSize: 12 }}>por {live.host}</Text>
+                    <Text style={{ color: DS.textSecondary, fontSize: 13 }}>by {live.host}</Text>
                   </View>
                 </Pressable>
               </Animated.View>
@@ -386,66 +349,59 @@ export default function LiveScreen() {
           </View>
         ) : null}
 
-        {/* Queued Transmissions */}
+        {/* Scheduled lives */}
         {scheduledLives.length > 0 ? (
           <View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, marginTop: activeLives.length > 0 ? 8 : 0 }}>
-              <Calendar size={12} color={HUD_ACCENT} />
-              <Text
-                style={{
-                  color: HUD_ACCENT,
-                  fontWeight: "800",
-                  fontSize: 10,
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                }}
-              >
-                QUEUED TRANSMISSIONS
+              <Calendar size={13} color={DS.textSecondary} />
+              <Text style={{ color: DS.textSecondary, fontWeight: "700", fontSize: 12 }}>
+                Coming up
               </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: HUD_BORDER, marginLeft: 4 }} />
             </View>
             {scheduledLives.map((live, i) => (
               <Animated.View key={live.id} entering={FadeInDown.duration(300).delay(i * 60)}>
                 <Pressable
                   testID={`scheduled-card-${live.id}`}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#062035" : HUD_CARD,
-                    borderRadius: 4,
-                    padding: 14,
-                    marginBottom: 10,
+                    backgroundColor: pressed ? "#161E2E" : DS.card,
+                    borderRadius: 20,
+                    padding: 16,
+                    marginBottom: 12,
                     flexDirection: "row",
                     alignItems: "center",
-                    borderLeftWidth: 2,
-                    borderLeftColor: HUD_ACCENT,
                     borderWidth: 1,
-                    borderColor: HUD_BORDER,
+                    borderColor: DS.border,
+                    shadowColor: "#000",
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 2 },
                   })}
                   onPress={() => Alert.alert(t("setReminder"), `${t("setReminder")}: "${live.title}"`)}
                 >
                   <View
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 2,
-                      backgroundColor: "rgba(0,180,216,0.08)",
+                      width: 48,
+                      height: 48,
+                      borderRadius: 100,
+                      backgroundColor: DS.cyanSoft,
                       alignItems: "center",
                       justifyContent: "center",
                       marginRight: 14,
                       borderWidth: 1,
-                      borderColor: "rgba(0,180,216,0.25)",
+                      borderColor: DS.cyanBorder,
                     }}
                   >
-                    <Clock size={20} color={HUD_ACCENT} />
+                    <Clock size={20} color={DS.cyan} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: HUD_TEXT, fontSize: 14, fontWeight: "700", marginBottom: 3, letterSpacing: 0.3 }}>
+                    <Text style={{ color: DS.textPrimary, fontSize: 14, fontWeight: "700", marginBottom: 3, letterSpacing: -0.1 }}>
                       {live.title}
                     </Text>
-                    <Text style={{ color: HUD_TEXT_DIM, fontSize: 12 }}>por {live.host}</Text>
+                    <Text style={{ color: DS.textSecondary, fontSize: 12 }}>by {live.host}</Text>
                     {live.scheduledAt ? (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
-                        <Calendar size={10} color={HUD_ACCENT} />
-                        <Text style={{ color: HUD_ACCENT, fontSize: 11, fontWeight: "600" }}>{live.scheduledAt}</Text>
+                        <Calendar size={10} color={DS.cyan} />
+                        <Text style={{ color: DS.cyan, fontSize: 11, fontWeight: "600" }}>{live.scheduledAt}</Text>
                       </View>
                     ) : null}
                   </View>
@@ -453,18 +409,18 @@ export default function LiveScreen() {
                     onPress={() => handleDelete(live.id)}
                     testID={`delete-scheduled-${live.id}`}
                     style={({ pressed }) => ({
-                      width: 34,
-                      height: 34,
-                      borderRadius: 2,
-                      backgroundColor: pressed ? "rgba(255,59,48,0.15)" : "rgba(255,59,48,0.06)",
+                      width: 36,
+                      height: 36,
+                      borderRadius: 100,
+                      backgroundColor: pressed ? DS.redSoft : "rgba(255,255,255,0.04)",
                       alignItems: "center",
                       justifyContent: "center",
                       marginLeft: 8,
                       borderWidth: 1,
-                      borderColor: "rgba(255,59,48,0.25)",
+                      borderColor: DS.redBorder,
                     })}
                   >
-                    <Trash2 size={15} color={HUD_RED} />
+                    <Trash2 size={15} color={DS.red} />
                   </Pressable>
                 </Pressable>
               </Animated.View>
@@ -472,62 +428,64 @@ export default function LiveScreen() {
           </View>
         ) : null}
 
-        {/* Empty State */}
+        {/* Empty state */}
         {activeLives.length === 0 && scheduledLives.length === 0 ? (
           <View
             style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }}
             testID="empty-lives"
           >
-            {/* HUD reticle */}
-            <View style={{ width: 72, height: 72, alignItems: "center", justifyContent: "center", position: "relative" }}>
-              <View style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTopWidth: 2, borderLeftWidth: 2, borderColor: HUD_ACCENT, opacity: 0.5 }} />
-              <View style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTopWidth: 2, borderRightWidth: 2, borderColor: HUD_ACCENT, opacity: 0.5 }} />
-              <View style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: HUD_ACCENT, opacity: 0.5 }} />
-              <View style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottomWidth: 2, borderRightWidth: 2, borderColor: HUD_ACCENT, opacity: 0.5 }} />
-              <Radio size={32} color={HUD_ACCENT} style={{ opacity: 0.4 }} />
+            <View style={{
+              width: 80,
+              height: 80,
+              borderRadius: 100,
+              backgroundColor: DS.redSoft,
+              borderWidth: 1,
+              borderColor: DS.redBorder,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 20,
+            }}>
+              <Radio size={34} color={DS.red} />
             </View>
             <Text
               style={{
-                color: HUD_TEXT,
-                fontSize: 14,
+                color: DS.textPrimary,
+                fontSize: 18,
                 fontWeight: "800",
-                marginTop: 20,
                 marginBottom: 8,
                 textAlign: "center",
-                letterSpacing: 3,
-                textTransform: "uppercase",
+                letterSpacing: -0.3,
               }}
             >
-              NO ACTIVE SIGNALS
+              No live streams yet
             </Text>
-            <Text style={{ color: HUD_TEXT_DIM, fontSize: 13, textAlign: "center", lineHeight: 22, opacity: 0.7 }}>
+            <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", lineHeight: 22 }}>
               {t("noLivesDesc")}
             </Text>
 
-            {/* Full-width broadcast button in empty state */}
             <Pressable
               testID="go-live-button-empty"
               onPress={() => setShowStartLive(true)}
               style={({ pressed }) => ({
                 marginTop: 32,
                 width: "100%",
-                backgroundColor: pressed ? "#CC2E26" : HUD_RED,
+                backgroundColor: pressed ? "#CC2E26" : DS.red,
                 paddingVertical: 16,
-                borderRadius: 2,
+                borderRadius: 100,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: 10,
-                shadowColor: HUD_RED,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.5,
+                shadowColor: DS.red,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
                 shadowRadius: 12,
                 elevation: 8,
               })}
             >
               <Radio size={16} color="#fff" />
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>
-                INITIATE BROADCAST
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+                Start streaming
               </Text>
             </Pressable>
           </View>
@@ -536,89 +494,67 @@ export default function LiveScreen() {
 
       {/* Start Live Modal */}
       <Modal visible={showStartLive} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD_BG, padding: 24 }}>
-          {/* Modal top accent line */}
-          <View style={{ height: 1, backgroundColor: HUD_ACCENT, marginBottom: 28, opacity: 0.5 }} />
+        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 24 }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
 
           {/* Modal header */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 36 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
             <Pressable
               onPress={() => setShowStartLive(false)}
               testID="close-live-modal"
               style={({ pressed }) => ({
-                width: 34,
-                height: 34,
-                borderRadius: 2,
-                backgroundColor: pressed ? "rgba(0,180,216,0.15)" : "rgba(0,180,216,0.07)",
+                width: 36,
+                height: 36,
+                borderRadius: 100,
+                backgroundColor: pressed ? DS.cyanSoft : "rgba(255,255,255,0.05)",
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: "rgba(0,180,216,0.25)",
+                borderColor: DS.border,
               })}
             >
-              <X size={18} color={HUD_ACCENT} />
+              <X size={18} color={DS.textSecondary} />
             </Pressable>
-            <View style={{ flex: 1, alignItems: "center" }}>
-              <Text
-                style={{
-                  color: HUD_ACCENT,
-                  fontSize: 10,
-                  fontWeight: "800",
-                  letterSpacing: 3,
-                  textTransform: "uppercase",
-                  marginBottom: 2,
-                }}
-              >
-                BROADCAST NETWORK
-              </Text>
-              <Text
-                style={{
-                  color: HUD_TEXT,
-                  fontSize: 16,
-                  fontWeight: "800",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                LAUNCH BROADCAST
-              </Text>
-            </View>
-            {/* Spacer to balance close button */}
-            <View style={{ width: 34 }} />
+            <Text style={{
+              flex: 1,
+              textAlign: "center",
+              color: DS.textPrimary,
+              fontSize: 17,
+              fontWeight: "700",
+            }}>
+              Start a stream
+            </Text>
+            <View style={{ width: 36 }} />
           </View>
 
-          {/* Avatar / Operator ID */}
-          <View style={{ alignItems: "center", marginBottom: 36 }}>
+          {/* Avatar / Name */}
+          <View style={{ alignItems: "center", marginBottom: 32 }}>
             <View
               style={{
                 width: 72,
                 height: 72,
-                borderRadius: 2,
-                backgroundColor: "rgba(0,180,216,0.1)",
+                borderRadius: 100,
+                backgroundColor: DS.cyanSoft,
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: HUD_ACCENT,
+                marginBottom: 12,
+                borderWidth: 2,
+                borderColor: DS.cyan,
+                shadowColor: DS.cyan,
+                shadowOpacity: 0.2,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 0 },
               }}
             >
-              <Text style={{ color: HUD_ACCENT, fontWeight: "800", fontSize: 28 }}>
+              <Text style={{ color: DS.cyan, fontWeight: "800", fontSize: 28 }}>
                 {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
               </Text>
             </View>
-            <Text
-              style={{
-                color: HUD_TEXT_DIM,
-                fontSize: 10,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                marginBottom: 2,
-              }}
-            >
-              OPERATOR
+            <Text style={{ color: DS.textSecondary, fontSize: 12, marginBottom: 4 }}>
+              Streaming as
             </Text>
-            <Text style={{ color: HUD_TEXT, fontWeight: "700", fontSize: 15, letterSpacing: 0.5 }}>
+            <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 15 }}>
               {session?.user?.name ?? "Unknown"}
             </Text>
 
@@ -626,16 +562,7 @@ export default function LiveScreen() {
           </View>
 
           {/* Title label */}
-          <Text
-            style={{
-              color: HUD_ACCENT,
-              fontSize: 9,
-              fontWeight: "800",
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
+          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
             {t("liveTitle")}
           </Text>
 
@@ -644,18 +571,17 @@ export default function LiveScreen() {
             testID="live-title-input"
             value={liveTitle}
             onChangeText={setLiveTitle}
-            placeholder="ej. Cómo construir disciplina real"
-            placeholderTextColor="rgba(0,180,216,0.3)"
+            placeholder="e.g. How to build real discipline"
+            placeholderTextColor={DS.textMuted}
             style={{
-              backgroundColor: HUD_CARD,
-              borderRadius: 2,
+              backgroundColor: DS.card,
+              borderRadius: 12,
               padding: 14,
-              color: HUD_TEXT,
+              color: DS.textPrimary,
               fontSize: 14,
-              marginBottom: 36,
+              marginBottom: 32,
               borderWidth: 1,
-              borderColor: HUD_ACCENT,
-              letterSpacing: 0.3,
+              borderColor: DS.border,
             }}
             autoFocus
           />
@@ -666,16 +592,17 @@ export default function LiveScreen() {
             onPress={handleGoLive}
             disabled={!liveTitle.trim() || isStreaming}
             style={({ pressed }) => ({
-              backgroundColor: !liveTitle.trim() ? "rgba(255,59,48,0.3)" : pressed ? "#CC2E26" : HUD_RED,
-              borderRadius: 2,
+              backgroundColor: !liveTitle.trim() ? DS.redSoft : pressed ? "#CC2E26" : DS.red,
+              borderRadius: 100,
               paddingVertical: 17,
               alignItems: "center",
               flexDirection: "row",
               justifyContent: "center",
               gap: 10,
-              shadowColor: liveTitle.trim() ? HUD_RED : "transparent",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.6,
+              opacity: !liveTitle.trim() ? 0.5 : 1,
+              shadowColor: liveTitle.trim() ? DS.red : "transparent",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
               shadowRadius: 14,
               elevation: liveTitle.trim() ? 8 : 0,
             })}
@@ -683,21 +610,14 @@ export default function LiveScreen() {
             {isStreaming ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <>
                 <Radio size={18} color="#fff" />
-                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>
+                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
                   {t("startStreaming")}
                 </Text>
-              </View>
+              </>
             )}
           </Pressable>
-
-          {/* Bottom grid lines for aesthetic */}
-          <View style={{ flexDirection: "row", gap: 4, marginTop: 28, opacity: 0.15 }}>
-            {[...Array(12)].map((_, i) => (
-              <View key={i} style={{ flex: 1, height: 1, backgroundColor: HUD_ACCENT }} />
-            ))}
-          </View>
         </View>
       </Modal>
     </View>

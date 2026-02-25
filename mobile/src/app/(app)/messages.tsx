@@ -16,20 +16,19 @@ import { useI18n } from "@/lib/i18n";
 import { uploadFile } from "@/lib/upload";
 import { pickImage, pickDocument, pickPdf, takePhoto } from "@/lib/file-picker";
 
-const HUD = {
-  bg: "#020B18",
-  bgCard: "#041525",
-  bgInput: "#030E1A",
-  bgMyMsg: "#0A2540",
-  bgRecvMsg: "#041525",
+const DS = {
+  bg: "#0A0F1E",
+  card: "#111827",
+  cardAlt: "#0F172A",
+  msgMy: "#0E3A5C",
+  msgOther: "#111827",
   cyan: "#00B4D8",
-  cyanDim: "#4A7A99",
-  cyanFaint: "#7DB8D9",
-  textPrimary: "#C8E8FF",
-  textSecondary: "#7DB8D9",
-  textMuted: "#4A7A99",
-  border: "#0A2F47",
-  borderBright: "#00B4D8",
+  cyanSoft: "rgba(0,180,216,0.12)",
+  cyanBorder: "rgba(0,180,216,0.25)",
+  textPrimary: "#F1F5F9",
+  textSecondary: "#94A3B8",
+  textMuted: "#475569",
+  border: "rgba(255,255,255,0.06)",
 };
 
 function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean; colors: any }) {
@@ -41,11 +40,11 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
       <TouchableOpacity onPress={() => msg.fileUrl && Linking.openURL(msg.fileUrl)}>
         <Image
           source={{ uri: msg.fileUrl }}
-          style={{ width: 200, height: 150, borderRadius: 2 }}
+          style={{ width: 200, height: 150, borderRadius: 12 }}
           resizeMode="cover"
         />
         {msg.content ? (
-          <Text style={{ color: isMe ? HUD.textPrimary : HUD.textPrimary, fontSize: 14, marginTop: 6, paddingHorizontal: 2, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
+          <Text style={{ color: DS.textPrimary, fontSize: 14, marginTop: 6, paddingHorizontal: 2 }}>
             {msg.content}
           </Text>
         ) : null}
@@ -59,12 +58,12 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
         onPress={() => msg.fileUrl && Linking.openURL(msg.fileUrl)}
         style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 }}
       >
-        <View style={{ width: 36, height: 36, borderRadius: 2, backgroundColor: "#041525", borderWidth: 1, borderColor: HUD.cyan, alignItems: "center", justifyContent: "center" }}>
-          <Mic size={18} color={HUD.cyan} />
+        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: DS.cyanSoft, borderWidth: 1, borderColor: DS.cyanBorder, alignItems: "center", justifyContent: "center" }}>
+          <Mic size={16} color={DS.cyan} />
         </View>
         <View>
-          <Text style={{ color: HUD.textPrimary, fontSize: 13, fontWeight: "700", letterSpacing: 1, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>AUDIO</Text>
-          <Text style={{ color: HUD.textMuted, fontSize: 11, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{msg.fileName || "audio.m4a"}</Text>
+          <Text style={{ color: DS.textPrimary, fontSize: 13, fontWeight: "600" }}>Audio</Text>
+          <Text style={{ color: DS.textMuted, fontSize: 11 }}>{msg.fileName || "audio.m4a"}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -76,18 +75,18 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
         onPress={() => msg.fileUrl && Linking.openURL(msg.fileUrl)}
         style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 }}
       >
-        <View style={{ width: 36, height: 36, borderRadius: 2, backgroundColor: "#041525", borderWidth: 1, borderColor: HUD.cyan, alignItems: "center", justifyContent: "center" }}>
-          <FileText size={18} color={HUD.cyan} />
+        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: DS.cyanSoft, borderWidth: 1, borderColor: DS.cyanBorder, alignItems: "center", justifyContent: "center" }}>
+          <FileText size={16} color={DS.cyan} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: HUD.textPrimary, fontSize: 13, fontWeight: "700", letterSpacing: 1, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }} numberOfLines={1}>{msg.fileName || "ARCHIVO"}</Text>
-          <Text style={{ color: HUD.textMuted, fontSize: 11, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>TAP TO OPEN</Text>
+          <Text style={{ color: DS.textPrimary, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>{msg.fileName || "File"}</Text>
+          <Text style={{ color: DS.textMuted, fontSize: 11 }}>Tap to open</Text>
         </View>
       </TouchableOpacity>
     );
   }
 
-  return <Text style={{ color: HUD.textPrimary, fontSize: 15, lineHeight: 22, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{msg.content}</Text>;
+  return <Text style={{ color: DS.textPrimary, fontSize: 15, lineHeight: 22 }}>{msg.content}</Text>;
 }
 
 function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; currentUserId: string; onBack: () => void; colors: any }) {
@@ -96,7 +95,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const otherMember = chat.members?.find(m => m.user.id !== currentUserId);
-  const name = chat.type === "direct" ? otherMember?.user?.name || "?" : (chat.name || "Grupo");
+  const name = chat.type === "direct" ? otherMember?.user?.name || "?" : (chat.name || "Group");
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["messages", chat.id],
@@ -117,7 +116,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t("cancel"), "Foto de la cámara", t("pickImageLabel"), t("pickPdf"), t("pickFile")],
+          options: [t("cancel"), "Camera", t("pickImageLabel"), t("pickPdf"), t("pickFile")],
           cancelButtonIndex: 0,
         },
         async (idx) => {
@@ -129,7 +128,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
       );
     } else {
       Alert.alert(t("attachFile"), undefined, [
-        { text: "Cámara", onPress: () => handleSendMedia("camera") },
+        { text: "Camera", onPress: () => handleSendMedia("camera") },
         { text: t("pickImageLabel"), onPress: () => handleSendMedia("image") },
         { text: t("pickPdf"), onPress: () => handleSendMedia("pdf") },
         { text: t("pickFile"), onPress: () => handleSendMedia("document") },
@@ -163,70 +162,73 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
         fileMimeType: result.mimeType,
       });
     } catch (e: any) {
-      Alert.alert("Error", e.message || "No se pudo subir el archivo");
+      Alert.alert("Error", e.message || "Could not upload file");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD.bg }} testID="chat-view">
+    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="chat-view">
       <SafeAreaView edges={["top"]}>
         <View style={{
           flexDirection: "row",
           alignItems: "center",
           padding: 16,
           borderBottomWidth: 1,
-          borderBottomColor: HUD.border,
-          backgroundColor: HUD.bgCard,
+          borderBottomColor: DS.border,
+          backgroundColor: DS.card,
         }}>
           <TouchableOpacity
             onPress={onBack}
             style={{
-              marginRight: 14,
-              width: 34,
-              height: 34,
+              marginRight: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 100,
               borderWidth: 1,
-              borderColor: HUD.cyan,
+              borderColor: DS.border,
               alignItems: "center",
               justifyContent: "center",
             }}
             testID="back-button"
           >
-            <ArrowLeft size={18} color={HUD.cyan} />
+            <ArrowLeft size={18} color={DS.textSecondary} />
           </TouchableOpacity>
 
+          {/* Circular avatar */}
           <View style={{
-            width: 38,
-            height: 38,
+            width: 40,
+            height: 40,
+            borderRadius: 100,
             borderWidth: 2,
-            borderColor: HUD.cyan,
-            marginRight: 10,
+            borderColor: DS.cyan,
+            marginRight: 12,
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            backgroundColor: HUD.bgCard,
+            backgroundColor: DS.cardAlt,
           }}>
             {otherMember?.user?.image
-              ? <Image source={{ uri: otherMember.user.image }} style={{ width: 38, height: 38 }} />
-              : <Text style={{ color: HUD.cyan, fontWeight: "700", fontSize: 14, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{name[0]?.toUpperCase()}</Text>
+              ? <Image source={{ uri: otherMember.user.image }} style={{ width: 40, height: 40 }} />
+              : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 15 }}>{name[0]?.toUpperCase()}</Text>
             }
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={{ color: HUD.textPrimary, fontSize: 14, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{name}</Text>
-            <Text style={{ color: HUD.cyan, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>ENCRYPTED TRANSMISSION</Text>
+            <Text style={{ color: DS.textPrimary, fontSize: 15, fontWeight: "700" }}>{name}</Text>
+            <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 1 }}>Active</Text>
           </View>
 
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: HUD.cyan }} />
+          <View style={{ width: 8, height: 8, borderRadius: 100, backgroundColor: DS.cyan }} />
         </View>
       </SafeAreaView>
 
       {isLoading
         ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-            <ActivityIndicator color={HUD.cyan} />
-            <Text style={{ color: HUD.textMuted, fontSize: 10, letterSpacing: 2, marginTop: 10, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>LOADING DATA...</Text>
+            <ActivityIndicator color={DS.cyan} />
+            <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 10 }}>Loading messages...</Text>
           </View>
         )
         : (
@@ -239,32 +241,29 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
               return (
                 <Animated.View
                   entering={FadeInRight.duration(200)}
-                  style={{ padding: 8, paddingHorizontal: 16, alignItems: isMe ? "flex-end" : "flex-start" }}
+                  style={{ padding: 6, paddingHorizontal: 14, alignItems: isMe ? "flex-end" : "flex-start" }}
                 >
                   <View style={{
                     maxWidth: "78%",
-                    backgroundColor: isMe ? HUD.bgMyMsg : HUD.bgRecvMsg,
-                    borderRadius: 0,
-                    borderRightWidth: isMe ? 2 : 0,
-                    borderLeftWidth: isMe ? 0 : 2,
-                    borderRightColor: HUD.cyan,
-                    borderLeftColor: HUD.cyan,
-                    paddingHorizontal: hasFile ? 10 : 14,
+                    backgroundColor: isMe ? DS.msgMy : DS.msgOther,
+                    borderRadius: 20,
+                    borderBottomRightRadius: isMe ? 4 : 20,
+                    borderBottomLeftRadius: isMe ? 20 : 4,
+                    borderWidth: 1,
+                    borderColor: isMe ? DS.cyanBorder : DS.border,
+                    paddingHorizontal: hasFile ? 12 : 14,
                     paddingVertical: 10,
                     overflow: "hidden",
                   }}>
                     {hasFile
                       ? <FileMessageBubble msg={item} isMe={isMe} colors={colors} />
-                      : <Text style={{ color: HUD.textPrimary, fontSize: 14, lineHeight: 22, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{item.content}</Text>
+                      : <Text style={{ color: DS.textPrimary, fontSize: 15, lineHeight: 22 }}>{item.content}</Text>
                     }
                     <Text style={{
-                      color: HUD.textMuted,
-                      fontSize: 9,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
+                      color: DS.textMuted,
+                      fontSize: 10,
                       marginTop: 4,
                       textAlign: isMe ? "right" : "left",
-                      fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
                     }}>
                       {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                     </Text>
@@ -284,9 +283,10 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
             flexDirection: "row",
             alignItems: "flex-end",
             padding: 12,
+            paddingHorizontal: 14,
             borderTopWidth: 1,
-            borderTopColor: HUD.border,
-            backgroundColor: HUD.bgCard,
+            borderTopColor: DS.border,
+            backgroundColor: DS.card,
             gap: 8,
           }}>
             <TouchableOpacity
@@ -294,40 +294,40 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
               disabled={uploading}
               testID="attach-button"
               style={{
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
+                borderRadius: 100,
                 borderWidth: 1,
-                borderColor: HUD.cyan,
+                borderColor: DS.border,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: HUD.bgInput,
+                backgroundColor: DS.cardAlt,
               }}
             >
               {uploading
-                ? <ActivityIndicator color={HUD.cyan} size="small" />
-                : <Paperclip size={18} color={HUD.cyan} />
+                ? <ActivityIndicator color={DS.cyan} size="small" />
+                : <Paperclip size={17} color={DS.textSecondary} />
               }
             </TouchableOpacity>
 
+            {/* Pill-shaped input */}
             <TextInput
               value={message}
               onChangeText={setMessage}
-              placeholder="TRANSMIT..."
-              placeholderTextColor={HUD.textMuted}
+              placeholder="Message..."
+              placeholderTextColor={DS.textMuted}
               testID="message-input"
               style={{
                 flex: 1,
-                backgroundColor: HUD.bgInput,
+                backgroundColor: DS.cardAlt,
                 borderWidth: 1,
-                borderColor: message.length > 0 ? HUD.cyan : HUD.border,
-                borderRadius: 0,
-                paddingHorizontal: 14,
+                borderColor: message.length > 0 ? DS.cyanBorder : DS.border,
+                borderRadius: 100,
+                paddingHorizontal: 18,
                 paddingVertical: 11,
-                color: HUD.textPrimary,
-                fontSize: 13,
+                color: DS.textPrimary,
+                fontSize: 14,
                 maxHeight: 120,
-                fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
-                letterSpacing: 0.5,
               }}
               multiline
             />
@@ -337,16 +337,21 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
               disabled={!message.trim() || sendMsg.isPending}
               testID="send-button"
               style={{
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
+                borderRadius: 100,
+                backgroundColor: message.trim() ? DS.cyan : DS.cardAlt,
                 borderWidth: 1,
-                borderColor: message.trim() ? HUD.cyan : HUD.border,
-                backgroundColor: message.trim() ? "rgba(0,180,216,0.15)" : HUD.bgInput,
+                borderColor: message.trim() ? DS.cyan : DS.border,
                 alignItems: "center",
                 justifyContent: "center",
+                shadowColor: message.trim() ? DS.cyan : "transparent",
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 0 },
               }}
             >
-              <Send size={18} color={message.trim() ? HUD.cyan : HUD.textMuted} />
+              <Send size={16} color={message.trim() ? DS.bg : DS.textMuted} />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -390,95 +395,87 @@ export default function MessagesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD.bg }} testID="messages-screen">
+    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="messages-screen">
       <SafeAreaView edges={["top"]}>
         {/* Header */}
         <View style={{
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
           paddingTop: 14,
           paddingBottom: 12,
           borderBottomWidth: 1,
-          borderBottomColor: HUD.border,
-          backgroundColor: HUD.bgCard,
+          borderBottomColor: DS.border,
+          backgroundColor: DS.card,
+          flexDirection: "row",
+          alignItems: "center",
         }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {/* Corner brackets decoration */}
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: "800",
-                color: HUD.textPrimary,
-                letterSpacing: 4,
-                textTransform: "uppercase",
-                fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
-              }}>
-                COMMS CENTER
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: HUD.cyan }} />
-                <Text style={{
-                  color: HUD.cyan,
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
-                }}>
-                  SECURE CHANNEL
-                </Text>
-              </View>
-            </View>
+          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: DS.textPrimary, letterSpacing: -0.5 }}>
+            Messages
+          </Text>
 
-            <TouchableOpacity
-              onPress={() => setShowNewChat(true)}
-              testID="new-chat-button"
-              style={{
-                width: 40,
-                height: 40,
-                borderWidth: 1,
-                borderColor: HUD.cyan,
-                backgroundColor: "rgba(0,180,216,0.1)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Plus size={20} color={HUD.cyan} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowNewChat(true)}
+            testID="new-chat-button"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 100,
+              borderWidth: 1,
+              borderColor: DS.cyanBorder,
+              backgroundColor: DS.cyanSoft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Plus size={20} color={DS.cyan} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
       {isLoading
         ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-            <ActivityIndicator color={HUD.cyan} size="large" />
-            <Text style={{ color: HUD.textMuted, fontSize: 10, letterSpacing: 2, marginTop: 12, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>SCANNING CHANNELS...</Text>
+            <ActivityIndicator color={DS.cyan} size="large" />
+            <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 12 }}>Loading chats...</Text>
           </View>
         )
         : !chats?.length
           ? (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-              <View style={{ borderWidth: 1, borderColor: HUD.border, padding: 20, marginBottom: 24 }}>
-                <MessageCircle size={48} color={HUD.cyanDim} />
+              <View style={{
+                width: 80,
+                height: 80,
+                borderRadius: 100,
+                backgroundColor: DS.cyanSoft,
+                borderWidth: 1,
+                borderColor: DS.cyanBorder,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 20,
+              }}>
+                <MessageCircle size={34} color={DS.cyan} />
               </View>
-              <Text style={{ color: HUD.textPrimary, fontSize: 16, fontWeight: "700", marginBottom: 8, textAlign: "center", letterSpacing: 3, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
+              <Text style={{ color: DS.textPrimary, fontSize: 18, fontWeight: "800", marginBottom: 8, textAlign: "center", letterSpacing: -0.3 }}>
                 {t("noMessages")}
               </Text>
-              <Text style={{ color: HUD.textMuted, fontSize: 12, textAlign: "center", lineHeight: 20, letterSpacing: 1, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
+              <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", lineHeight: 20 }}>
                 {t("startConversation")}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowNewChat(true)}
                 style={{
                   marginTop: 24,
-                  borderWidth: 1,
-                  borderColor: HUD.cyan,
-                  backgroundColor: "rgba(0,180,216,0.1)",
-                  paddingHorizontal: 24,
-                  paddingVertical: 12,
+                  backgroundColor: DS.cyan,
+                  borderRadius: 100,
+                  paddingHorizontal: 28,
+                  paddingVertical: 13,
+                  shadowColor: DS.cyan,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 4 },
                 }}
               >
-                <Text style={{ color: HUD.cyan, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase", fontSize: 13, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
-                  INITIATE CONTACT
+                <Text style={{ color: DS.bg, fontWeight: "700", fontSize: 14 }}>
+                  Start a conversation
                 </Text>
               </TouchableOpacity>
             </View>
@@ -489,13 +486,13 @@ export default function MessagesScreen() {
               keyExtractor={(c) => c.id}
               renderItem={({ item }) => {
                 const other = item.members?.find(m => m.user.id !== session?.user?.id);
-                const name = item.type === "direct" ? other?.user?.name || "?" : (item.name || "Grupo");
+                const name = item.type === "direct" ? other?.user?.name || "?" : (item.name || "Group");
                 const lastMsg = item.messages?.[0];
                 const lastMsgText = lastMsg?.type !== "text" && lastMsg?.type
-                  ? lastMsg.type === "image" ? "[IMAGE]"
-                    : lastMsg.type === "audio" ? "[AUDIO]"
-                    : lastMsg.type === "video" ? "[VIDEO]"
-                    : "[FILE]"
+                  ? lastMsg.type === "image" ? "Photo"
+                    : lastMsg.type === "audio" ? "Voice message"
+                    : lastMsg.type === "video" ? "Video"
+                    : "File"
                   : lastMsg?.content || t("noMessages");
                 const lastMsgTime = lastMsg?.createdAt
                   ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -507,39 +504,38 @@ export default function MessagesScreen() {
                       flexDirection: "row",
                       alignItems: "center",
                       padding: 14,
-                      paddingHorizontal: 16,
+                      paddingHorizontal: 20,
                       borderBottomWidth: 1,
-                      borderBottomColor: HUD.border,
-                      backgroundColor: HUD.bgCard,
-                      borderLeftWidth: 2,
-                      borderLeftColor: HUD.cyan,
+                      borderBottomColor: DS.border,
                     }}
                     testID="chat-list-item"
                   >
+                    {/* Circular avatar */}
                     <View style={{
-                      width: 50,
-                      height: 50,
+                      width: 52,
+                      height: 52,
+                      borderRadius: 100,
                       borderWidth: 2,
-                      borderColor: HUD.cyan,
+                      borderColor: DS.cyanBorder,
                       marginRight: 14,
                       overflow: "hidden",
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: HUD.bg,
+                      backgroundColor: DS.cardAlt,
                     }}>
                       {other?.user?.image
-                        ? <Image source={{ uri: other.user.image }} style={{ width: 50, height: 50 }} />
-                        : <Text style={{ color: HUD.cyan, fontWeight: "700", fontSize: 18, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{name[0]?.toUpperCase()}</Text>
+                        ? <Image source={{ uri: other.user.image }} style={{ width: 52, height: 52 }} />
+                        : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 20 }}>{name[0]?.toUpperCase()}</Text>
                       }
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: HUD.textPrimary, fontWeight: "700", fontSize: 14, marginBottom: 4, letterSpacing: 1, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{name}</Text>
-                      <Text style={{ color: HUD.textSecondary, fontSize: 12, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }} numberOfLines={1}>{lastMsgText}</Text>
+                      <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 15, marginBottom: 3 }}>{name}</Text>
+                      <Text style={{ color: DS.textSecondary, fontSize: 13 }} numberOfLines={1}>{lastMsgText}</Text>
                     </View>
 
                     {lastMsgTime ? (
-                      <Text style={{ color: HUD.textMuted, fontSize: 9, letterSpacing: 1, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace", textTransform: "uppercase" }}>
+                      <Text style={{ color: DS.textMuted, fontSize: 11 }}>
                         {lastMsgTime}
                       </Text>
                     ) : null}
@@ -553,47 +549,51 @@ export default function MessagesScreen() {
       }
 
       <Modal visible={showNewChat} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD.bg, padding: 16 }}>
+        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 20 }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 20 }} />
+
           {/* Modal header */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: HUD.border }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: HUD.textPrimary, fontSize: 16, fontWeight: "800", letterSpacing: 3, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
-                INITIATE CONTACT
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: HUD.cyan }} />
-                <Text style={{ color: HUD.cyan, fontSize: 9, letterSpacing: 2, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
-                  SCANNING NETWORK
-                </Text>
-              </View>
-            </View>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>
+              New message
+            </Text>
             <TouchableOpacity
               onPress={() => { setShowNewChat(false); setSearchQ(""); }}
               testID="close-new-chat"
-              style={{ width: 34, height: 34, borderWidth: 1, borderColor: HUD.border, alignItems: "center", justifyContent: "center" }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 100,
+                borderWidth: 1,
+                borderColor: DS.border,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <X size={18} color={HUD.textSecondary} />
+              <X size={18} color={DS.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          {/* Search input */}
+          {/* Search input - pill shaped */}
           <View style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: HUD.bgInput,
+            backgroundColor: DS.card,
             borderWidth: 1,
-            borderColor: searchQ.length > 0 ? HUD.cyan : HUD.border,
-            paddingHorizontal: 14,
+            borderColor: searchQ.length > 0 ? DS.cyanBorder : DS.border,
+            paddingHorizontal: 16,
             gap: 10,
             marginBottom: 16,
+            borderRadius: 100,
           }}>
-            <Search size={16} color={HUD.textMuted} />
+            <Search size={16} color={DS.textMuted} />
             <TextInput
               value={searchQ}
               onChangeText={setSearchQ}
               placeholder={t("searchUsers")}
-              placeholderTextColor={HUD.textMuted}
-              style={{ flex: 1, color: HUD.textPrimary, fontSize: 13, paddingVertical: 12, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace", letterSpacing: 0.5 }}
+              placeholderTextColor={DS.textMuted}
+              style={{ flex: 1, color: DS.textPrimary, fontSize: 14, paddingVertical: 12 }}
               autoFocus
               testID="search-users-input"
             />
@@ -602,7 +602,7 @@ export default function MessagesScreen() {
           {searchQ.length < 2
             ? (
               <View style={{ alignItems: "center", paddingTop: 60 }}>
-                <Text style={{ color: HUD.textMuted, fontSize: 11, textAlign: "center", letterSpacing: 2, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>
+                <Text style={{ color: DS.textMuted, fontSize: 13, textAlign: "center" }}>
                   {t("selectUser")}
                 </Text>
               </View>
@@ -620,36 +620,39 @@ export default function MessagesScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         padding: 12,
-                        marginBottom: 4,
-                        backgroundColor: HUD.bgCard,
-                        borderLeftWidth: 2,
-                        borderLeftColor: HUD.cyan,
+                        marginBottom: 6,
+                        backgroundColor: DS.card,
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        borderColor: DS.border,
                       }}
                       testID="user-search-result"
                     >
+                      {/* Circular avatar */}
                       <View style={{
                         width: 44,
                         height: 44,
-                        borderWidth: 1,
-                        borderColor: HUD.cyan,
-                        marginRight: 14,
+                        borderRadius: 100,
+                        borderWidth: 1.5,
+                        borderColor: DS.cyanBorder,
+                        marginRight: 12,
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
-                        backgroundColor: HUD.bg,
+                        backgroundColor: DS.cardAlt,
                       }}>
                         {item.image
                           ? <Image source={{ uri: item.image }} style={{ width: 44, height: 44 }} />
-                          : <Text style={{ color: HUD.cyan, fontWeight: "700", fontSize: 16, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{item.name?.[0]}</Text>
+                          : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 16 }}>{item.name?.[0]}</Text>
                         }
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: HUD.textPrimary, fontWeight: "700", fontSize: 14, letterSpacing: 1, textTransform: "uppercase", fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>{item.name}</Text>
+                        <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 14 }}>{item.name}</Text>
                         {item.username ? (
-                          <Text style={{ color: HUD.textMuted, fontSize: 11, letterSpacing: 1, fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace" }}>@{item.username}</Text>
+                          <Text style={{ color: DS.textMuted, fontSize: 12 }}>@{item.username}</Text>
                         ) : null}
                       </View>
-                      {createChat.isPending ? <ActivityIndicator color={HUD.cyan} size="small" /> : null}
+                      {createChat.isPending ? <ActivityIndicator color={DS.cyan} size="small" /> : null}
                     </TouchableOpacity>
                   );
                 }}

@@ -16,15 +16,21 @@ import { uploadFile } from "@/lib/upload";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 
-const HUD_BG = "#020B18";
-const HUD_CARD = "#041525";
-const HUD_CYAN = "#00B4D8";
-const HUD_CYAN_DIM = "#7DB8D9";
-const HUD_NAME = "#C8E8FF";
-const HUD_RED = "#FF3B30";
-const HUD_BORDER = "#0A2A3F";
-const HUD_CYAN_FAINT = "rgba(0,180,216,0.10)";
-const HUD_CYAN_MID = "rgba(0,180,216,0.20)";
+const DS = {
+  bg: "#0A0F1E",
+  card: "#111827",
+  cardAlt: "#0F172A",
+  cyan: "#00B4D8",
+  cyanSoft: "rgba(0,180,216,0.12)",
+  cyanBorder: "rgba(0,180,216,0.25)",
+  red: "#FF3B30",
+  redSoft: "rgba(255,59,48,0.10)",
+  redBorder: "rgba(255,59,48,0.28)",
+  textPrimary: "#F1F5F9",
+  textSecondary: "#94A3B8",
+  textMuted: "#475569",
+  border: "rgba(255,255,255,0.06)",
+};
 
 export default function ProfileScreen() {
   const { data: session } = useSession();
@@ -120,8 +126,8 @@ export default function ProfileScreen() {
 
   if (profileLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: HUD_BG, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-        <ActivityIndicator color={HUD_CYAN} size="large" />
+      <View style={{ flex: 1, backgroundColor: DS.bg, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
+        <ActivityIndicator color={DS.cyan} size="large" />
       </View>
     );
   }
@@ -130,158 +136,160 @@ export default function ProfileScreen() {
   const avatarImage = profile?.image || session?.user?.image;
 
   return (
-    <View style={{ flex: 1, backgroundColor: HUD_BG }} testID="profile-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: HUD_BG }}>
-        {/* HUD Header */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 0 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-            <Text style={{
-              flex: 1,
-              fontSize: 13,
-              fontWeight: "700",
-              color: HUD_CYAN,
-              letterSpacing: 4,
-              textTransform: "uppercase",
-            }}>
-              AGENT PROFILE
-            </Text>
-            <TouchableOpacity
-              onPress={openEdit}
-              testID="edit-profile-button"
-              style={{
-                borderWidth: 1,
-                borderColor: HUD_CYAN,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                marginRight: 8,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <Edit3 size={13} color={HUD_CYAN} />
-              <Text style={{ color: HUD_CYAN, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>EDIT</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSignOut}
-              testID="sign-out-button"
-              style={{
-                borderWidth: 1,
-                borderColor: HUD_RED,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <LogOut size={13} color={HUD_RED} />
-              <Text style={{ color: HUD_RED, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>OUT</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Thin cyan divider */}
-          <View style={{ height: 1, backgroundColor: HUD_CYAN, opacity: 0.6, marginBottom: 2 }} />
-          <View style={{ height: 1, backgroundColor: HUD_CYAN, opacity: 0.15 }} />
+    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="profile-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: DS.bg }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: DS.textPrimary, letterSpacing: -0.5 }}>
+            Profile
+          </Text>
+          <TouchableOpacity
+            onPress={openEdit}
+            testID="edit-profile-button"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              backgroundColor: DS.cyanSoft,
+              borderWidth: 1,
+              borderColor: DS.cyanBorder,
+              borderRadius: 100,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              marginRight: 8,
+            }}
+          >
+            <Edit3 size={13} color={DS.cyan} />
+            <Text style={{ color: DS.cyan, fontSize: 13, fontWeight: "600" }}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSignOut}
+            testID="sign-out-button"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 100,
+              backgroundColor: DS.redSoft,
+              borderWidth: 1,
+              borderColor: DS.redBorder,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <LogOut size={15} color={DS.red} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Identity block */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
-          <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 18 }}>
-            {/* Avatar */}
+        {/* Hero block */}
+        <View style={{
+          backgroundColor: DS.card,
+          borderRadius: 24,
+          marginHorizontal: 16,
+          marginTop: 4,
+          marginBottom: 16,
+          padding: 20,
+          borderWidth: 1,
+          borderColor: DS.border,
+          shadowColor: "#000",
+          shadowOpacity: 0.15,
+          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 4 },
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+            {/* Avatar with cyan ring */}
             <TouchableOpacity
               onPress={handleAvatarPress}
               disabled={uploadingAvatar}
               testID="avatar-button"
-              style={{ position: "relative", marginRight: 16 }}
+              style={{ marginRight: 16 }}
             >
               <View style={{
-                width: 82,
-                height: 82,
-                borderRadius: 8,
-                backgroundColor: HUD_CARD,
-                borderWidth: 2,
-                borderColor: HUD_CYAN,
+                width: 80,
+                height: 80,
+                borderRadius: 100,
+                backgroundColor: DS.cardAlt,
+                borderWidth: 2.5,
+                borderColor: DS.cyan,
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                shadowColor: HUD_CYAN,
-                shadowOpacity: 0.5,
-                shadowRadius: 8,
+                shadowColor: DS.cyan,
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
                 shadowOffset: { width: 0, height: 0 },
               }}>
                 {uploadingAvatar ? (
-                  <ActivityIndicator color={HUD_CYAN} />
+                  <ActivityIndicator color={DS.cyan} />
                 ) : avatarImage ? (
-                  <Image source={{ uri: avatarImage }} style={{ width: 82, height: 82 }} />
+                  <Image source={{ uri: avatarImage }} style={{ width: 80, height: 80 }} />
                 ) : (
-                  <Text style={{ color: HUD_CYAN, fontWeight: "800", fontSize: 32, letterSpacing: -1 }}>
+                  <Text style={{ color: DS.cyan, fontWeight: "800", fontSize: 30 }}>
                     {displayName[0]?.toUpperCase()}
                   </Text>
                 )}
               </View>
-              {/* Camera overlay badge */}
+              {/* Camera overlay */}
               <View style={{
                 position: "absolute",
                 bottom: 0,
                 right: 0,
-                width: 22,
-                height: 22,
-                backgroundColor: HUD_CYAN,
+                width: 26,
+                height: 26,
+                borderRadius: 100,
+                backgroundColor: DS.cyan,
                 alignItems: "center",
                 justifyContent: "center",
+                borderWidth: 2,
+                borderColor: DS.card,
               }}>
-                <Camera size={12} color={HUD_BG} />
+                <Camera size={12} color={DS.bg} />
               </View>
-              {/* Corner brackets */}
-              <View style={{ position: "absolute", top: -2, left: -2, width: 10, height: 10, borderTopWidth: 2, borderLeftWidth: 2, borderColor: HUD_CYAN }} />
-              <View style={{ position: "absolute", top: -2, right: -2, width: 10, height: 10, borderTopWidth: 2, borderRightWidth: 2, borderColor: HUD_CYAN }} />
-              <View style={{ position: "absolute", bottom: -2, left: -2, width: 10, height: 10, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: HUD_CYAN }} />
             </TouchableOpacity>
 
             {/* Name + username + badges */}
             <View style={{ flex: 1, paddingTop: 4 }}>
               <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
-                <Text style={{ color: HUD_NAME, fontSize: 20, fontWeight: "800", letterSpacing: 0.5 }}>{displayName}</Text>
+                <Text style={{ color: DS.textPrimary, fontSize: 20, fontWeight: "800", letterSpacing: -0.3 }}>{displayName}</Text>
                 {profile?.isVerified ? (
                   <View style={{
                     width: 18,
                     height: 18,
-                    backgroundColor: HUD_CYAN,
+                    borderRadius: 100,
+                    backgroundColor: DS.cyan,
                     alignItems: "center",
                     justifyContent: "center",
-                    transform: [{ rotate: "45deg" }],
                   }}>
-                    <View style={{ transform: [{ rotate: "-45deg" }] }}>
-                      <CheckCircle size={12} color={HUD_BG} fill={HUD_BG} />
-                    </View>
+                    <CheckCircle size={12} color={DS.bg} fill={DS.bg} />
                   </View>
                 ) : null}
                 {profile?.role === "mentor" ? (
                   <View style={{
                     borderWidth: 1,
-                    borderColor: HUD_CYAN,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
+                    borderColor: DS.cyanBorder,
+                    backgroundColor: DS.cyanSoft,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 100,
                   }}>
-                    <Text style={{ color: HUD_CYAN, fontSize: 9, fontWeight: "700", letterSpacing: 1.5 }}>MENTOR</Text>
+                    <Text style={{ color: DS.cyan, fontSize: 10, fontWeight: "700" }}>Mentor</Text>
                   </View>
                 ) : null}
               </View>
 
               {profile?.username ? (
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 13, letterSpacing: 0.5, marginBottom: 6 }}>@{profile.username}</Text>
+                <Text style={{ color: DS.textSecondary, fontSize: 13, marginBottom: 6 }}>@{profile.username}</Text>
               ) : null}
 
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 {profile?.isPublic ? (
-                  <Globe size={12} color={HUD_CYAN_DIM} />
+                  <Globe size={11} color={DS.textMuted} />
                 ) : (
-                  <Lock size={12} color={HUD_CYAN_DIM} />
+                  <Lock size={11} color={DS.textMuted} />
                 )}
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>
-                  {profile?.isPublic ? "PUBLIC" : "PRIVATE"}
+                <Text style={{ color: DS.textMuted, fontSize: 11 }}>
+                  {profile?.isPublic ? "Public profile" : "Private profile"}
                 </Text>
               </View>
             </View>
@@ -290,292 +298,347 @@ export default function ProfileScreen() {
           {/* Bio */}
           {profile?.bio ? (
             <Text style={{
-              color: HUD_CYAN_DIM,
+              color: DS.textSecondary,
               fontSize: 13,
               lineHeight: 20,
-              fontStyle: "italic",
-              marginBottom: 16,
-              paddingLeft: 10,
-              borderLeftWidth: 2,
-              borderLeftColor: HUD_CYAN,
+              marginTop: 14,
+              paddingTop: 14,
+              borderTopWidth: 1,
+              borderTopColor: DS.border,
             }}>{profile.bio}</Text>
           ) : null}
+        </View>
 
-          {/* Stats row: FOLLOWERS / FOLLOWING / POSTS */}
-          <View style={{
-            flexDirection: "row",
-            borderWidth: 1,
-            borderColor: HUD_BORDER,
-            marginBottom: 20,
-          }}>
-            {[
-              { label: "FOLLOWERS", value: profile?._count?.followers || 0 },
-              { label: "FOLLOWING", value: profile?._count?.following || 0 },
-              { label: "POSTS", value: profile?._count?.posts || 0 },
-            ].map((item, idx) => (
-              <View
-                key={item.label}
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  paddingVertical: 12,
-                  borderLeftWidth: idx === 0 ? 0 : 1,
-                  borderLeftColor: HUD_CYAN,
-                  backgroundColor: HUD_CARD,
-                }}
-              >
-                <Text style={{ color: HUD_CYAN, fontSize: 22, fontWeight: "700", letterSpacing: -0.5 }}>{item.value}</Text>
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 1.5, marginTop: 2, textTransform: "uppercase" }}>{item.label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Interests */}
-          {interests.length > 0 ? (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>INTERESTS</Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {interests.map((tag: string) => (
-                  <View
-                    key={tag}
-                    style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                      borderWidth: 1,
-                      borderColor: HUD_CYAN,
-                      backgroundColor: HUD_CYAN_FAINT,
-                    }}
-                  >
-                    <Text style={{ color: HUD_CYAN, fontSize: 11, fontWeight: "600", letterSpacing: 0.5 }}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          {/* Main Ambition */}
-          {profile?.mainAmbition ? (
-            <Animated.View
-              entering={FadeInDown.duration(400)}
+        {/* Stats row - 3 pill cards */}
+        <View style={{ flexDirection: "row", gap: 10, marginHorizontal: 16, marginBottom: 16 }}>
+          {[
+            { label: "Followers", value: profile?._count?.followers || 0 },
+            { label: "Following", value: profile?._count?.following || 0 },
+            { label: "Posts", value: profile?._count?.posts || 0 },
+          ].map((item, idx) => (
+            <View
+              key={item.label}
               style={{
-                backgroundColor: HUD_CARD,
-                borderTopWidth: 1,
-                borderTopColor: HUD_CYAN,
-                padding: 14,
-                marginBottom: 16,
+                flex: 1,
+                alignItems: "center",
+                paddingVertical: 14,
+                backgroundColor: DS.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: DS.border,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 2 },
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Award size={13} color={HUD_CYAN} />
-                <Text style={{ color: HUD_CYAN, fontSize: 9, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>MAIN AMBITION</Text>
-              </View>
-              <Text style={{ color: HUD_NAME, fontSize: 14, lineHeight: 22 }}>{profile.mainAmbition}</Text>
-            </Animated.View>
-          ) : null}
-
-          {/* Goals / Sprints stats grid */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>PERFORMANCE DATA</Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <View style={{
-                flex: 1,
-                backgroundColor: HUD_CARD,
-                borderTopWidth: 1,
-                borderTopColor: HUD_CYAN,
-                padding: 14,
-                alignItems: "center",
-              }}>
-                <Target size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
-                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{completedGoals}</Text>
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>GOALS{"\n"}DONE</Text>
-              </View>
-              <View style={{
-                flex: 1,
-                backgroundColor: HUD_CARD,
-                borderTopWidth: 1,
-                borderTopColor: HUD_CYAN,
-                padding: 14,
-                alignItems: "center",
-              }}>
-                <Target size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
-                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{activeGoals}</Text>
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>IN{"\n"}PROGRESS</Text>
-              </View>
-              <View style={{
-                flex: 1,
-                backgroundColor: HUD_CARD,
-                borderTopWidth: 1,
-                borderTopColor: HUD_CYAN,
-                padding: 14,
-                alignItems: "center",
-              }}>
-                <Zap size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
-                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{bestStreak}</Text>
-                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>BEST{"\n"}STREAK</Text>
-              </View>
+              <Text style={{ color: DS.textPrimary, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>{item.value}</Text>
+              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 3 }}>{item.label}</Text>
             </View>
-          </View>
+          ))}
+        </View>
 
-          {/* Current Focus */}
-          {profile?.currentGoals ? (
+        {/* Performance stats */}
+        <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+          <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+            Progress
+          </Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{
-              backgroundColor: HUD_CARD,
-              borderTopWidth: 1,
-              borderTopColor: HUD_CYAN,
-              padding: 14,
-              marginBottom: 20,
-            }}>
-              <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>CURRENT FOCUS</Text>
-              <Text style={{ color: HUD_CYAN_DIM, fontSize: 13, lineHeight: 20 }}>{profile.currentGoals}</Text>
-            </View>
-          ) : null}
-
-          {/* Settings section */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>SYSTEM CONFIG</Text>
-
-            {/* Language toggle */}
-            <View style={{
-              backgroundColor: HUD_CARD,
-              borderTopWidth: 1,
-              borderTopColor: HUD_CYAN,
-              padding: 14,
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 8,
-            }}>
-              <Text style={{ flex: 1, color: HUD_NAME, fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "600" }}>LANGUAGE</Text>
-              <View style={{ flexDirection: "row", gap: 4 }}>
-                <TouchableOpacity
-                  onPress={() => setLang("en")}
-                  testID="lang-en-button"
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 6,
-                    borderWidth: 1,
-                    borderColor: lang === "en" ? HUD_CYAN : HUD_BORDER,
-                    backgroundColor: lang === "en" ? HUD_CYAN_MID : "transparent",
-                  }}
-                >
-                  <Text style={{ color: lang === "en" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>EN</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setLang("es")}
-                  testID="lang-es-button"
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 6,
-                    borderWidth: 1,
-                    borderColor: lang === "es" ? HUD_CYAN : HUD_BORDER,
-                    backgroundColor: lang === "es" ? HUD_CYAN_MID : "transparent",
-                  }}
-                >
-                  <Text style={{ color: lang === "es" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>ES</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Theme toggle */}
-            <View style={{
-              backgroundColor: HUD_CARD,
-              borderTopWidth: 1,
-              borderTopColor: HUD_CYAN,
-              padding: 14,
-              flexDirection: "row",
+              flex: 1,
+              backgroundColor: DS.card,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: DS.border,
+              padding: 16,
               alignItems: "center",
             }}>
-              <Text style={{ flex: 1, color: HUD_NAME, fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "600" }}>DISPLAY MODE</Text>
-              <View style={{ flexDirection: "row", gap: 4 }}>
-                <TouchableOpacity
-                  onPress={() => setTheme("dark")}
-                  testID="theme-dark-button"
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderWidth: 1,
-                    borderColor: mode === "dark" ? HUD_CYAN : HUD_BORDER,
-                    backgroundColor: mode === "dark" ? HUD_CYAN_MID : "transparent",
-                  }}
-                >
-                  <Text style={{ color: mode === "dark" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>DARK</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setTheme("light")}
-                  testID="theme-light-button"
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderWidth: 1,
-                    borderColor: mode === "light" ? HUD_CYAN : HUD_BORDER,
-                    backgroundColor: mode === "light" ? HUD_CYAN_MID : "transparent",
-                  }}
-                >
-                  <Text style={{ color: mode === "light" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>LIGHT</Text>
-                </TouchableOpacity>
-              </View>
+              <Target size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
+              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{completedGoals}</Text>
+              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>Goals done</Text>
+            </View>
+            <View style={{
+              flex: 1,
+              backgroundColor: DS.card,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: DS.border,
+              padding: 16,
+              alignItems: "center",
+            }}>
+              <Target size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
+              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{activeGoals}</Text>
+              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>In progress</Text>
+            </View>
+            <View style={{
+              flex: 1,
+              backgroundColor: DS.card,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: DS.border,
+              padding: 16,
+              alignItems: "center",
+            }}>
+              <Zap size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
+              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{bestStreak}</Text>
+              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>Best streak</Text>
             </View>
           </View>
         </View>
+
+        {/* Interests */}
+        {interests.length > 0 ? (
+          <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+              Interests
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {interests.map((tag: string) => (
+                <View
+                  key={tag}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: DS.cyanBorder,
+                    backgroundColor: DS.cyanSoft,
+                    borderRadius: 100,
+                  }}
+                >
+                  <Text style={{ color: DS.cyan, fontSize: 12, fontWeight: "600" }}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Main Ambition */}
+        {profile?.mainAmbition ? (
+          <Animated.View
+            entering={FadeInDown.duration(400)}
+            style={{
+              backgroundColor: DS.card,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: DS.border,
+              borderLeftWidth: 3,
+              borderLeftColor: DS.cyan,
+              padding: 16,
+              marginHorizontal: 16,
+              marginBottom: 16,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Award size={14} color={DS.cyan} />
+              <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600" }}>Main ambition</Text>
+            </View>
+            <Text style={{ color: DS.textPrimary, fontSize: 14, lineHeight: 22 }}>{profile.mainAmbition}</Text>
+          </Animated.View>
+        ) : null}
+
+        {/* Current Focus */}
+        {profile?.currentGoals ? (
+          <View style={{
+            backgroundColor: DS.card,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: DS.border,
+            padding: 16,
+            marginHorizontal: 16,
+            marginBottom: 16,
+          }}>
+            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>Current focus</Text>
+            <Text style={{ color: DS.textSecondary, fontSize: 13, lineHeight: 20 }}>{profile.currentGoals}</Text>
+          </View>
+        ) : null}
+
+        {/* Settings */}
+        <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+          <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+            Settings
+          </Text>
+
+          {/* Language toggle */}
+          <View style={{
+            backgroundColor: DS.card,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: DS.border,
+            padding: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 10,
+          }}>
+            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 14, fontWeight: "600" }}>Language</Text>
+            <View style={{
+              flexDirection: "row",
+              backgroundColor: DS.bg,
+              borderRadius: 100,
+              padding: 3,
+              borderWidth: 1,
+              borderColor: DS.border,
+              gap: 3,
+            }}>
+              <TouchableOpacity
+                onPress={() => setLang("en")}
+                testID="lang-en-button"
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 100,
+                  backgroundColor: lang === "en" ? DS.cyan : "transparent",
+                }}
+              >
+                <Text style={{ color: lang === "en" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>EN</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setLang("es")}
+                testID="lang-es-button"
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 100,
+                  backgroundColor: lang === "es" ? DS.cyan : "transparent",
+                }}
+              >
+                <Text style={{ color: lang === "es" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>ES</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Theme toggle */}
+          <View style={{
+            backgroundColor: DS.card,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: DS.border,
+            padding: 16,
+            flexDirection: "row",
+            alignItems: "center",
+          }}>
+            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 14, fontWeight: "600" }}>Display mode</Text>
+            <View style={{
+              flexDirection: "row",
+              backgroundColor: DS.bg,
+              borderRadius: 100,
+              padding: 3,
+              borderWidth: 1,
+              borderColor: DS.border,
+              gap: 3,
+            }}>
+              <TouchableOpacity
+                onPress={() => setTheme("dark")}
+                testID="theme-dark-button"
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 100,
+                  backgroundColor: mode === "dark" ? DS.cyan : "transparent",
+                }}
+              >
+                <Text style={{ color: mode === "dark" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>Dark</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setTheme("light")}
+                testID="theme-light-button"
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 100,
+                  backgroundColor: mode === "light" ? DS.cyan : "transparent",
+                }}
+              >
+                <Text style={{ color: mode === "light" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>Light</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Sign out - destructive bottom button */}
+        <TouchableOpacity
+          onPress={handleSignOut}
+          testID="sign-out-bottom-button"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            marginHorizontal: 16,
+            marginBottom: 24,
+            backgroundColor: DS.redSoft,
+            borderWidth: 1,
+            borderColor: DS.redBorder,
+            borderRadius: 100,
+            padding: 16,
+          }}
+        >
+          <LogOut size={16} color={DS.red} />
+          <Text style={{ color: DS.red, fontSize: 15, fontWeight: "700" }}>{t("signOut")}</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Edit Modal */}
       <Modal visible={showEdit} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: HUD_BG }}>
+        <View style={{ flex: 1, backgroundColor: DS.bg }}>
+          {/* Drag indicator */}
+          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginTop: 12, marginBottom: 4 }} />
+
           {/* Modal header */}
           <View style={{
             flexDirection: "row",
             alignItems: "center",
-            padding: 16,
+            padding: 20,
             borderBottomWidth: 1,
-            borderBottomColor: HUD_CYAN,
+            borderBottomColor: DS.border,
           }}>
             <TouchableOpacity
               onPress={() => setShowEdit(false)}
               style={{
-                marginRight: 14,
+                width: 36,
+                height: 36,
+                borderRadius: 100,
                 borderWidth: 1,
-                borderColor: HUD_BORDER,
-                padding: 6,
+                borderColor: DS.border,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 14,
               }}
             >
-              <X size={18} color={HUD_CYAN_DIM} />
+              <X size={18} color={DS.textSecondary} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, color: HUD_CYAN, fontSize: 12, fontWeight: "700", letterSpacing: 3, textTransform: "uppercase" }}>EDIT PROFILE</Text>
+            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>Edit profile</Text>
             <TouchableOpacity
               onPress={() => updateProfile.mutate(editData)}
               disabled={updateProfile.isPending}
               testID="save-profile-button"
               style={{
-                borderWidth: 1,
-                borderColor: HUD_CYAN,
-                backgroundColor: HUD_CYAN_MID,
-                paddingHorizontal: 18,
-                paddingVertical: 8,
+                backgroundColor: DS.cyan,
+                borderRadius: 100,
+                paddingHorizontal: 20,
+                paddingVertical: 9,
               }}
             >
               {updateProfile.isPending ? (
-                <ActivityIndicator color={HUD_CYAN} size="small" />
+                <ActivityIndicator color={DS.bg} size="small" />
               ) : (
-                <Text style={{ color: HUD_CYAN, fontWeight: "700", fontSize: 12, letterSpacing: 1.5 }}>SAVE</Text>
+                <Text style={{ color: DS.bg, fontWeight: "700", fontSize: 14 }}>Save</Text>
               )}
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
             {([
-              { key: "name" as const, label: "FULL NAME", placeholder: "Your name" },
-              { key: "username" as const, label: "USERNAME", placeholder: "@username" },
-              { key: "bio" as const, label: "BIO", placeholder: "Tell your story...", multiline: true },
-              { key: "mainAmbition" as const, label: "MAIN AMBITION", placeholder: "What is your biggest goal in life?", multiline: true },
-              { key: "currentGoals" as const, label: "CURRENT FOCUS", placeholder: "What are you working on right now?", multiline: true },
+              { key: "name" as const, label: "Full name", placeholder: "Your name" },
+              { key: "username" as const, label: "Username", placeholder: "@username" },
+              { key: "bio" as const, label: "Bio", placeholder: "Tell your story...", multiline: true },
+              { key: "mainAmbition" as const, label: "Main ambition", placeholder: "What is your biggest goal in life?", multiline: true },
+              { key: "currentGoals" as const, label: "Current focus", placeholder: "What are you working on right now?", multiline: true },
             ]).map(({ key, label, placeholder, multiline }) => (
               <View key={key} style={{ marginBottom: 20 }}>
                 <Text style={{
-                  color: HUD_CYAN,
-                  fontSize: 9,
-                  fontWeight: "700",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                  color: DS.textSecondary,
+                  fontSize: 13,
+                  fontWeight: "600",
                   marginBottom: 8,
                 }}>
                   {label}
@@ -584,17 +647,18 @@ export default function ProfileScreen() {
                   value={editData[key]}
                   onChangeText={(txt) => setEditData(p => ({ ...p, [key]: txt }))}
                   placeholder={placeholder}
-                  placeholderTextColor={HUD_BORDER}
+                  placeholderTextColor={DS.textMuted}
                   multiline={multiline}
                   testID={`edit-${key}-input`}
                   style={{
-                    backgroundColor: HUD_CARD,
+                    backgroundColor: DS.card,
                     borderWidth: 1,
-                    borderColor: HUD_CYAN,
-                    padding: 12,
-                    color: HUD_NAME,
+                    borderColor: DS.border,
+                    borderRadius: 12,
+                    padding: 14,
+                    color: DS.textPrimary,
                     fontSize: 14,
-                    letterSpacing: 0.3,
+                    lineHeight: 20,
                     ...(multiline ? { minHeight: 80, textAlignVertical: "top" } : {}),
                   }}
                 />
