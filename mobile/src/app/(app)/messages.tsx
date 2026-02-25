@@ -14,7 +14,7 @@ import Animated, { FadeInRight, FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { uploadFile } from "@/lib/upload";
-import { pickImage, pickDocument, takePhoto } from "@/lib/file-picker";
+import { pickImage, pickDocument, pickPdf, takePhoto } from "@/lib/file-picker";
 
 function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean; colors: any }) {
   const isImage = msg.type === "image" || msg.fileMimeType?.startsWith("image/");
@@ -79,6 +79,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const otherMember = chat.members?.find(m => m.user.id !== currentUserId);
   const name = chat.type === "direct" ? otherMember?.user?.name || "?" : (chat.name || "Grupo");
 
@@ -101,31 +102,34 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ["Cancelar", "Foto de la cámara", "Imagen de la galería", "Archivo / Documento"],
+          options: [t("cancel"), "Foto de la cámara", t("pickImageLabel"), t("pickPdf"), t("pickFile")],
           cancelButtonIndex: 0,
         },
         async (idx) => {
           if (idx === 1) await handleSendMedia("camera");
           else if (idx === 2) await handleSendMedia("image");
-          else if (idx === 3) await handleSendMedia("document");
+          else if (idx === 3) await handleSendMedia("pdf");
+          else if (idx === 4) await handleSendMedia("document");
         }
       );
     } else {
-      Alert.alert("Adjuntar", "Selecciona el tipo de archivo", [
+      Alert.alert(t("attachFile"), undefined, [
         { text: "Cámara", onPress: () => handleSendMedia("camera") },
-        { text: "Imagen", onPress: () => handleSendMedia("image") },
-        { text: "Archivo", onPress: () => handleSendMedia("document") },
-        { text: "Cancelar", style: "cancel" },
+        { text: t("pickImageLabel"), onPress: () => handleSendMedia("image") },
+        { text: t("pickPdf"), onPress: () => handleSendMedia("pdf") },
+        { text: t("pickFile"), onPress: () => handleSendMedia("document") },
+        { text: t("cancel"), style: "cancel" },
       ]);
     }
   };
 
-  const handleSendMedia = async (source: "camera" | "image" | "document") => {
+  const handleSendMedia = async (source: "camera" | "image" | "pdf" | "document") => {
     try {
       setUploading(true);
       let picked = null;
       if (source === "camera") picked = await takePhoto();
       else if (source === "image") picked = await pickImage();
+      else if (source === "pdf") picked = await pickPdf();
       else picked = await pickDocument();
 
       if (!picked) { setUploading(false); return; }

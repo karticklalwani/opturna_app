@@ -205,13 +205,13 @@ export default function AcademyScreen() {
                   <View>
                     <Image source={{ uri: pickedThumbnail.uri }} style={{ width: "100%", height: 160 }} resizeMode="cover" />
                     <View style={{ position: "absolute", bottom: 8, right: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.6)" }}>
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>Change</Text>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{t("changeThumbnail")}</Text>
                     </View>
                   </View>
                 ) : (
                   <View style={{ height: 120, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.bg3 }}>
                     <ImageIcon size={28} color={colors.text4} />
-                    <Text style={{ color: colors.text4, fontSize: 13 }}>Tap to add thumbnail</Text>
+                    <Text style={{ color: colors.text4, fontSize: 13 }}>{t("addThumbnail")}</Text>
                   </View>
                 )}
               </TouchableOpacity>

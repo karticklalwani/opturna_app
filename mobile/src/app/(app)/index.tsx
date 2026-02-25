@@ -30,6 +30,7 @@ const REACTION_TYPES = [
 
 function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: string; colors: Colors }) {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -61,18 +62,18 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
 
   const handleMorePress = () => {
     if (!isMyPost) return;
-    Alert.alert("Post options", undefined, [
+    Alert.alert(t("post"), undefined, [
       {
-        text: "Delete",
+        text: t("delete"),
         style: "destructive",
         onPress: () => {
-          Alert.alert("Delete post", "Are you sure you want to delete this post?", [
-            { text: "Cancel", style: "cancel" },
-            { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate() },
+          Alert.alert(t("deletePost"), t("deletePostMsg"), [
+            { text: t("cancel"), style: "cancel" },
+            { text: t("delete"), style: "destructive", onPress: () => deleteMutation.mutate() },
           ]);
         },
       },
-      { text: "Cancel", style: "cancel" },
+      { text: t("cancel"), style: "cancel" },
     ]);
   };
 

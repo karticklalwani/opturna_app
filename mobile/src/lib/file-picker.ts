@@ -36,7 +36,26 @@ export async function takePhoto(): Promise<PickedFile | null> {
 }
 
 export async function pickDocument(): Promise<PickedFile | null> {
-  const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+  const result = await DocumentPicker.getDocumentAsync({
+    type: "*/*",
+    copyToCacheDirectory: true,
+  });
+  if (result.canceled) return null;
+  const a = result.assets[0];
+  return { uri: a.uri, filename: a.name, mimeType: a.mimeType ?? "application/octet-stream" };
+}
+
+export async function pickPdf(): Promise<PickedFile | null> {
+  const result = await DocumentPicker.getDocumentAsync({
+    type: ["application/pdf", "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain", "text/csv"],
+    copyToCacheDirectory: true,
+  });
   if (result.canceled) return null;
   const a = result.assets[0];
   return { uri: a.uri, filename: a.name, mimeType: a.mimeType ?? "application/octet-stream" };

@@ -53,10 +53,10 @@ export default function ProfileScreen() {
   });
 
   const handleSignOut = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("signOut"), t("signOutMsg"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Sign Out", style: "destructive",
+        text: t("signOut"), style: "destructive",
         onPress: async () => {
           await authClient.signOut();
           await invalidateSession();

@@ -31,7 +31,7 @@ export default function LiveScreen() {
   const [lives, setLives] = useState<LiveItem[]>([]);
 
   const activeLives = lives.filter(l => l.isLive);
-  const scheduled = lives.filter(l => !l.isLive);
+  const scheduledLives = lives.filter(l => !l.isLive);
 
   const handleGoLive = () => {
     if (!liveTitle.trim()) return;
@@ -55,12 +55,12 @@ export default function LiveScreen() {
 
   const handleDelete = (id: string) => {
     Alert.alert(
-      "Delete live",
-      "Are you sure you want to remove this live?",
+      t("deleteLive"),
+      t("deleteLiveMsg"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("delete"),
           style: "destructive",
           onPress: () => setLives(prev => prev.filter(l => l.id !== id)),
         },
@@ -89,14 +89,14 @@ export default function LiveScreen() {
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF4444" }} />
-              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>En directo ahora</Text>
+              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>{t("liveNow")}</Text>
             </View>
             {activeLives.map((live, i) => (
               <Animated.View key={live.id} entering={FadeInDown.duration(300).delay(i * 60)}>
                 <TouchableOpacity
                   testID={`live-card-${live.id}`}
                   style={{ backgroundColor: colors.card, borderRadius: 16, marginBottom: 12, overflow: "hidden" }}
-                  onPress={() => Alert.alert("Directo", `Unirse al directo de ${live.host}`)}
+                  onPress={() => Alert.alert(t("livesTitle"), `${t("joinLive")}: ${live.host}`)}
                 >
                   <View style={{ height: 140, backgroundColor: "#1a0000", alignItems: "center", justifyContent: "center" }}>
                     <View style={{ position: "absolute", top: 10, left: 10, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#EF4444", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
@@ -136,18 +136,18 @@ export default function LiveScreen() {
           </>
         )}
 
-        {scheduled.length > 0 && (
+        {scheduledLives.length > 0 && (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, marginTop: 8 }}>
               <Calendar size={16} color={colors.text3} />
-              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>Programados</Text>
+              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>{t("scheduled")}</Text>
             </View>
-            {scheduled.map((live, i) => (
+            {scheduledLives.map((live, i) => (
               <Animated.View key={live.id} entering={FadeInDown.duration(300).delay(i * 60)}>
                 <TouchableOpacity
                   testID={`scheduled-card-${live.id}`}
                   style={{ backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10, flexDirection: "row", alignItems: "center" }}
-                  onPress={() => Alert.alert("Recordatorio", `Activar recordatorio para "${live.title}"`)}
+                  onPress={() => Alert.alert(t("setReminder"), `${t("setReminder")}: "${live.title}"`)}
                 >
                   <View style={{ width: 50, height: 50, borderRadius: 14, backgroundColor: colors.bg3, alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                     <Clock size={22} color={colors.text3} />
@@ -175,7 +175,7 @@ export default function LiveScreen() {
           </>
         )}
 
-        {activeLives.length === 0 && scheduled.length === 0 && (
+        {activeLives.length === 0 && scheduledLives.length === 0 && (
           <View style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }} testID="empty-lives">
             <Radio size={56} color={colors.bg4} />
             <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", marginTop: 16, marginBottom: 8, textAlign: "center" }}>{t("noLives")}</Text>

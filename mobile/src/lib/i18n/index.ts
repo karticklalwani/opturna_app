@@ -46,6 +46,14 @@ const translations = {
     publish: "Publish", livesTitle: "Live", startLive: "Go Live",
     scheduleLive: "Schedule", noLives: "No lives scheduled", noLivesDesc: "Go live or schedule a broadcast for your followers.",
     liveTitle: "Stream Title", startStreaming: "Start Streaming",
+    deleteLive: "Delete Live", deleteLiveMsg: "Are you sure you want to remove this live?",
+    liveNow: "Live now", scheduled: "Scheduled",
+    joinLive: "Join live", setReminder: "Set Reminder",
+    signOutMsg: "Are you sure you want to sign out?",
+    deletePost: "Delete Post", deletePostMsg: "Are you sure you want to delete this post?",
+    reportPost: "Report Post", changeThumbnail: "Change", addThumbnail: "Tap to add thumbnail",
+    pickFile: "Pick File", pickPdf: "PDF / Document", pickAudio: "Audio", pickImageLabel: "Image",
+    attachFile: "Attach",
   },
   es: {
     feed: "Inicio", forYou: "Para Ti", progress: "Progreso", learning: "Aprendizaje",
@@ -88,6 +96,14 @@ const translations = {
     publish: "Publicar", livesTitle: "Directos", startLive: "Iniciar Directo",
     scheduleLive: "Programar", noLives: "Sin directos programados", noLivesDesc: "Inicia un directo o programa una transmisión para tus seguidores.",
     liveTitle: "Título del Directo", startStreaming: "Empezar a Transmitir",
+    deleteLive: "Eliminar Directo", deleteLiveMsg: "¿Seguro que quieres eliminar este directo?",
+    liveNow: "En directo ahora", scheduled: "Programados",
+    joinLive: "Unirse al directo", setReminder: "Activar Recordatorio",
+    signOutMsg: "¿Seguro que quieres cerrar sesión?",
+    deletePost: "Eliminar Publicación", deletePostMsg: "¿Seguro que quieres eliminar esta publicación?",
+    reportPost: "Reportar Publicación", changeThumbnail: "Cambiar", addThumbnail: "Toca para añadir miniatura",
+    pickFile: "Elegir Archivo", pickPdf: "PDF / Documento", pickAudio: "Audio",
+    attachFile: "Adjuntar",
   }
 };
 
@@ -104,7 +120,7 @@ export const useI18n = create<I18nStore>()(
     (set, get) => ({
       lang: "es",
       setLang: (lang) => set({ lang }),
-      t: (key) => translations[get().lang][key] || translations.en[key] || key,
+      t: (key) => (translations[get().lang] as Record<string, string>)[key] || (translations.en as Record<string, string>)[key] || key,
     }),
     { name: "opturna-lang", storage: createJSONStorage(() => AsyncStorage) }
   )
