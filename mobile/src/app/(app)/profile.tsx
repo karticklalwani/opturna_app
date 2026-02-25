@@ -16,11 +16,21 @@ import { uploadFile } from "@/lib/upload";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 
+const HUD_BG = "#020B18";
+const HUD_CARD = "#041525";
+const HUD_CYAN = "#00B4D8";
+const HUD_CYAN_DIM = "#7DB8D9";
+const HUD_NAME = "#C8E8FF";
+const HUD_RED = "#FF3B30";
+const HUD_BORDER = "#0A2A3F";
+const HUD_CYAN_FAINT = "rgba(0,180,216,0.10)";
+const HUD_CYAN_MID = "rgba(0,180,216,0.20)";
+
 export default function ProfileScreen() {
   const { data: session } = useSession();
   const invalidateSession = useInvalidateSession();
   const queryClient = useQueryClient();
-  const { colors, mode, setTheme } = useTheme();
+  const { mode, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState({ name: "", bio: "", mainAmbition: "", currentGoals: "", username: "" });
@@ -110,8 +120,8 @@ export default function ProfileScreen() {
 
   if (profileLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-        <ActivityIndicator color={colors.accent} size="large" />
+      <View style={{ flex: 1, backgroundColor: HUD_BG, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
+        <ActivityIndicator color={HUD_CYAN} size="large" />
       </View>
     );
   }
@@ -120,185 +130,387 @@ export default function ProfileScreen() {
   const avatarImage = profile?.image || session?.user?.image;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="profile-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.text, flex: 1, letterSpacing: -0.5 }}>Profile</Text>
-          <TouchableOpacity onPress={openEdit} style={{ padding: 8, marginRight: 4 }} testID="edit-profile-button">
-            <Edit3 size={20} color={colors.text3} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleSignOut} style={{ padding: 8 }} testID="sign-out-button">
-            <LogOut size={20} color={colors.text3} />
-          </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: HUD_BG }} testID="profile-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: HUD_BG }}>
+        {/* HUD Header */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 0 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Text style={{
+              flex: 1,
+              fontSize: 13,
+              fontWeight: "700",
+              color: HUD_CYAN,
+              letterSpacing: 4,
+              textTransform: "uppercase",
+            }}>
+              AGENT PROFILE
+            </Text>
+            <TouchableOpacity
+              onPress={openEdit}
+              testID="edit-profile-button"
+              style={{
+                borderWidth: 1,
+                borderColor: HUD_CYAN,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                marginRight: 8,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Edit3 size={13} color={HUD_CYAN} />
+              <Text style={{ color: HUD_CYAN, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>EDIT</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSignOut}
+              testID="sign-out-button"
+              style={{
+                borderWidth: 1,
+                borderColor: HUD_RED,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <LogOut size={13} color={HUD_RED} />
+              <Text style={{ color: HUD_RED, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>OUT</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Thin cyan divider */}
+          <View style={{ height: 1, backgroundColor: HUD_CYAN, opacity: 0.6, marginBottom: 2 }} />
+          <View style={{ height: 1, backgroundColor: HUD_CYAN, opacity: 0.15 }} />
         </View>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Cover */}
-        <View style={{ height: 120, backgroundColor: colors.bg2, position: "relative" }}>
-          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, backgroundColor: colors.bg }} />
-        </View>
-
-        {/* Avatar & basic info */}
-        <View style={{ paddingHorizontal: 16, marginTop: -40 }}>
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginBottom: 16 }}>
+        {/* Identity block */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 18 }}>
+            {/* Avatar */}
             <TouchableOpacity
               onPress={handleAvatarPress}
               disabled={uploadingAvatar}
               testID="avatar-button"
-              style={{ position: "relative" }}
+              style={{ position: "relative", marginRight: 16 }}
             >
-              <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: colors.bg, overflow: "hidden" }}>
+              <View style={{
+                width: 82,
+                height: 82,
+                borderRadius: 8,
+                backgroundColor: HUD_CARD,
+                borderWidth: 2,
+                borderColor: HUD_CYAN,
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                shadowColor: HUD_CYAN,
+                shadowOpacity: 0.5,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 0 },
+              }}>
                 {uploadingAvatar ? (
-                  <ActivityIndicator color="#0A0A0A" />
+                  <ActivityIndicator color={HUD_CYAN} />
                 ) : avatarImage ? (
-                  <Image source={{ uri: avatarImage }} style={{ width: 80, height: 80 }} />
+                  <Image source={{ uri: avatarImage }} style={{ width: 82, height: 82 }} />
                 ) : (
-                  <Text style={{ color: "#0A0A0A", fontWeight: "800", fontSize: 30 }}>
+                  <Text style={{ color: HUD_CYAN, fontWeight: "800", fontSize: 32, letterSpacing: -1 }}>
                     {displayName[0]?.toUpperCase()}
                   </Text>
                 )}
               </View>
-              <View style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.bg }}>
-                <Camera size={12} color="#0A0A0A" />
+              {/* Camera overlay badge */}
+              <View style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: 22,
+                height: 22,
+                backgroundColor: HUD_CYAN,
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <Camera size={12} color={HUD_BG} />
               </View>
+              {/* Corner brackets */}
+              <View style={{ position: "absolute", top: -2, left: -2, width: 10, height: 10, borderTopWidth: 2, borderLeftWidth: 2, borderColor: HUD_CYAN }} />
+              <View style={{ position: "absolute", top: -2, right: -2, width: 10, height: 10, borderTopWidth: 2, borderRightWidth: 2, borderColor: HUD_CYAN }} />
+              <View style={{ position: "absolute", bottom: -2, left: -2, width: 10, height: 10, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: HUD_CYAN }} />
             </TouchableOpacity>
-            <View style={{ flex: 1, marginLeft: 14, marginBottom: 4 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{displayName}</Text>
-                {profile?.isVerified ? <CheckCircle size={16} color={colors.accent} fill={colors.accent} /> : null}
+
+            {/* Name + username + badges */}
+            <View style={{ flex: 1, paddingTop: 4 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+                <Text style={{ color: HUD_NAME, fontSize: 20, fontWeight: "800", letterSpacing: 0.5 }}>{displayName}</Text>
+                {profile?.isVerified ? (
+                  <View style={{
+                    width: 18,
+                    height: 18,
+                    backgroundColor: HUD_CYAN,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: [{ rotate: "45deg" }],
+                  }}>
+                    <View style={{ transform: [{ rotate: "-45deg" }] }}>
+                      <CheckCircle size={12} color={HUD_BG} fill={HUD_BG} />
+                    </View>
+                  </View>
+                ) : null}
                 {profile?.role === "mentor" ? (
-                  <View style={{ backgroundColor: `${colors.accent}22`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                    <Text style={{ color: colors.accent, fontSize: 10, fontWeight: "700" }}>MENTOR</Text>
+                  <View style={{
+                    borderWidth: 1,
+                    borderColor: HUD_CYAN,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                  }}>
+                    <Text style={{ color: HUD_CYAN, fontSize: 9, fontWeight: "700", letterSpacing: 1.5 }}>MENTOR</Text>
                   </View>
                 ) : null}
               </View>
+
               {profile?.username ? (
-                <Text style={{ color: colors.text3, fontSize: 14 }}>@{profile.username}</Text>
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 13, letterSpacing: 0.5, marginBottom: 6 }}>@{profile.username}</Text>
               ) : null}
-            </View>
-            <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
-              {profile?.isPublic ? (
-                <Globe size={14} color={colors.text4} />
-              ) : (
-                <Lock size={14} color={colors.text4} />
-              )}
+
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                {profile?.isPublic ? (
+                  <Globe size={12} color={HUD_CYAN_DIM} />
+                ) : (
+                  <Lock size={12} color={HUD_CYAN_DIM} />
+                )}
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>
+                  {profile?.isPublic ? "PUBLIC" : "PRIVATE"}
+                </Text>
+              </View>
             </View>
           </View>
 
+          {/* Bio */}
           {profile?.bio ? (
-            <Text style={{ color: colors.text2, fontSize: 14, lineHeight: 22, marginBottom: 12 }}>{profile.bio}</Text>
+            <Text style={{
+              color: HUD_CYAN_DIM,
+              fontSize: 13,
+              lineHeight: 20,
+              fontStyle: "italic",
+              marginBottom: 16,
+              paddingLeft: 10,
+              borderLeftWidth: 2,
+              borderLeftColor: HUD_CYAN,
+            }}>{profile.bio}</Text>
           ) : null}
 
-          {/* Followers */}
-          <View style={{ flexDirection: "row", gap: 24, marginBottom: 16 }}>
-            <View>
-              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{profile?._count?.followers || 0}</Text>
-              <Text style={{ color: colors.text4, fontSize: 12 }}>Followers</Text>
-            </View>
-            <View>
-              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{profile?._count?.following || 0}</Text>
-              <Text style={{ color: colors.text4, fontSize: 12 }}>Following</Text>
-            </View>
-            <View>
-              <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{profile?._count?.posts || 0}</Text>
-              <Text style={{ color: colors.text4, fontSize: 12 }}>Posts</Text>
-            </View>
+          {/* Stats row: FOLLOWERS / FOLLOWING / POSTS */}
+          <View style={{
+            flexDirection: "row",
+            borderWidth: 1,
+            borderColor: HUD_BORDER,
+            marginBottom: 20,
+          }}>
+            {[
+              { label: "FOLLOWERS", value: profile?._count?.followers || 0 },
+              { label: "FOLLOWING", value: profile?._count?.following || 0 },
+              { label: "POSTS", value: profile?._count?.posts || 0 },
+            ].map((item, idx) => (
+              <View
+                key={item.label}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  paddingVertical: 12,
+                  borderLeftWidth: idx === 0 ? 0 : 1,
+                  borderLeftColor: HUD_CYAN,
+                  backgroundColor: HUD_CARD,
+                }}
+              >
+                <Text style={{ color: HUD_CYAN, fontSize: 22, fontWeight: "700", letterSpacing: -0.5 }}>{item.value}</Text>
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 1.5, marginTop: 2, textTransform: "uppercase" }}>{item.label}</Text>
+              </View>
+            ))}
           </View>
 
           {/* Interests */}
           {interests.length > 0 ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-              {interests.map((tag: string) => (
-                <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, backgroundColor: colors.bg3, borderWidth: 1, borderColor: colors.border }}>
-                  <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "500" }}>{tag}</Text>
-                </View>
-              ))}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>INTERESTS</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {interests.map((tag: string) => (
+                  <View
+                    key={tag}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderWidth: 1,
+                      borderColor: HUD_CYAN,
+                      backgroundColor: HUD_CYAN_FAINT,
+                    }}
+                  >
+                    <Text style={{ color: HUD_CYAN, fontSize: 11, fontWeight: "600", letterSpacing: 0.5 }}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           ) : null}
 
           {/* Main Ambition */}
           {profile?.mainAmbition ? (
-            <Animated.View entering={FadeInDown.duration(400)} style={{ backgroundColor: `${colors.accent}18`, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: `${colors.accent}33` }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <Award size={16} color={colors.accent} />
-                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase" }}>Main Ambition</Text>
+            <Animated.View
+              entering={FadeInDown.duration(400)}
+              style={{
+                backgroundColor: HUD_CARD,
+                borderTopWidth: 1,
+                borderTopColor: HUD_CYAN,
+                padding: 14,
+                marginBottom: 16,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <Award size={13} color={HUD_CYAN} />
+                <Text style={{ color: HUD_CYAN, fontSize: 9, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" }}>MAIN AMBITION</Text>
               </View>
-              <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>{profile.mainAmbition}</Text>
+              <Text style={{ color: HUD_NAME, fontSize: 14, lineHeight: 22 }}>{profile.mainAmbition}</Text>
             </Animated.View>
           ) : null}
 
-          {/* Stats grid */}
-          <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
-            <View style={{ flex: 1, backgroundColor: colors.bg2, borderRadius: 14, padding: 14 }}>
-              <Target size={20} color={colors.success} />
-              <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700", marginTop: 8 }}>{completedGoals}</Text>
-              <Text style={{ color: colors.text4, fontSize: 11 }}>Goals done</Text>
-            </View>
-            <View style={{ flex: 1, backgroundColor: colors.bg2, borderRadius: 14, padding: 14 }}>
-              <Target size={20} color={colors.accent} />
-              <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700", marginTop: 8 }}>{activeGoals}</Text>
-              <Text style={{ color: colors.text4, fontSize: 11 }}>In progress</Text>
-            </View>
-            <View style={{ flex: 1, backgroundColor: colors.bg2, borderRadius: 14, padding: 14 }}>
-              <Zap size={20} color={colors.info} />
-              <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700", marginTop: 8 }}>{bestStreak}</Text>
-              <Text style={{ color: colors.text4, fontSize: 11 }}>Best streak</Text>
+          {/* Goals / Sprints stats grid */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>PERFORMANCE DATA</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{
+                flex: 1,
+                backgroundColor: HUD_CARD,
+                borderTopWidth: 1,
+                borderTopColor: HUD_CYAN,
+                padding: 14,
+                alignItems: "center",
+              }}>
+                <Target size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
+                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{completedGoals}</Text>
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>GOALS{"\n"}DONE</Text>
+              </View>
+              <View style={{
+                flex: 1,
+                backgroundColor: HUD_CARD,
+                borderTopWidth: 1,
+                borderTopColor: HUD_CYAN,
+                padding: 14,
+                alignItems: "center",
+              }}>
+                <Target size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
+                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{activeGoals}</Text>
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>IN{"\n"}PROGRESS</Text>
+              </View>
+              <View style={{
+                flex: 1,
+                backgroundColor: HUD_CARD,
+                borderTopWidth: 1,
+                borderTopColor: HUD_CYAN,
+                padding: 14,
+                alignItems: "center",
+              }}>
+                <Zap size={16} color={HUD_CYAN} style={{ marginBottom: 8 }} />
+                <Text style={{ color: HUD_CYAN, fontSize: 24, fontWeight: "700", letterSpacing: -1 }}>{bestStreak}</Text>
+                <Text style={{ color: HUD_CYAN_DIM, fontSize: 8, letterSpacing: 1.5, marginTop: 4, textTransform: "uppercase", textAlign: "center" }}>BEST{"\n"}STREAK</Text>
+              </View>
             </View>
           </View>
 
-          {/* Current Goals */}
+          {/* Current Focus */}
           {profile?.currentGoals ? (
-            <View style={{ backgroundColor: colors.bg2, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-              <Text style={{ color: colors.text4, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Current Focus</Text>
-              <Text style={{ color: colors.text2, fontSize: 14, lineHeight: 22 }}>{profile.currentGoals}</Text>
+            <View style={{
+              backgroundColor: HUD_CARD,
+              borderTopWidth: 1,
+              borderTopColor: HUD_CYAN,
+              padding: 14,
+              marginBottom: 20,
+            }}>
+              <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>CURRENT FOCUS</Text>
+              <Text style={{ color: HUD_CYAN_DIM, fontSize: 13, lineHeight: 20 }}>{profile.currentGoals}</Text>
             </View>
           ) : null}
 
           {/* Settings section */}
-          <View style={{ backgroundColor: colors.bg2, borderRadius: 16, overflow: "hidden", marginBottom: 20 }}>
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ color: HUD_CYAN_DIM, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>SYSTEM CONFIG</Text>
+
             {/* Language toggle */}
-            <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>Language / Idioma</Text>
-              </View>
-              <View style={{ flexDirection: "row", gap: 4, backgroundColor: colors.bg3, borderRadius: 10, padding: 3 }}>
+            <View style={{
+              backgroundColor: HUD_CARD,
+              borderTopWidth: 1,
+              borderTopColor: HUD_CYAN,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 8,
+            }}>
+              <Text style={{ flex: 1, color: HUD_NAME, fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "600" }}>LANGUAGE</Text>
+              <View style={{ flexDirection: "row", gap: 4 }}>
                 <TouchableOpacity
                   onPress={() => setLang("en")}
                   testID="lang-en-button"
-                  style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, backgroundColor: lang === "en" ? colors.accent : "transparent" }}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: lang === "en" ? HUD_CYAN : HUD_BORDER,
+                    backgroundColor: lang === "en" ? HUD_CYAN_MID : "transparent",
+                  }}
                 >
-                  <Text style={{ color: lang === "en" ? "#0A0A0A" : colors.text3, fontWeight: "600", fontSize: 13 }}>EN</Text>
+                  <Text style={{ color: lang === "en" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>EN</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setLang("es")}
                   testID="lang-es-button"
-                  style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, backgroundColor: lang === "es" ? colors.accent : "transparent" }}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: lang === "es" ? HUD_CYAN : HUD_BORDER,
+                    backgroundColor: lang === "es" ? HUD_CYAN_MID : "transparent",
+                  }}
                 >
-                  <Text style={{ color: lang === "es" ? "#0A0A0A" : colors.text3, fontWeight: "600", fontSize: 13 }}>ES</Text>
+                  <Text style={{ color: lang === "es" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>ES</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Theme toggle */}
-            <View style={{ flexDirection: "row", alignItems: "center", padding: 16 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{t("theme")} / Tema</Text>
-              </View>
-              <View style={{ flexDirection: "row", gap: 4, backgroundColor: colors.bg3, borderRadius: 10, padding: 3 }}>
+            <View style={{
+              backgroundColor: HUD_CARD,
+              borderTopWidth: 1,
+              borderTopColor: HUD_CYAN,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+            }}>
+              <Text style={{ flex: 1, color: HUD_NAME, fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "600" }}>DISPLAY MODE</Text>
+              <View style={{ flexDirection: "row", gap: 4 }}>
                 <TouchableOpacity
                   onPress={() => setTheme("dark")}
                   testID="theme-dark-button"
-                  style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, backgroundColor: mode === "dark" ? colors.accent : "transparent" }}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: mode === "dark" ? HUD_CYAN : HUD_BORDER,
+                    backgroundColor: mode === "dark" ? HUD_CYAN_MID : "transparent",
+                  }}
                 >
-                  <Text style={{ color: mode === "dark" ? "#0A0A0A" : colors.text3, fontWeight: "600", fontSize: 13 }}>{t("dark")}</Text>
+                  <Text style={{ color: mode === "dark" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>DARK</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setTheme("light")}
                   testID="theme-light-button"
-                  style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8, backgroundColor: mode === "light" ? colors.accent : "transparent" }}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderWidth: 1,
+                    borderColor: mode === "light" ? HUD_CYAN : HUD_BORDER,
+                    backgroundColor: mode === "light" ? HUD_CYAN_MID : "transparent",
+                  }}
                 >
-                  <Text style={{ color: mode === "light" ? "#0A0A0A" : colors.text3, fontWeight: "600", fontSize: 13 }}>{t("light")}</Text>
+                  <Text style={{ color: mode === "light" ? HUD_CYAN : HUD_CYAN_DIM, fontWeight: "700", fontSize: 12, letterSpacing: 1 }}>LIGHT</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -308,50 +520,82 @@ export default function ProfileScreen() {
 
       {/* Edit Modal */}
       <Modal visible={showEdit} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: colors.bg2 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={() => setShowEdit(false)} style={{ marginRight: 16 }}>
-              <X size={22} color={colors.text3} />
+        <View style={{ flex: 1, backgroundColor: HUD_BG }}>
+          {/* Modal header */}
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: HUD_CYAN,
+          }}>
+            <TouchableOpacity
+              onPress={() => setShowEdit(false)}
+              style={{
+                marginRight: 14,
+                borderWidth: 1,
+                borderColor: HUD_BORDER,
+                padding: 6,
+              }}
+            >
+              <X size={18} color={HUD_CYAN_DIM} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>Edit Profile</Text>
+            <Text style={{ flex: 1, color: HUD_CYAN, fontSize: 12, fontWeight: "700", letterSpacing: 3, textTransform: "uppercase" }}>EDIT PROFILE</Text>
             <TouchableOpacity
               onPress={() => updateProfile.mutate(editData)}
               disabled={updateProfile.isPending}
               testID="save-profile-button"
-              style={{ backgroundColor: colors.accent, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 10 }}
+              style={{
+                borderWidth: 1,
+                borderColor: HUD_CYAN,
+                backgroundColor: HUD_CYAN_MID,
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+              }}
             >
-              {updateProfile.isPending ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
-                <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 14 }}>Save</Text>
+              {updateProfile.isPending ? (
+                <ActivityIndicator color={HUD_CYAN} size="small" />
+              ) : (
+                <Text style={{ color: HUD_CYAN, fontWeight: "700", fontSize: 12, letterSpacing: 1.5 }}>SAVE</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
             {([
-              { key: "name" as const, label: "Full Name", placeholder: "Your name" },
-              { key: "username" as const, label: "Username", placeholder: "@username" },
-              { key: "bio" as const, label: "Bio", placeholder: "Tell your story...", multiline: true },
-              { key: "mainAmbition" as const, label: "Main Ambition", placeholder: "What is your biggest goal in life?", multiline: true },
-              { key: "currentGoals" as const, label: "Current Focus", placeholder: "What are you working on right now?", multiline: true },
+              { key: "name" as const, label: "FULL NAME", placeholder: "Your name" },
+              { key: "username" as const, label: "USERNAME", placeholder: "@username" },
+              { key: "bio" as const, label: "BIO", placeholder: "Tell your story...", multiline: true },
+              { key: "mainAmbition" as const, label: "MAIN AMBITION", placeholder: "What is your biggest goal in life?", multiline: true },
+              { key: "currentGoals" as const, label: "CURRENT FOCUS", placeholder: "What are you working on right now?", multiline: true },
             ]).map(({ key, label, placeholder, multiline }) => (
               <View key={key} style={{ marginBottom: 20 }}>
-                <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+                <Text style={{
+                  color: HUD_CYAN,
+                  fontSize: 9,
+                  fontWeight: "700",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginBottom: 8,
+                }}>
                   {label}
                 </Text>
                 <TextInput
                   value={editData[key]}
                   onChangeText={(txt) => setEditData(p => ({ ...p, [key]: txt }))}
                   placeholder={placeholder}
-                  placeholderTextColor={colors.text4}
+                  placeholderTextColor={HUD_BORDER}
                   multiline={multiline}
                   testID={`edit-${key}-input`}
                   style={{
-                    backgroundColor: colors.bg3,
-                    borderRadius: 12,
-                    padding: 14,
-                    color: colors.text,
-                    fontSize: 15,
-                    ...(multiline ? { minHeight: 80 } : {}),
+                    backgroundColor: HUD_CARD,
+                    borderWidth: 1,
+                    borderColor: HUD_CYAN,
+                    padding: 12,
+                    color: HUD_NAME,
+                    fontSize: 14,
+                    letterSpacing: 0.3,
+                    ...(multiline ? { minHeight: 80, textAlignVertical: "top" } : {}),
                   }}
                 />
               </View>

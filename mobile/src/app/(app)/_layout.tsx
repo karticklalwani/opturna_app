@@ -1,6 +1,37 @@
 import { Tabs } from "expo-router";
 import { Home, Zap, BookOpen, MessageCircle, User, Radio } from "lucide-react-native";
 import { useTheme } from "@/lib/theme";
+import { View } from "react-native";
+
+function HudTabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: boolean }) {
+  return (
+    <View style={{ alignItems: "center", justifyContent: "center", width: 44, height: 44 }}>
+      {focused ? (
+        <View style={{
+          position: "absolute",
+          width: 36, height: 36, borderRadius: 8,
+          backgroundColor: `${color}18`,
+          borderWidth: 1,
+          borderColor: `${color}44`,
+        }} />
+      ) : null}
+      <Icon size={20} color={color} strokeWidth={focused ? 2.2 : 1.5} />
+      {focused ? (
+        <View style={{
+          position: "absolute",
+          bottom: 4,
+          width: 16, height: 1.5,
+          backgroundColor: color,
+          borderRadius: 1,
+          shadowColor: color,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.9,
+          shadowRadius: 4,
+        }} />
+      ) : null}
+    </View>
+  );
+}
 
 export default function AppLayout() {
   const { colors } = useTheme();
@@ -9,24 +40,72 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.bg2,
-          borderTopColor: colors.border,
+          backgroundColor: "#020B18",
+          borderTopColor: "#0D3A55",
           borderTopWidth: 1,
-          height: 82,
-          paddingBottom: 20,
-          paddingTop: 10,
+          height: 86,
+          paddingBottom: 24,
+          paddingTop: 6,
+          shadowColor: "#00B4D8",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
+          elevation: 20,
         },
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.text4,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "600", letterSpacing: 0.3 },
+        tabBarActiveTintColor: "#00B4D8",
+        tabBarInactiveTintColor: "#2A4D63",
+        tabBarLabelStyle: {
+          fontSize: 9,
+          fontWeight: "700",
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+          marginTop: -2,
+        },
+        tabBarShowLabel: true,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Inicio", tabBarIcon: ({ color, size }: { color: string; size: number }) => <Home size={size - 1} color={color} /> }} />
-      <Tabs.Screen name="sprints" options={{ title: "Sprints", tabBarIcon: ({ color, size }: { color: string; size: number }) => <Zap size={size - 1} color={color} /> }} />
-      <Tabs.Screen name="live" options={{ title: "Directos", tabBarIcon: ({ color, size }: { color: string; size: number }) => <Radio size={size - 1} color={color} /> }} />
-      <Tabs.Screen name="academy" options={{ title: "Academia", tabBarIcon: ({ color, size }: { color: string; size: number }) => <BookOpen size={size - 1} color={color} /> }} />
-      <Tabs.Screen name="messages" options={{ title: "Mensajes", tabBarIcon: ({ color, size }: { color: string; size: number }) => <MessageCircle size={size - 1} color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: "Perfil", tabBarIcon: ({ color, size }: { color: string; size: number }) => <User size={size - 1} color={color} /> }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "FEED",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={Home} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sprints"
+        options={{
+          title: "SPRINTS",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={Zap} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="live"
+        options={{
+          title: "LIVE",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={Radio} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="academy"
+        options={{
+          title: "ACADEMY",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={BookOpen} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: "COMMS",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={MessageCircle} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "AGENT",
+          tabBarIcon: ({ color, focused }) => <HudTabIcon Icon={User} color={color} focused={focused} />,
+        }}
+      />
     </Tabs>
   );
 }
