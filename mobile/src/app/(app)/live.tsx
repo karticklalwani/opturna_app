@@ -4,32 +4,22 @@ import {
   ActivityIndicator, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Radio, Plus, Calendar, Users, X, Play, Clock } from "lucide-react-native";
+import { Radio, Calendar, Users, X, Play, Clock, Trash2 } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/auth/use-session";
 
-const MOCK_LIVES = [
-  {
-    id: "1", title: "Cómo escalar tu negocio en 2025", host: "Carlos Méndez",
-    viewers: 234, isLive: true, category: "Negocios", startedAt: "hace 12 min",
-    scheduledAt: undefined,
-  },
-  {
-    id: "2", title: "Hábitos de productividad extrema", host: "Ana Torres",
-    viewers: 189, isLive: true, category: "Hábitos", startedAt: "hace 34 min",
-    scheduledAt: undefined,
-  },
-  {
-    id: "3", title: "AMA: Inversión y libertad financiera", host: "Luis Vera",
-    viewers: 0, isLive: false, category: "Finanzas", startedAt: undefined, scheduledAt: "Mañana 20:00",
-  },
-  {
-    id: "4", title: "Filosofía estoica aplicada al trabajo", host: "Sara Núñez",
-    viewers: 0, isLive: false, category: "Filosofía", startedAt: undefined, scheduledAt: "Sáb 19:00",
-  },
-];
+interface LiveItem {
+  id: string;
+  title: string;
+  host: string;
+  viewers: number;
+  isLive: boolean;
+  category: string;
+  startedAt?: string;
+  scheduledAt?: string;
+}
 
 export default function LiveScreen() {
   const { colors } = useTheme();
@@ -38,19 +28,44 @@ export default function LiveScreen() {
   const [showStartLive, setShowStartLive] = useState(false);
   const [liveTitle, setLiveTitle] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [lives, setLives] = useState<LiveItem[]>([]);
 
-  const activeLives = MOCK_LIVES.filter(l => l.isLive);
-  const scheduled = MOCK_LIVES.filter(l => !l.isLive);
+  const activeLives = lives.filter(l => l.isLive);
+  const scheduled = lives.filter(l => !l.isLive);
 
   const handleGoLive = () => {
     if (!liveTitle.trim()) return;
     setIsStreaming(true);
     setTimeout(() => {
+      const newLive: LiveItem = {
+        id: Date.now().toString(),
+        title: liveTitle.trim(),
+        host: session?.user?.name || "You",
+        viewers: 0,
+        isLive: true,
+        category: "General",
+        startedAt: "hace 0 min",
+      };
+      setLives(prev => [newLive, ...prev]);
       setIsStreaming(false);
       setShowStartLive(false);
       setLiveTitle("");
-      Alert.alert("Directo iniciado", "Tu directo está activo. Los seguidores recibirán una notificación.");
     }, 1500);
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      "Delete live",
+      "Are you sure you want to remove this live?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => setLives(prev => prev.filter(l => l.id !== id)),
+        },
+      ]
+    );
   };
 
   return (
@@ -88,9 +103,18 @@ export default function LiveScreen() {
                       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff" }} />
                       <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>EN VIVO</Text>
                     </View>
-                    <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                      <Users size={12} color="#fff" />
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{live.viewers}</Text>
+                    <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 4 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                        <Users size={12} color="#fff" />
+                        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{live.viewers}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleDelete(live.id)}
+                        testID={`delete-live-${live.id}`}
+                        style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", marginLeft: 4 }}
+                      >
+                        <Trash2 size={14} color="#EF4444" />
+                      </TouchableOpacity>
                     </View>
                     <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
                       <Play size={24} color="#0A0A0A" fill="#0A0A0A" />
@@ -101,7 +125,7 @@ export default function LiveScreen() {
                       <View style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: `${colors.accent}22` }}>
                         <Text style={{ color: colors.accent, fontSize: 10, fontWeight: "700" }}>{live.category.toUpperCase()}</Text>
                       </View>
-                      <Text style={{ color: colors.text4, fontSize: 12 }}>{live.startedAt}</Text>
+                      {live.startedAt ? <Text style={{ color: colors.text4, fontSize: 12 }}>{live.startedAt}</Text> : null}
                     </View>
                     <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginBottom: 4 }}>{live.title}</Text>
                     <Text style={{ color: colors.text3, fontSize: 13 }}>por {live.host}</Text>
@@ -131,14 +155,20 @@ export default function LiveScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontSize: 15, fontWeight: "600", marginBottom: 4 }}>{live.title}</Text>
                     <Text style={{ color: colors.text3, fontSize: 13 }}>por {live.host}</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
-                      <Calendar size={12} color={colors.accent} />
-                      <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>{live.scheduledAt}</Text>
-                    </View>
+                    {live.scheduledAt ? (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                        <Calendar size={12} color={colors.accent} />
+                        <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>{live.scheduledAt}</Text>
+                      </View>
+                    ) : null}
                   </View>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
-                    <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600" }}>Recordar</Text>
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(live.id)}
+                    testID={`delete-scheduled-${live.id}`}
+                    style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bg3, alignItems: "center", justifyContent: "center", marginLeft: 8 }}
+                  >
+                    <Trash2 size={16} color={colors.error} />
+                  </TouchableOpacity>
                 </TouchableOpacity>
               </Animated.View>
             ))}

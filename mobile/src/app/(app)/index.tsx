@@ -1,21 +1,23 @@
 import React, { useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, RefreshControl,
-  ActivityIndicator, TextInput, Image, Modal, ScrollView,
+  ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
-import { Post } from "@/types";
+import { Post, Notification, User } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   TrendingUp, Lightbulb, HelpCircle, Heart, Sparkles,
   Plus, Bell, Search, X, Bookmark, MessageCircle,
-  MoreHorizontal, CheckCircle, Send,
+  MoreHorizontal, CheckCircle, Send, ImageIcon, UserPlus,
 } from "lucide-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme, DARK } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
+import * as ImagePicker from "expo-image-picker";
+import { uploadFile } from "@/lib/upload";
 
 type Colors = typeof DARK;
 
@@ -32,6 +34,7 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const myReaction = post.reactions?.[0];
+  const isMyPost = post.author?.id === currentUserId;
 
   const reactMutation = useMutation({
     mutationFn: (type: string) => api.post(`/api/posts/${post.id}/react`, { type }),
@@ -45,6 +48,10 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
     mutationFn: () => api.post(`/api/posts/${post.id}/comments`, { content: commentText }),
     onSuccess: () => { setCommentText(""); queryClient.invalidateQueries({ queryKey: ["comments", post.id] }); },
   });
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/api/posts/${post.id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
+  });
 
   const { data: comments } = useQuery({
     queryKey: ["comments", post.id],
@@ -52,14 +59,33 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
     enabled: showComments,
   });
 
+  const handleMorePress = () => {
+    if (!isMyPost) return;
+    Alert.alert("Post options", undefined, [
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          Alert.alert("Delete post", "Are you sure you want to delete this post?", [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate() },
+          ]);
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
   const categoryColors: Record<string, string> = {
     progress: colors.success, learning: colors.info,
     question: "#8B5CF6", inspiration: colors.accent,
   };
   const catColor = categoryColors[post.category] || colors.accent;
 
-  // suppress unused variable warning
-  void currentUserId;
+  // Parse media urls
+  const mediaUrls: string[] = (() => {
+    try { return post.mediaUrls ? JSON.parse(post.mediaUrls) : []; } catch { return []; }
+  })();
 
   return (
     <Animated.View entering={FadeInDown.duration(300)}>
@@ -81,7 +107,13 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
               </View>
               <Text style={{ color: colors.text4, fontSize: 12 }}>{post.category}</Text>
             </View>
-            <TouchableOpacity><MoreHorizontal size={18} color={colors.text4} /></TouchableOpacity>
+            {isMyPost ? (
+              <TouchableOpacity onPress={handleMorePress} testID="more-options-button">
+                <MoreHorizontal size={18} color={colors.text4} />
+              </TouchableOpacity>
+            ) : (
+              <MoreHorizontal size={18} color="transparent" />
+            )}
           </View>
 
           {/* Content */}
@@ -89,6 +121,13 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
             <Text style={{ color: colors.text2, fontSize: 15, lineHeight: 24, marginBottom: 10 }}>
               {post.content}
             </Text>
+          ) : null}
+
+          {/* Media */}
+          {mediaUrls.length > 0 ? (
+            <View style={{ marginBottom: 10, borderRadius: 12, overflow: "hidden" }}>
+              <Image source={{ uri: mediaUrls[0] }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+            </View>
           ) : null}
 
           {/* Hashtags */}
@@ -197,8 +236,12 @@ export default function FeedScreen() {
   const [category, setCategory] = useState("all");
   const [showCompose, setShowCompose] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [newPost, setNewPost] = useState({ content: "", category: "progress", hashtags: "" });
+  const [pickedMedia, setPickedMedia] = useState<{ uri: string; mimeType: string; fileName: string } | null>(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const queryClient = useQueryClient();
 
   const { data: posts, isLoading, refetch, isRefetching } = useQuery({
@@ -212,19 +255,80 @@ export default function FeedScreen() {
     enabled: searchQ.length > 1,
   });
 
+  const { data: notifications } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => api.get<Notification[]>("/api/notifications"),
+    enabled: showNotifications,
+  });
+
+  const { data: selectedUserProfile } = useQuery({
+    queryKey: ["user-profile", selectedUser?.id],
+    queryFn: () => api.get<User>(`/api/users/${selectedUser!.id}`),
+    enabled: !!selectedUser,
+  });
+
+  const unreadCount = notifications?.filter(n => !n.isRead).length ?? 0;
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => api.patch("/api/notifications/read-all", {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
+  const followMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/api/users/${userId}/follow`, {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user-profile", selectedUser?.id] }),
+  });
+
   const createPost = useMutation({
-    mutationFn: () => api.post("/api/posts", {
-      content: newPost.content,
-      category: newPost.category,
-      hashtags: newPost.hashtags ? newPost.hashtags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : [],
-      type: "text",
-    }),
+    mutationFn: async () => {
+      let mediaUrls: string[] = [];
+      if (pickedMedia) {
+        setUploadingMedia(true);
+        try {
+          const result = await uploadFile(pickedMedia.uri, pickedMedia.fileName, pickedMedia.mimeType);
+          mediaUrls = [result.url];
+        } finally {
+          setUploadingMedia(false);
+        }
+      }
+      return api.post("/api/posts", {
+        content: newPost.content,
+        category: newPost.category,
+        hashtags: newPost.hashtags ? newPost.hashtags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : [],
+        type: mediaUrls.length > 0 ? "media" : "text",
+        ...(mediaUrls.length > 0 ? { mediaUrls } : {}),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       setShowCompose(false);
       setNewPost({ content: "", category: "progress", hashtags: "" });
+      setPickedMedia(null);
     },
   });
+
+  const pickMedia = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const ext = asset.uri.split(".").pop() || "jpg";
+      const mimeType = asset.type === "video" ? `video/${ext}` : `image/${ext}`;
+      const fileName = asset.fileName || `media.${ext}`;
+      setPickedMedia({ uri: asset.uri, mimeType, fileName });
+    }
+  };
+
+  // Check if there are unread notifications (we use a background query for the badge)
+  const { data: notifBadge } = useQuery({
+    queryKey: ["notifications-badge"],
+    queryFn: () => api.get<Notification[]>("/api/notifications"),
+    refetchInterval: 30000,
+  });
+  const hasUnread = (notifBadge || []).some(n => !n.isRead);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="feed-screen">
@@ -234,8 +338,17 @@ export default function FeedScreen() {
           <TouchableOpacity onPress={() => setShowSearch(true)} style={{ padding: 8 }}>
             <Search size={22} color={colors.text3} />
           </TouchableOpacity>
-          <TouchableOpacity style={{ padding: 8, marginLeft: 4 }}>
-            <Bell size={22} color={colors.text3} />
+          <TouchableOpacity
+            style={{ padding: 8, marginLeft: 4 }}
+            onPress={() => setShowNotifications(true)}
+            testID="bell-button"
+          >
+            <View>
+              <Bell size={22} color={colors.text3} />
+              {hasUnread ? (
+                <View style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error }} />
+              ) : null}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -288,6 +401,53 @@ export default function FeedScreen() {
         <Plus size={24} color="#0A0A0A" strokeWidth={2.5} />
       </TouchableOpacity>
 
+      {/* Notifications Modal */}
+      <Modal visible={showNotifications} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>Notifications</Text>
+            <TouchableOpacity
+              onPress={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending || unreadCount === 0}
+              style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.bg3, marginRight: 12 }}
+              testID="mark-all-read-button"
+            >
+              <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>Mark all read</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowNotifications(false)}>
+              <X size={22} color={colors.text3} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={notifications || []}
+            keyExtractor={(n) => n.id}
+            contentContainerStyle={{ padding: 16 }}
+            renderItem={({ item }) => (
+              <View
+                testID={`notification-${item.id}`}
+                style={{ flexDirection: "row", alignItems: "flex-start", padding: 14, borderRadius: 14, backgroundColor: item.isRead ? colors.bg3 : `${colors.accent}18`, marginBottom: 8, borderWidth: 1, borderColor: item.isRead ? colors.border : `${colors.accent}44` }}
+              >
+                {!item.isRead ? (
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent, marginTop: 4, marginRight: 10 }} />
+                ) : (
+                  <View style={{ width: 8, marginRight: 10 }} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: "600", fontSize: 14, marginBottom: 2 }}>{item.title}</Text>
+                  {item.body ? <Text style={{ color: colors.text3, fontSize: 13, lineHeight: 20 }}>{item.body}</Text> : null}
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={
+              <View style={{ alignItems: "center", paddingTop: 60 }}>
+                <Bell size={40} color={colors.text4} />
+                <Text style={{ color: colors.text4, fontSize: 15, marginTop: 12 }}>No notifications yet</Text>
+              </View>
+            }
+          />
+        </View>
+      </Modal>
+
       {/* Search Modal */}
       <Modal visible={showSearch} animationType="slide" presentationStyle="pageSheet">
         <View style={{ flex: 1, backgroundColor: colors.bg, padding: 16 }}>
@@ -311,7 +471,11 @@ export default function FeedScreen() {
             data={searchResults || []}
             keyExtractor={(u) => u.id}
             renderItem={({ item }) => (
-              <View style={{ flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <Pressable
+                onPress={() => { setSelectedUser(item); setShowSearch(false); }}
+                testID={`search-result-${item.id}`}
+                style={{ flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}
+              >
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg3, marginRight: 14, alignItems: "center", justifyContent: "center" }}>
                   {item.image ? <Image source={{ uri: item.image }} style={{ width: 44, height: 44, borderRadius: 22 }} /> : (
                     <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 17 }}>{item.name?.[0]}</Text>
@@ -321,9 +485,79 @@ export default function FeedScreen() {
                   <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{item.name}</Text>
                   {item.username ? <Text style={{ color: colors.text3, fontSize: 13 }}>@{item.username}</Text> : null}
                 </View>
-              </View>
+              </Pressable>
             )}
           />
+        </View>
+      </Modal>
+
+      {/* User Profile Modal (from search) */}
+      <Modal visible={!!selectedUser} animationType="slide" presentationStyle="pageSheet">
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>Profile</Text>
+            <TouchableOpacity onPress={() => setSelectedUser(null)}>
+              <X size={22} color={colors.text3} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 20 }}>
+            {selectedUserProfile ? (
+              <>
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
+                  <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: 12 }}>
+                    {selectedUserProfile.image
+                      ? <Image source={{ uri: selectedUserProfile.image }} style={{ width: 80, height: 80 }} />
+                      : <Text style={{ color: "#0A0A0A", fontWeight: "800", fontSize: 32 }}>{selectedUserProfile.name?.[0]?.toUpperCase()}</Text>
+                    }
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <Text style={{ color: colors.text, fontWeight: "700", fontSize: 20 }}>{selectedUserProfile.name}</Text>
+                    {selectedUserProfile.isVerified ? <CheckCircle size={16} color={colors.accent} fill={colors.accent} /> : null}
+                  </View>
+                  {selectedUserProfile.username ? (
+                    <Text style={{ color: colors.text3, fontSize: 14, marginBottom: 8 }}>@{selectedUserProfile.username}</Text>
+                  ) : null}
+                  {selectedUserProfile.bio ? (
+                    <Text style={{ color: colors.text2, fontSize: 14, lineHeight: 22, textAlign: "center", marginBottom: 16 }}>{selectedUserProfile.bio}</Text>
+                  ) : null}
+                  <View style={{ flexDirection: "row", gap: 32, marginBottom: 20 }}>
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{selectedUserProfile._count?.followers ?? 0}</Text>
+                      <Text style={{ color: colors.text4, fontSize: 12 }}>Followers</Text>
+                    </View>
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{selectedUserProfile._count?.following ?? 0}</Text>
+                      <Text style={{ color: colors.text4, fontSize: 12 }}>Following</Text>
+                    </View>
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{selectedUserProfile._count?.posts ?? 0}</Text>
+                      <Text style={{ color: colors.text4, fontSize: 12 }}>Posts</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => followMutation.mutate(selectedUserProfile.id)}
+                    disabled={followMutation.isPending}
+                    testID="follow-button"
+                    style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.accent, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 14 }}
+                  >
+                    {followMutation.isPending
+                      ? <ActivityIndicator color="#0A0A0A" size="small" />
+                      : (
+                        <>
+                          <UserPlus size={16} color="#0A0A0A" />
+                          <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 15 }}>Follow</Text>
+                        </>
+                      )
+                    }
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <View style={{ alignItems: "center", paddingTop: 40 }}>
+                <ActivityIndicator color={colors.accent} />
+              </View>
+            )}
+          </ScrollView>
         </View>
       </Modal>
 
@@ -331,17 +565,17 @@ export default function FeedScreen() {
       <Modal visible={showCompose} animationType="slide" presentationStyle="pageSheet">
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={() => setShowCompose(false)} style={{ marginRight: 16 }}>
+            <TouchableOpacity onPress={() => { setShowCompose(false); setPickedMedia(null); }} style={{ marginRight: 16 }}>
               <X size={22} color={colors.text3} />
             </TouchableOpacity>
             <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>{t("newPost")}</Text>
             <TouchableOpacity
               onPress={() => createPost.mutate()}
-              disabled={!newPost.content.trim() || createPost.isPending}
+              disabled={!newPost.content.trim() || createPost.isPending || uploadingMedia}
               testID="submit-post-button"
               style={{ backgroundColor: colors.accent, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 10, opacity: !newPost.content.trim() || createPost.isPending ? 0.5 : 1 }}
             >
-              {createPost.isPending ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
+              {createPost.isPending || uploadingMedia ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
                 <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 14 }}>{t("post")}</Text>
               )}
             </TouchableOpacity>
@@ -365,9 +599,34 @@ export default function FeedScreen() {
               placeholderTextColor={colors.text4}
               multiline
               testID="post-content-input"
-              style={{ color: colors.text, fontSize: 16, lineHeight: 26, minHeight: 120, marginBottom: 24 }}
+              style={{ color: colors.text, fontSize: 16, lineHeight: 26, minHeight: 120, marginBottom: 16 }}
               autoFocus
             />
+
+            {/* Media picker */}
+            <View style={{ marginBottom: 24 }}>
+              {pickedMedia ? (
+                <View style={{ borderRadius: 12, overflow: "hidden", marginBottom: 10, position: "relative" }}>
+                  <Image source={{ uri: pickedMedia.uri }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+                  <TouchableOpacity
+                    onPress={() => setPickedMedia(null)}
+                    style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}
+                  >
+                    <X size={14} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+              <TouchableOpacity
+                onPress={pickMedia}
+                testID="pick-media-button"
+                style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.bg3, borderWidth: 1, borderColor: colors.border, alignSelf: "flex-start" }}
+              >
+                <ImageIcon size={16} color={colors.text3} />
+                <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "600" }}>
+                  {pickedMedia ? "Change photo/video" : "Add photo/video"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>{t("category")}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>

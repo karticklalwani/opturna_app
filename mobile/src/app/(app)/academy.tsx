@@ -4,10 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import { Course } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BookOpen, Play, Users, Lock, Plus, X, ChevronRight } from "lucide-react-native";
+import { BookOpen, Play, Users, Lock, Plus, X, ChevronRight, ImageIcon } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
+import * as ImagePicker from "expo-image-picker";
+import { uploadFile } from "@/lib/upload";
 
 const COURSE_CATEGORIES = ["All", "Negocios", "Mentalidad", "Finanzas", "Salud", "Tecnología", "Filosofía"];
 
@@ -74,7 +76,9 @@ export default function AcademyScreen() {
   const { t } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showCreate, setShowCreate] = useState(false);
-  const [newCourse, setNewCourse] = useState({ title: "", description: "", category: "", access: "free" });
+  const [newCourse, setNewCourse] = useState({ title: "", description: "", category: "", access: "free", thumbnail: "" });
+  const [pickedThumbnail, setPickedThumbnail] = useState<{ uri: string; mimeType: string; fileName: string } | null>(null);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: courses, isLoading, refetch, isRefetching } = useQuery({
@@ -83,13 +87,42 @@ export default function AcademyScreen() {
   });
 
   const createCourse = useMutation({
-    mutationFn: () => api.post("/api/courses", newCourse),
+    mutationFn: async () => {
+      let thumbnail = newCourse.thumbnail;
+      if (pickedThumbnail) {
+        setUploadingThumb(true);
+        try {
+          const result = await uploadFile(pickedThumbnail.uri, pickedThumbnail.fileName, pickedThumbnail.mimeType);
+          thumbnail = result.url;
+        } finally {
+          setUploadingThumb(false);
+        }
+      }
+      return api.post("/api/courses", { ...newCourse, thumbnail });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       setShowCreate(false);
-      setNewCourse({ title: "", description: "", category: "", access: "free" });
+      setNewCourse({ title: "", description: "", category: "", access: "free", thumbnail: "" });
+      setPickedThumbnail(null);
     },
   });
+
+  const pickThumbnail = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const ext = asset.uri.split(".").pop() || "jpg";
+      const mimeType = `image/${ext}`;
+      const fileName = asset.fileName || `thumbnail.${ext}`;
+      setPickedThumbnail({ uri: asset.uri, mimeType, fileName });
+    }
+  };
 
   const filtered = courses?.filter(c => selectedCategory === "All" || c.category === selectedCategory) || [];
 
@@ -144,22 +177,46 @@ export default function AcademyScreen() {
       <Modal visible={showCreate} animationType="slide" presentationStyle="pageSheet">
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={() => setShowCreate(false)} style={{ marginRight: 16 }} testID="close-create-modal">
+            <TouchableOpacity onPress={() => { setShowCreate(false); setPickedThumbnail(null); }} style={{ marginRight: 16 }} testID="close-create-modal">
               <X size={22} color={colors.text3} />
             </TouchableOpacity>
             <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "600" }}>{t("createCourse")}</Text>
             <TouchableOpacity
               testID="publish-course-button"
               onPress={() => createCourse.mutate()}
-              disabled={!newCourse.title.trim() || createCourse.isPending}
+              disabled={!newCourse.title.trim() || createCourse.isPending || uploadingThumb}
               style={{ backgroundColor: colors.accent, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 10, opacity: !newCourse.title.trim() ? 0.5 : 1 }}
             >
-              {createCourse.isPending ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
+              {createCourse.isPending || uploadingThumb ? <ActivityIndicator color="#0A0A0A" size="small" /> : (
                 <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 14 }}>{t("publish")}</Text>
               )}
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+            {/* Thumbnail picker */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Thumbnail</Text>
+              <TouchableOpacity
+                onPress={pickThumbnail}
+                testID="pick-thumbnail-button"
+                style={{ borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+              >
+                {pickedThumbnail ? (
+                  <View>
+                    <Image source={{ uri: pickedThumbnail.uri }} style={{ width: "100%", height: 160 }} resizeMode="cover" />
+                    <View style={{ position: "absolute", bottom: 8, right: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.6)" }}>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>Change</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ height: 120, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.bg3 }}>
+                    <ImageIcon size={28} color={colors.text4} />
+                    <Text style={{ color: colors.text4, fontSize: 13 }}>Tap to add thumbnail</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
             {([
               { key: "title" as const, label: t("courseTitle"), placeholder: "ej. Construye tu negocio en 30 días" },
               { key: "description" as const, label: t("courseDesc"), placeholder: "Describe tu curso...", multiline: true },
