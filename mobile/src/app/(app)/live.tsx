@@ -8,22 +8,12 @@ import { Radio, Calendar, Users, X, Play, Clock, Trash2 } from "lucide-react-nat
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from "react-native-reanimated";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/auth/use-session";
+import { useTheme } from "@/lib/theme";
 
-const DS = {
-  bg: "#0A0F1E",
-  card: "#111827",
-  cardAlt: "#0F172A",
-  cyan: "#00B4D8",
-  cyanSoft: "rgba(0,180,216,0.12)",
-  cyanBorder: "rgba(0,180,216,0.25)",
-  red: "#FF3B30",
-  redSoft: "rgba(255,59,48,0.12)",
-  redBorder: "rgba(255,59,48,0.30)",
-  textPrimary: "#F1F5F9",
-  textSecondary: "#94A3B8",
-  textMuted: "#475569",
-  border: "rgba(255,255,255,0.06)",
-};
+// Static live-specific colors (not theme-dependent — red is always "danger/live")
+const LIVE_RED = "#FF3B30";
+const LIVE_RED_SOFT = "rgba(255,59,48,0.12)";
+const LIVE_RED_BORDER = "rgba(255,59,48,0.30)";
 
 interface LiveItem {
   id: string;
@@ -62,7 +52,7 @@ function PulsingDot({ color }: { color: string }) {
   );
 }
 
-function BroadcastingBadge() {
+function BroadcastingBadge({ t }: { t: (key: any) => string }) {
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -85,20 +75,20 @@ function BroadcastingBadge() {
           flexDirection: "row",
           alignItems: "center",
           gap: 6,
-          backgroundColor: DS.redSoft,
+          backgroundColor: LIVE_RED_SOFT,
           paddingHorizontal: 14,
           paddingVertical: 8,
           borderRadius: 100,
           borderWidth: 1,
-          borderColor: DS.redBorder,
+          borderColor: LIVE_RED_BORDER,
           marginTop: 12,
         },
         animStyle,
       ]}
     >
-      <View style={{ width: 6, height: 6, borderRadius: 100, backgroundColor: DS.red }} />
-      <Text style={{ color: DS.red, fontWeight: "700", fontSize: 13 }}>
-        Broadcasting
+      <View style={{ width: 6, height: 6, borderRadius: 100, backgroundColor: LIVE_RED }} />
+      <Text style={{ color: LIVE_RED, fontWeight: "700", fontSize: 13 }}>
+        {t("startStreaming")}
       </Text>
     </Animated.View>
   );
@@ -106,6 +96,7 @@ function BroadcastingBadge() {
 
 export default function LiveScreen() {
   const { t } = useI18n();
+  const { colors } = useTheme();
   const { data: session } = useSession();
   const [showStartLive, setShowStartLive] = useState(false);
   const [liveTitle, setLiveTitle] = useState("");
@@ -114,6 +105,9 @@ export default function LiveScreen() {
 
   const activeLives = lives.filter(l => l.isLive);
   const scheduledLives = lives.filter(l => !l.isLive);
+
+  const accentSoft = `${colors.accent}1F`;
+  const accentBorder = `${colors.accent}4D`;
 
   const handleGoLive = () => {
     if (!liveTitle.trim()) return;
@@ -151,25 +145,15 @@ export default function LiveScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="live-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="live-screen">
       <SafeAreaView edges={["top"]}>
-        {/* Header */}
-        <View style={{
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 12,
-        }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <PulsingDot color={DS.red} />
-                <Text style={{
-                  fontSize: 28,
-                  fontWeight: "800",
-                  color: DS.textPrimary,
-                  letterSpacing: -0.5,
-                }}>
-                  Live
+                <PulsingDot color={LIVE_RED} />
+                <Text style={{ fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5 }}>
+                  {t("livesTitle")}
                 </Text>
               </View>
             </View>
@@ -181,11 +165,11 @@ export default function LiveScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 6,
-                backgroundColor: pressed ? "#CC2E26" : DS.red,
+                backgroundColor: pressed ? "#CC2E26" : LIVE_RED,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
                 borderRadius: 100,
-                shadowColor: DS.red,
+                shadowColor: LIVE_RED,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 12,
@@ -194,7 +178,7 @@ export default function LiveScreen() {
             >
               <Radio size={14} color="#fff" />
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>
-                Go live
+                {t("startLive")}
               </Text>
             </Pressable>
           </View>
@@ -207,9 +191,9 @@ export default function LiveScreen() {
         {activeLives.length > 0 ? (
           <View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <PulsingDot color={DS.red} />
-              <Text style={{ color: DS.red, fontWeight: "700", fontSize: 12 }}>
-                Happening now
+              <PulsingDot color={LIVE_RED} />
+              <Text style={{ color: LIVE_RED, fontWeight: "700", fontSize: 12 }}>
+                {t("liveNow")}
               </Text>
             </View>
             {activeLives.map((live, i) => (
@@ -217,12 +201,12 @@ export default function LiveScreen() {
                 <Pressable
                   testID={`live-card-${live.id}`}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#161E2E" : DS.card,
+                    backgroundColor: pressed ? colors.bg2 : colors.card,
                     borderRadius: 20,
                     marginBottom: 14,
                     overflow: "hidden",
                     borderWidth: 1,
-                    borderColor: DS.border,
+                    borderColor: colors.border,
                     shadowColor: "#000",
                     shadowOpacity: 0.15,
                     shadowRadius: 20,
@@ -231,55 +215,44 @@ export default function LiveScreen() {
                   onPress={() => Alert.alert(t("livesTitle"), `${t("joinLive")}: ${live.host}`)}
                 >
                   {/* Video preview area */}
-                  <View
-                    style={{
-                      height: 140,
-                      backgroundColor: DS.cardAlt,
+                  <View style={{ height: 140, backgroundColor: colors.bg2, alignItems: "center", justifyContent: "center" }}>
+                    {/* LIVE badge */}
+                    <View style={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                      flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {/* LIVE badge - red pill with pulse */}
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 12,
-                        left: 12,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 5,
-                        backgroundColor: DS.red,
-                        paddingHorizontal: 10,
-                        paddingVertical: 5,
-                        borderRadius: 100,
-                      }}
-                    >
+                      gap: 5,
+                      backgroundColor: LIVE_RED,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 100,
+                    }}>
                       <PulsingDot color="#fff" />
                       <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>LIVE</Text>
                     </View>
 
                     {/* Viewer count */}
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 12,
-                        right: 52,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        backgroundColor: "rgba(0,0,0,0.6)",
-                        paddingHorizontal: 10,
-                        paddingVertical: 5,
-                        borderRadius: 100,
-                        borderWidth: 1,
-                        borderColor: DS.border,
-                      }}
-                    >
-                      <Users size={10} color={DS.textSecondary} />
-                      <Text style={{ color: DS.textPrimary, fontSize: 11, fontWeight: "700" }}>{live.viewers}</Text>
+                    <View style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 52,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      backgroundColor: "rgba(0,0,0,0.6)",
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 100,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}>
+                      <Users size={10} color={colors.text2} />
+                      <Text style={{ color: colors.text, fontSize: 11, fontWeight: "700" }}>{live.viewers}</Text>
                     </View>
 
-                    {/* Delete button - circular */}
+                    {/* Delete button */}
                     <Pressable
                       onPress={() => handleDelete(live.id)}
                       testID={`delete-live-${live.id}`}
@@ -290,58 +263,54 @@ export default function LiveScreen() {
                         width: 32,
                         height: 32,
                         borderRadius: 100,
-                        backgroundColor: pressed ? DS.redSoft : "rgba(0,0,0,0.6)",
+                        backgroundColor: pressed ? LIVE_RED_SOFT : "rgba(0,0,0,0.6)",
                         alignItems: "center",
                         justifyContent: "center",
                         borderWidth: 1,
-                        borderColor: DS.redBorder,
+                        borderColor: LIVE_RED_BORDER,
                       })}
                     >
-                      <Trash2 size={13} color={DS.red} />
+                      <Trash2 size={13} color={LIVE_RED} />
                     </Pressable>
 
-                    {/* Play icon - circular */}
-                    <View
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 100,
-                        backgroundColor: DS.cyanSoft,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 1,
-                        borderColor: DS.cyanBorder,
-                      }}
-                    >
-                      <Play size={22} color={DS.cyan} fill={DS.cyan} />
+                    {/* Play icon */}
+                    <View style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 100,
+                      backgroundColor: accentSoft,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: 1,
+                      borderColor: accentBorder,
+                    }}>
+                      <Play size={22} color={colors.accent} fill={colors.accent} />
                     </View>
                   </View>
 
                   {/* Card info */}
                   <View style={{ padding: 14 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <View
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 100,
-                          backgroundColor: DS.cyanSoft,
-                          borderWidth: 1,
-                          borderColor: DS.cyanBorder,
-                        }}
-                      >
-                        <Text style={{ color: DS.cyan, fontSize: 10, fontWeight: "700" }}>
+                      <View style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 100,
+                        backgroundColor: accentSoft,
+                        borderWidth: 1,
+                        borderColor: accentBorder,
+                      }}>
+                        <Text style={{ color: colors.accent, fontSize: 10, fontWeight: "700" }}>
                           {live.category}
                         </Text>
                       </View>
                       {live.startedAt ? (
-                        <Text style={{ color: DS.textMuted, fontSize: 11 }}>{live.startedAt}</Text>
+                        <Text style={{ color: colors.text3, fontSize: 11 }}>{live.startedAt}</Text>
                       ) : null}
                     </View>
-                    <Text style={{ color: DS.textPrimary, fontSize: 15, fontWeight: "700", marginBottom: 4, letterSpacing: -0.2 }}>
+                    <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginBottom: 4, letterSpacing: -0.2 }}>
                       {live.title}
                     </Text>
-                    <Text style={{ color: DS.textSecondary, fontSize: 13 }}>by {live.host}</Text>
+                    <Text style={{ color: colors.text2, fontSize: 13 }}>by {live.host}</Text>
                   </View>
                 </Pressable>
               </Animated.View>
@@ -353,9 +322,9 @@ export default function LiveScreen() {
         {scheduledLives.length > 0 ? (
           <View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, marginTop: activeLives.length > 0 ? 8 : 0 }}>
-              <Calendar size={13} color={DS.textSecondary} />
-              <Text style={{ color: DS.textSecondary, fontWeight: "700", fontSize: 12 }}>
-                Coming up
+              <Calendar size={13} color={colors.text2} />
+              <Text style={{ color: colors.text2, fontWeight: "700", fontSize: 12 }}>
+                {t("scheduled")}
               </Text>
             </View>
             {scheduledLives.map((live, i) => (
@@ -363,14 +332,14 @@ export default function LiveScreen() {
                 <Pressable
                   testID={`scheduled-card-${live.id}`}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#161E2E" : DS.card,
+                    backgroundColor: pressed ? colors.bg2 : colors.card,
                     borderRadius: 20,
                     padding: 16,
                     marginBottom: 12,
                     flexDirection: "row",
                     alignItems: "center",
                     borderWidth: 1,
-                    borderColor: DS.border,
+                    borderColor: colors.border,
                     shadowColor: "#000",
                     shadowOpacity: 0.1,
                     shadowRadius: 12,
@@ -378,30 +347,28 @@ export default function LiveScreen() {
                   })}
                   onPress={() => Alert.alert(t("setReminder"), `${t("setReminder")}: "${live.title}"`)}
                 >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 100,
-                      backgroundColor: DS.cyanSoft,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 14,
-                      borderWidth: 1,
-                      borderColor: DS.cyanBorder,
-                    }}
-                  >
-                    <Clock size={20} color={DS.cyan} />
+                  <View style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 100,
+                    backgroundColor: accentSoft,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 14,
+                    borderWidth: 1,
+                    borderColor: accentBorder,
+                  }}>
+                    <Clock size={20} color={colors.accent} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: DS.textPrimary, fontSize: 14, fontWeight: "700", marginBottom: 3, letterSpacing: -0.1 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: 3, letterSpacing: -0.1 }}>
                       {live.title}
                     </Text>
-                    <Text style={{ color: DS.textSecondary, fontSize: 12 }}>by {live.host}</Text>
+                    <Text style={{ color: colors.text2, fontSize: 12 }}>by {live.host}</Text>
                     {live.scheduledAt ? (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
-                        <Calendar size={10} color={DS.cyan} />
-                        <Text style={{ color: DS.cyan, fontSize: 11, fontWeight: "600" }}>{live.scheduledAt}</Text>
+                        <Calendar size={10} color={colors.accent} />
+                        <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "600" }}>{live.scheduledAt}</Text>
                       </View>
                     ) : null}
                   </View>
@@ -412,15 +379,15 @@ export default function LiveScreen() {
                       width: 36,
                       height: 36,
                       borderRadius: 100,
-                      backgroundColor: pressed ? DS.redSoft : "rgba(255,255,255,0.04)",
+                      backgroundColor: pressed ? LIVE_RED_SOFT : `${colors.text}0A`,
                       alignItems: "center",
                       justifyContent: "center",
                       marginLeft: 8,
                       borderWidth: 1,
-                      borderColor: DS.redBorder,
+                      borderColor: LIVE_RED_BORDER,
                     })}
                   >
-                    <Trash2 size={15} color={DS.red} />
+                    <Trash2 size={15} color={LIVE_RED} />
                   </Pressable>
                 </Pressable>
               </Animated.View>
@@ -430,36 +397,31 @@ export default function LiveScreen() {
 
         {/* Empty state */}
         {activeLives.length === 0 && scheduledLives.length === 0 ? (
-          <View
-            style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }}
-            testID="empty-lives"
-          >
+          <View style={{ alignItems: "center", paddingTop: 80, paddingHorizontal: 32 }} testID="empty-lives">
             <View style={{
               width: 80,
               height: 80,
               borderRadius: 100,
-              backgroundColor: DS.redSoft,
+              backgroundColor: LIVE_RED_SOFT,
               borderWidth: 1,
-              borderColor: DS.redBorder,
+              borderColor: LIVE_RED_BORDER,
               alignItems: "center",
               justifyContent: "center",
               marginBottom: 20,
             }}>
-              <Radio size={34} color={DS.red} />
+              <Radio size={34} color={LIVE_RED} />
             </View>
-            <Text
-              style={{
-                color: DS.textPrimary,
-                fontSize: 18,
-                fontWeight: "800",
-                marginBottom: 8,
-                textAlign: "center",
-                letterSpacing: -0.3,
-              }}
-            >
-              No live streams yet
+            <Text style={{
+              color: colors.text,
+              fontSize: 18,
+              fontWeight: "800",
+              marginBottom: 8,
+              textAlign: "center",
+              letterSpacing: -0.3,
+            }}>
+              {t("noLives")}
             </Text>
-            <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", lineHeight: 22 }}>
+            <Text style={{ color: colors.text2, fontSize: 13, textAlign: "center", lineHeight: 22 }}>
               {t("noLivesDesc")}
             </Text>
 
@@ -469,14 +431,14 @@ export default function LiveScreen() {
               style={({ pressed }) => ({
                 marginTop: 32,
                 width: "100%",
-                backgroundColor: pressed ? "#CC2E26" : DS.red,
+                backgroundColor: pressed ? "#CC2E26" : LIVE_RED,
                 paddingVertical: 16,
                 borderRadius: 100,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: 10,
-                shadowColor: DS.red,
+                shadowColor: LIVE_RED,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 12,
@@ -485,7 +447,7 @@ export default function LiveScreen() {
             >
               <Radio size={16} color="#fff" />
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
-                Start streaming
+                {t("startLive")}
               </Text>
             </Pressable>
           </View>
@@ -494,11 +456,9 @@ export default function LiveScreen() {
 
       {/* Start Live Modal */}
       <Modal visible={showStartLive} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 24 }}>
-          {/* Drag indicator */}
-          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
+        <View style={{ flex: 1, backgroundColor: colors.bg, padding: 24 }}>
+          <View style={{ width: 36, height: 4, backgroundColor: colors.border, borderRadius: 100, alignSelf: "center", marginBottom: 24 }} />
 
-          {/* Modal header */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
             <Pressable
               onPress={() => setShowStartLive(false)}
@@ -507,92 +467,81 @@ export default function LiveScreen() {
                 width: 36,
                 height: 36,
                 borderRadius: 100,
-                backgroundColor: pressed ? DS.cyanSoft : "rgba(255,255,255,0.05)",
+                backgroundColor: pressed ? accentSoft : `${colors.text}0A`,
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: DS.border,
+                borderColor: colors.border,
               })}
             >
-              <X size={18} color={DS.textSecondary} />
+              <X size={18} color={colors.text2} />
             </Pressable>
-            <Text style={{
-              flex: 1,
-              textAlign: "center",
-              color: DS.textPrimary,
-              fontSize: 17,
-              fontWeight: "700",
-            }}>
-              Start a stream
+            <Text style={{ flex: 1, textAlign: "center", color: colors.text, fontSize: 17, fontWeight: "700" }}>
+              {t("startLive")}
             </Text>
             <View style={{ width: 36 }} />
           </View>
 
           {/* Avatar / Name */}
           <View style={{ alignItems: "center", marginBottom: 32 }}>
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 100,
-                backgroundColor: DS.cyanSoft,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
-                borderWidth: 2,
-                borderColor: DS.cyan,
-                shadowColor: DS.cyan,
-                shadowOpacity: 0.2,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            >
-              <Text style={{ color: DS.cyan, fontWeight: "800", fontSize: 28 }}>
+            <View style={{
+              width: 72,
+              height: 72,
+              borderRadius: 100,
+              backgroundColor: accentSoft,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 12,
+              borderWidth: 2,
+              borderColor: colors.accent,
+              shadowColor: colors.accent,
+              shadowOpacity: 0.2,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 0 },
+            }}>
+              <Text style={{ color: colors.accent, fontWeight: "800", fontSize: 28 }}>
                 {session?.user?.name?.[0]?.toUpperCase() ?? "?"}
               </Text>
             </View>
-            <Text style={{ color: DS.textSecondary, fontSize: 12, marginBottom: 4 }}>
-              Streaming as
+            <Text style={{ color: colors.text3, fontSize: 12, marginBottom: 4 }}>
+              {t("sharingWith")}
             </Text>
-            <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 15 }}>
+            <Text style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}>
               {session?.user?.name ?? "Unknown"}
             </Text>
 
-            {isStreaming ? <BroadcastingBadge /> : null}
+            {isStreaming ? <BroadcastingBadge t={t} /> : null}
           </View>
 
-          {/* Title label */}
-          <Text style={{ color: DS.textSecondary, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+          <Text style={{ color: colors.text2, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
             {t("liveTitle")}
           </Text>
 
-          {/* Input */}
           <TextInput
             testID="live-title-input"
             value={liveTitle}
             onChangeText={setLiveTitle}
             placeholder="e.g. How to build real discipline"
-            placeholderTextColor={DS.textMuted}
+            placeholderTextColor={colors.text3}
             style={{
-              backgroundColor: DS.card,
+              backgroundColor: colors.card,
               borderRadius: 12,
               padding: 14,
-              color: DS.textPrimary,
+              color: colors.text,
               fontSize: 14,
               marginBottom: 32,
               borderWidth: 1,
-              borderColor: DS.border,
+              borderColor: colors.border,
             }}
             autoFocus
           />
 
-          {/* Submit button */}
           <Pressable
             testID="start-streaming-button"
             onPress={handleGoLive}
             disabled={!liveTitle.trim() || isStreaming}
             style={({ pressed }) => ({
-              backgroundColor: !liveTitle.trim() ? DS.redSoft : pressed ? "#CC2E26" : DS.red,
+              backgroundColor: !liveTitle.trim() ? LIVE_RED_SOFT : pressed ? "#CC2E26" : LIVE_RED,
               borderRadius: 100,
               paddingVertical: 17,
               alignItems: "center",
@@ -600,7 +549,7 @@ export default function LiveScreen() {
               justifyContent: "center",
               gap: 10,
               opacity: !liveTitle.trim() ? 0.5 : 1,
-              shadowColor: liveTitle.trim() ? DS.red : "transparent",
+              shadowColor: liveTitle.trim() ? LIVE_RED : "transparent",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 14,

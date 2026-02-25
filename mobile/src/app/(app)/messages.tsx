@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, Image, TextInput,
   ActivityIndicator, KeyboardAvoidingView, Platform, Modal,
@@ -9,29 +9,17 @@ import { api } from "@/lib/api/api";
 import { Chat, Message } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Search, Send, ArrowLeft, Plus, X, MessageCircle, Paperclip, Mic, FileText, Camera } from "lucide-react-native";
-import Animated, { FadeInRight, FadeInDown } from "react-native-reanimated";
+import { Search, Send, ArrowLeft, Plus, X, MessageCircle, Paperclip, Mic, FileText } from "lucide-react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { uploadFile } from "@/lib/upload";
 import { pickImage, pickDocument, pickPdf, takePhoto } from "@/lib/file-picker";
 
-const DS = {
-  bg: "#0A0F1E",
-  card: "#111827",
-  cardAlt: "#0F172A",
-  msgMy: "#0E3A5C",
-  msgOther: "#111827",
-  cyan: "#00B4D8",
-  cyanSoft: "rgba(0,180,216,0.12)",
-  cyanBorder: "rgba(0,180,216,0.25)",
-  textPrimary: "#F1F5F9",
-  textSecondary: "#94A3B8",
-  textMuted: "#475569",
-  border: "rgba(255,255,255,0.06)",
-};
-
-function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean; colors: any }) {
+function FileMessageBubble({ msg, colors }: { msg: Message; isMe: boolean; colors: any }) {
+  const { t } = useI18n();
+  const accentSoft = `${colors.accent}1F`;
+  const accentBorder = `${colors.accent}4D`;
   const isImage = msg.type === "image" || msg.fileMimeType?.startsWith("image/");
   const isAudio = msg.type === "audio" || msg.fileMimeType?.startsWith("audio/");
 
@@ -44,7 +32,7 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
           resizeMode="cover"
         />
         {msg.content ? (
-          <Text style={{ color: DS.textPrimary, fontSize: 14, marginTop: 6, paddingHorizontal: 2 }}>
+          <Text style={{ color: colors.text, fontSize: 14, marginTop: 6, paddingHorizontal: 2 }}>
             {msg.content}
           </Text>
         ) : null}
@@ -58,12 +46,12 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
         onPress={() => msg.fileUrl && Linking.openURL(msg.fileUrl)}
         style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 }}
       >
-        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: DS.cyanSoft, borderWidth: 1, borderColor: DS.cyanBorder, alignItems: "center", justifyContent: "center" }}>
-          <Mic size={16} color={DS.cyan} />
+        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: accentSoft, borderWidth: 1, borderColor: accentBorder, alignItems: "center", justifyContent: "center" }}>
+          <Mic size={16} color={colors.accent} />
         </View>
         <View>
-          <Text style={{ color: DS.textPrimary, fontSize: 13, fontWeight: "600" }}>Audio</Text>
-          <Text style={{ color: DS.textMuted, fontSize: 11 }}>{msg.fileName || "audio.m4a"}</Text>
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>{t("audio")}</Text>
+          <Text style={{ color: colors.text3, fontSize: 11 }}>{msg.fileName || "audio.m4a"}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -75,18 +63,18 @@ function FileMessageBubble({ msg, isMe, colors }: { msg: Message; isMe: boolean;
         onPress={() => msg.fileUrl && Linking.openURL(msg.fileUrl)}
         style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 }}
       >
-        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: DS.cyanSoft, borderWidth: 1, borderColor: DS.cyanBorder, alignItems: "center", justifyContent: "center" }}>
-          <FileText size={16} color={DS.cyan} />
+        <View style={{ width: 36, height: 36, borderRadius: 100, backgroundColor: accentSoft, borderWidth: 1, borderColor: accentBorder, alignItems: "center", justifyContent: "center" }}>
+          <FileText size={16} color={colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: DS.textPrimary, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>{msg.fileName || "File"}</Text>
-          <Text style={{ color: DS.textMuted, fontSize: 11 }}>Tap to open</Text>
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>{msg.fileName || t("file")}</Text>
+          <Text style={{ color: colors.text3, fontSize: 11 }}>{t("tapToOpen")}</Text>
         </View>
       </TouchableOpacity>
     );
   }
 
-  return <Text style={{ color: DS.textPrimary, fontSize: 15, lineHeight: 22 }}>{msg.content}</Text>;
+  return <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>{msg.content}</Text>;
 }
 
 function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; currentUserId: string; onBack: () => void; colors: any }) {
@@ -96,6 +84,10 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
   const { t } = useI18n();
   const otherMember = chat.members?.find(m => m.user.id !== currentUserId);
   const name = chat.type === "direct" ? otherMember?.user?.name || "?" : (chat.name || "Group");
+
+  const accentSoft = `${colors.accent}1F`;
+  const accentBorder = `${colors.accent}4D`;
+  const msgMyBg = "#0E3A5C";
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["messages", chat.id],
@@ -116,7 +108,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t("cancel"), "Camera", t("pickImageLabel"), t("pickPdf"), t("pickFile")],
+          options: [t("cancel"), t("camera"), t("pickImageLabel"), t("pickPdf"), t("pickFile")],
           cancelButtonIndex: 0,
         },
         async (idx) => {
@@ -128,7 +120,7 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
       );
     } else {
       Alert.alert(t("attachFile"), undefined, [
-        { text: "Camera", onPress: () => handleSendMedia("camera") },
+        { text: t("camera"), onPress: () => handleSendMedia("camera") },
         { text: t("pickImageLabel"), onPress: () => handleSendMedia("image") },
         { text: t("pickPdf"), onPress: () => handleSendMedia("pdf") },
         { text: t("pickFile"), onPress: () => handleSendMedia("document") },
@@ -169,15 +161,15 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="chat-view">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="chat-view">
       <SafeAreaView edges={["top"]}>
         <View style={{
           flexDirection: "row",
           alignItems: "center",
           padding: 16,
           borderBottomWidth: 1,
-          borderBottomColor: DS.border,
-          backgroundColor: DS.card,
+          borderBottomColor: colors.border,
+          backgroundColor: colors.card,
         }}>
           <TouchableOpacity
             onPress={onBack}
@@ -187,95 +179,91 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
               height: 36,
               borderRadius: 100,
               borderWidth: 1,
-              borderColor: DS.border,
+              borderColor: colors.border,
               alignItems: "center",
               justifyContent: "center",
             }}
             testID="back-button"
           >
-            <ArrowLeft size={18} color={DS.textSecondary} />
+            <ArrowLeft size={18} color={colors.text2} />
           </TouchableOpacity>
 
-          {/* Circular avatar */}
           <View style={{
             width: 40,
             height: 40,
             borderRadius: 100,
             borderWidth: 2,
-            borderColor: DS.cyan,
+            borderColor: colors.accent,
             marginRight: 12,
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            backgroundColor: DS.cardAlt,
+            backgroundColor: colors.bg2,
           }}>
             {otherMember?.user?.image
               ? <Image source={{ uri: otherMember.user.image }} style={{ width: 40, height: 40 }} />
-              : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 15 }}>{name[0]?.toUpperCase()}</Text>
+              : <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 15 }}>{name[0]?.toUpperCase()}</Text>
             }
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={{ color: DS.textPrimary, fontSize: 15, fontWeight: "700" }}>{name}</Text>
-            <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 1 }}>Active</Text>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>{name}</Text>
+            <Text style={{ color: colors.text3, fontSize: 11, marginTop: 1 }}>{t("active")}</Text>
           </View>
 
-          <View style={{ width: 8, height: 8, borderRadius: 100, backgroundColor: DS.cyan }} />
+          <View style={{ width: 8, height: 8, borderRadius: 100, backgroundColor: colors.accent }} />
         </View>
       </SafeAreaView>
 
-      {isLoading
-        ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-            <ActivityIndicator color={DS.cyan} />
-            <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 10 }}>Loading messages...</Text>
-          </View>
-        )
-        : (
-          <FlatList
-            data={messages || []}
-            keyExtractor={(m) => m.id}
-            renderItem={({ item }) => {
-              const isMe = item.senderId === currentUserId;
-              const hasFile = item.type !== "text" && item.fileUrl;
-              return (
-                <Animated.View
-                  entering={FadeInRight.duration(200)}
-                  style={{ padding: 6, paddingHorizontal: 14, alignItems: isMe ? "flex-end" : "flex-start" }}
-                >
-                  <View style={{
-                    maxWidth: "78%",
-                    backgroundColor: isMe ? DS.msgMy : DS.msgOther,
-                    borderRadius: 20,
-                    borderBottomRightRadius: isMe ? 4 : 20,
-                    borderBottomLeftRadius: isMe ? 20 : 4,
-                    borderWidth: 1,
-                    borderColor: isMe ? DS.cyanBorder : DS.border,
-                    paddingHorizontal: hasFile ? 12 : 14,
-                    paddingVertical: 10,
-                    overflow: "hidden",
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
+          <ActivityIndicator color={colors.accent} />
+          <Text style={{ color: colors.text3, fontSize: 13, marginTop: 10 }}>{t("loadingMessages")}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={messages || []}
+          keyExtractor={(m) => m.id}
+          renderItem={({ item }) => {
+            const isMe = item.senderId === currentUserId;
+            const hasFile = item.type !== "text" && item.fileUrl;
+            return (
+              <Animated.View
+                entering={FadeInRight.duration(200)}
+                style={{ padding: 6, paddingHorizontal: 14, alignItems: isMe ? "flex-end" : "flex-start" }}
+              >
+                <View style={{
+                  maxWidth: "78%",
+                  backgroundColor: isMe ? msgMyBg : colors.card,
+                  borderRadius: 20,
+                  borderBottomRightRadius: isMe ? 4 : 20,
+                  borderBottomLeftRadius: isMe ? 20 : 4,
+                  borderWidth: 1,
+                  borderColor: isMe ? accentBorder : colors.border,
+                  paddingHorizontal: hasFile ? 12 : 14,
+                  paddingVertical: 10,
+                  overflow: "hidden",
+                }}>
+                  {hasFile
+                    ? <FileMessageBubble msg={item} isMe={isMe} colors={colors} />
+                    : <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>{item.content}</Text>
+                  }
+                  <Text style={{
+                    color: colors.text3,
+                    fontSize: 10,
+                    marginTop: 4,
+                    textAlign: isMe ? "right" : "left",
                   }}>
-                    {hasFile
-                      ? <FileMessageBubble msg={item} isMe={isMe} colors={colors} />
-                      : <Text style={{ color: DS.textPrimary, fontSize: 15, lineHeight: 22 }}>{item.content}</Text>
-                    }
-                    <Text style={{
-                      color: DS.textMuted,
-                      fontSize: 10,
-                      marginTop: 4,
-                      textAlign: isMe ? "right" : "left",
-                    }}>
-                      {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
-                    </Text>
-                  </View>
-                </Animated.View>
-              );
-            }}
-            contentContainerStyle={{ paddingVertical: 12, paddingBottom: 20 }}
-            testID="messages-list"
-          />
-        )
-      }
+                    {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                  </Text>
+                </View>
+              </Animated.View>
+            );
+          }}
+          contentContainerStyle={{ paddingVertical: 12, paddingBottom: 20 }}
+          testID="messages-list"
+        />
+      )}
 
       <SafeAreaView edges={["bottom"]}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -285,8 +273,8 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
             padding: 12,
             paddingHorizontal: 14,
             borderTopWidth: 1,
-            borderTopColor: DS.border,
-            backgroundColor: DS.card,
+            borderTopColor: colors.border,
+            backgroundColor: colors.card,
             gap: 8,
           }}>
             <TouchableOpacity
@@ -298,34 +286,33 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
                 height: 40,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: DS.border,
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: DS.cardAlt,
+                backgroundColor: colors.bg2,
               }}
             >
               {uploading
-                ? <ActivityIndicator color={DS.cyan} size="small" />
-                : <Paperclip size={17} color={DS.textSecondary} />
+                ? <ActivityIndicator color={colors.accent} size="small" />
+                : <Paperclip size={17} color={colors.text2} />
               }
             </TouchableOpacity>
 
-            {/* Pill-shaped input */}
             <TextInput
               value={message}
               onChangeText={setMessage}
-              placeholder="Message..."
-              placeholderTextColor={DS.textMuted}
+              placeholder={`${t("messagesTitle")}...`}
+              placeholderTextColor={colors.text3}
               testID="message-input"
               style={{
                 flex: 1,
-                backgroundColor: DS.cardAlt,
+                backgroundColor: colors.bg2,
                 borderWidth: 1,
-                borderColor: message.length > 0 ? DS.cyanBorder : DS.border,
+                borderColor: message.length > 0 ? accentBorder : colors.border,
                 borderRadius: 100,
                 paddingHorizontal: 18,
                 paddingVertical: 11,
-                color: DS.textPrimary,
+                color: colors.text,
                 fontSize: 14,
                 maxHeight: 120,
               }}
@@ -340,18 +327,18 @@ function ChatView({ chat, currentUserId, onBack, colors }: { chat: Chat; current
                 width: 40,
                 height: 40,
                 borderRadius: 100,
-                backgroundColor: message.trim() ? DS.cyan : DS.cardAlt,
+                backgroundColor: message.trim() ? colors.accent : colors.bg2,
                 borderWidth: 1,
-                borderColor: message.trim() ? DS.cyan : DS.border,
+                borderColor: message.trim() ? colors.accent : colors.border,
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: message.trim() ? DS.cyan : "transparent",
+                shadowColor: message.trim() ? colors.accent : "transparent",
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 0 },
               }}
             >
-              <Send size={16} color={message.trim() ? DS.bg : DS.textMuted} />
+              <Send size={16} color={message.trim() ? colors.bg : colors.text3} />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -368,6 +355,9 @@ export default function MessagesScreen() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const queryClient = useQueryClient();
+
+  const accentSoft = `${colors.accent}1F`;
+  const accentBorder = `${colors.accent}4D`;
 
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
@@ -395,21 +385,20 @@ export default function MessagesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="messages-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="messages-screen">
       <SafeAreaView edges={["top"]}>
-        {/* Header */}
         <View style={{
           paddingHorizontal: 20,
           paddingTop: 14,
           paddingBottom: 12,
           borderBottomWidth: 1,
-          borderBottomColor: DS.border,
-          backgroundColor: DS.card,
+          borderBottomColor: colors.border,
+          backgroundColor: colors.card,
           flexDirection: "row",
           alignItems: "center",
         }}>
-          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: DS.textPrimary, letterSpacing: -0.5 }}>
-            Messages
+          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5 }}>
+            {t("messagesTitle")}
           </Text>
 
           <TouchableOpacity
@@ -420,143 +409,133 @@ export default function MessagesScreen() {
               height: 40,
               borderRadius: 100,
               borderWidth: 1,
-              borderColor: DS.cyanBorder,
-              backgroundColor: DS.cyanSoft,
+              borderColor: accentBorder,
+              backgroundColor: accentSoft,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Plus size={20} color={DS.cyan} />
+            <Plus size={20} color={colors.accent} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {isLoading
-        ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-            <ActivityIndicator color={DS.cyan} size="large" />
-            <Text style={{ color: DS.textMuted, fontSize: 13, marginTop: 12 }}>Loading chats...</Text>
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
+          <ActivityIndicator color={colors.accent} size="large" />
+          <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>{t("loadingChats")}</Text>
+        </View>
+      ) : !chats?.length ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+          <View style={{
+            width: 80,
+            height: 80,
+            borderRadius: 100,
+            backgroundColor: accentSoft,
+            borderWidth: 1,
+            borderColor: accentBorder,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}>
+            <MessageCircle size={34} color={colors.accent} />
           </View>
-        )
-        : !chats?.length
-          ? (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-              <View style={{
-                width: 80,
-                height: 80,
-                borderRadius: 100,
-                backgroundColor: DS.cyanSoft,
-                borderWidth: 1,
-                borderColor: DS.cyanBorder,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}>
-                <MessageCircle size={34} color={DS.cyan} />
-              </View>
-              <Text style={{ color: DS.textPrimary, fontSize: 18, fontWeight: "800", marginBottom: 8, textAlign: "center", letterSpacing: -0.3 }}>
-                {t("noMessages")}
-              </Text>
-              <Text style={{ color: DS.textSecondary, fontSize: 13, textAlign: "center", lineHeight: 20 }}>
-                {t("startConversation")}
-              </Text>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "800", marginBottom: 8, textAlign: "center", letterSpacing: -0.3 }}>
+            {t("noMessages")}
+          </Text>
+          <Text style={{ color: colors.text2, fontSize: 13, textAlign: "center", lineHeight: 20 }}>
+            {t("startConversation")}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowNewChat(true)}
+            style={{
+              marginTop: 24,
+              backgroundColor: colors.accent,
+              borderRadius: 100,
+              paddingHorizontal: 28,
+              paddingVertical: 13,
+              shadowColor: colors.accent,
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
+            }}
+          >
+            <Text style={{ color: colors.bg, fontWeight: "700", fontSize: 14 }}>
+              {t("startConversationBtn")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={chats}
+          keyExtractor={(c) => c.id}
+          renderItem={({ item }) => {
+            const other = item.members?.find(m => m.user.id !== session?.user?.id);
+            const name = item.type === "direct" ? other?.user?.name || "?" : (item.name || "Group");
+            const lastMsg = item.messages?.[0];
+            const lastMsgText = lastMsg?.type !== "text" && lastMsg?.type
+              ? lastMsg.type === "image" ? t("photo")
+                : lastMsg.type === "audio" ? t("voiceMessage")
+                : lastMsg.type === "video" ? t("video")
+                : t("file")
+              : lastMsg?.content || t("noMessages");
+            const lastMsgTime = lastMsg?.createdAt
+              ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : null;
+            return (
               <TouchableOpacity
-                onPress={() => setShowNewChat(true)}
+                onPress={() => setSelectedChat(item)}
                 style={{
-                  marginTop: 24,
-                  backgroundColor: DS.cyan,
-                  borderRadius: 100,
-                  paddingHorizontal: 28,
-                  paddingVertical: 13,
-                  shadowColor: DS.cyan,
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 4 },
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 14,
+                  paddingHorizontal: 20,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
                 }}
+                testID="chat-list-item"
               >
-                <Text style={{ color: DS.bg, fontWeight: "700", fontSize: 14 }}>
-                  Start a conversation
-                </Text>
+                <View style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 100,
+                  borderWidth: 2,
+                  borderColor: accentBorder,
+                  marginRight: 14,
+                  overflow: "hidden",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.bg2,
+                }}>
+                  {other?.user?.image
+                    ? <Image source={{ uri: other.user.image }} style={{ width: 52, height: 52 }} />
+                    : <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 20 }}>{name[0]?.toUpperCase()}</Text>
+                  }
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: "700", fontSize: 15, marginBottom: 3 }}>{name}</Text>
+                  <Text style={{ color: colors.text2, fontSize: 13 }} numberOfLines={1}>{lastMsgText}</Text>
+                </View>
+
+                {lastMsgTime ? (
+                  <Text style={{ color: colors.text3, fontSize: 11 }}>{lastMsgTime}</Text>
+                ) : null}
               </TouchableOpacity>
-            </View>
-          )
-          : (
-            <FlatList
-              data={chats}
-              keyExtractor={(c) => c.id}
-              renderItem={({ item }) => {
-                const other = item.members?.find(m => m.user.id !== session?.user?.id);
-                const name = item.type === "direct" ? other?.user?.name || "?" : (item.name || "Group");
-                const lastMsg = item.messages?.[0];
-                const lastMsgText = lastMsg?.type !== "text" && lastMsg?.type
-                  ? lastMsg.type === "image" ? "Photo"
-                    : lastMsg.type === "audio" ? "Voice message"
-                    : lastMsg.type === "video" ? "Video"
-                    : "File"
-                  : lastMsg?.content || t("noMessages");
-                const lastMsgTime = lastMsg?.createdAt
-                  ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                  : null;
-                return (
-                  <TouchableOpacity
-                    onPress={() => setSelectedChat(item)}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      padding: 14,
-                      paddingHorizontal: 20,
-                      borderBottomWidth: 1,
-                      borderBottomColor: DS.border,
-                    }}
-                    testID="chat-list-item"
-                  >
-                    {/* Circular avatar */}
-                    <View style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: 100,
-                      borderWidth: 2,
-                      borderColor: DS.cyanBorder,
-                      marginRight: 14,
-                      overflow: "hidden",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: DS.cardAlt,
-                    }}>
-                      {other?.user?.image
-                        ? <Image source={{ uri: other.user.image }} style={{ width: 52, height: 52 }} />
-                        : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 20 }}>{name[0]?.toUpperCase()}</Text>
-                      }
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 15, marginBottom: 3 }}>{name}</Text>
-                      <Text style={{ color: DS.textSecondary, fontSize: 13 }} numberOfLines={1}>{lastMsgText}</Text>
-                    </View>
-
-                    {lastMsgTime ? (
-                      <Text style={{ color: DS.textMuted, fontSize: 11 }}>
-                        {lastMsgTime}
-                      </Text>
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              }}
-              contentContainerStyle={{ paddingBottom: 100 }}
-              testID="chats-list"
-            />
-          )
-      }
+            );
+          }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          testID="chats-list"
+        />
+      )}
 
       <Modal visible={showNewChat} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: DS.bg, padding: 20 }}>
-          {/* Drag indicator */}
-          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginBottom: 20 }} />
+        <View style={{ flex: 1, backgroundColor: colors.bg, padding: 20 }}>
+          <View style={{ width: 36, height: 4, backgroundColor: colors.border, borderRadius: 100, alignSelf: "center", marginBottom: 20 }} />
 
-          {/* Modal header */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>
-              New message
+            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "700" }}>
+              {t("newMessage")}
             </Text>
             <TouchableOpacity
               onPress={() => { setShowNewChat(false); setSearchQ(""); }}
@@ -566,99 +545,94 @@ export default function MessagesScreen() {
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: DS.border,
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={18} color={DS.textSecondary} />
+              <X size={18} color={colors.text2} />
             </TouchableOpacity>
           </View>
 
-          {/* Search input - pill shaped */}
           <View style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: DS.card,
+            backgroundColor: colors.card,
             borderWidth: 1,
-            borderColor: searchQ.length > 0 ? DS.cyanBorder : DS.border,
+            borderColor: searchQ.length > 0 ? accentBorder : colors.border,
             paddingHorizontal: 16,
             gap: 10,
             marginBottom: 16,
             borderRadius: 100,
           }}>
-            <Search size={16} color={DS.textMuted} />
+            <Search size={16} color={colors.text3} />
             <TextInput
               value={searchQ}
               onChangeText={setSearchQ}
               placeholder={t("searchUsers")}
-              placeholderTextColor={DS.textMuted}
-              style={{ flex: 1, color: DS.textPrimary, fontSize: 14, paddingVertical: 12 }}
+              placeholderTextColor={colors.text3}
+              style={{ flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12 }}
               autoFocus
               testID="search-users-input"
             />
           </View>
 
-          {searchQ.length < 2
-            ? (
-              <View style={{ alignItems: "center", paddingTop: 60 }}>
-                <Text style={{ color: DS.textMuted, fontSize: 13, textAlign: "center" }}>
-                  {t("selectUser")}
-                </Text>
-              </View>
-            )
-            : (
-              <FlatList
-                data={searchResults || []}
-                keyExtractor={(u) => u.id}
-                renderItem={({ item }) => {
-                  if (item.id === session?.user?.id) return null;
-                  return (
-                    <TouchableOpacity
-                      onPress={() => createChat.mutate(item.id)}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: 12,
-                        marginBottom: 6,
-                        backgroundColor: DS.card,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: DS.border,
-                      }}
-                      testID="user-search-result"
-                    >
-                      {/* Circular avatar */}
-                      <View style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 100,
-                        borderWidth: 1.5,
-                        borderColor: DS.cyanBorder,
-                        marginRight: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        backgroundColor: DS.cardAlt,
-                      }}>
-                        {item.image
-                          ? <Image source={{ uri: item.image }} style={{ width: 44, height: 44 }} />
-                          : <Text style={{ color: DS.cyan, fontWeight: "700", fontSize: 16 }}>{item.name?.[0]}</Text>
-                        }
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: DS.textPrimary, fontWeight: "700", fontSize: 14 }}>{item.name}</Text>
-                        {item.username ? (
-                          <Text style={{ color: DS.textMuted, fontSize: 12 }}>@{item.username}</Text>
-                        ) : null}
-                      </View>
-                      {createChat.isPending ? <ActivityIndicator color={DS.cyan} size="small" /> : null}
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            )
-          }
+          {searchQ.length < 2 ? (
+            <View style={{ alignItems: "center", paddingTop: 60 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, textAlign: "center" }}>
+                {t("selectUser")}
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={searchResults || []}
+              keyExtractor={(u) => u.id}
+              renderItem={({ item }) => {
+                if (item.id === session?.user?.id) return null;
+                return (
+                  <TouchableOpacity
+                    onPress={() => createChat.mutate(item.id)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 12,
+                      marginBottom: 6,
+                      backgroundColor: colors.card,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                    testID="user-search-result"
+                  >
+                    <View style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 100,
+                      borderWidth: 1.5,
+                      borderColor: accentBorder,
+                      marginRight: 12,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      backgroundColor: colors.bg2,
+                    }}>
+                      {item.image
+                        ? <Image source={{ uri: item.image }} style={{ width: 44, height: 44 }} />
+                        : <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 16 }}>{item.name?.[0]}</Text>
+                      }
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.text, fontWeight: "700", fontSize: 14 }}>{item.name}</Text>
+                      {item.username ? (
+                        <Text style={{ color: colors.text3, fontSize: 12 }}>@{item.username}</Text>
+                      ) : null}
+                    </View>
+                    {createChat.isPending ? <ActivityIndicator color={colors.accent} size="small" /> : null}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
         </View>
       </Modal>
     </View>

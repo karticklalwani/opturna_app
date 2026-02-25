@@ -16,31 +16,20 @@ import { uploadFile } from "@/lib/upload";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 
-const DS = {
-  bg: "#0A0F1E",
-  card: "#111827",
-  cardAlt: "#0F172A",
-  cyan: "#00B4D8",
-  cyanSoft: "rgba(0,180,216,0.12)",
-  cyanBorder: "rgba(0,180,216,0.25)",
-  red: "#FF3B30",
-  redSoft: "rgba(255,59,48,0.10)",
-  redBorder: "rgba(255,59,48,0.28)",
-  textPrimary: "#F1F5F9",
-  textSecondary: "#94A3B8",
-  textMuted: "#475569",
-  border: "rgba(255,255,255,0.06)",
-};
-
 export default function ProfileScreen() {
   const { data: session } = useSession();
   const invalidateSession = useInvalidateSession();
   const queryClient = useQueryClient();
-  const { mode, setTheme } = useTheme();
+  const { mode, colors, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState({ name: "", bio: "", mainAmbition: "", currentGoals: "", username: "" });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const accentSoft = `${colors.accent}1F`;
+  const accentBorder = `${colors.accent}4D`;
+  const errorSoft = `${colors.error}1A`;
+  const errorBorder = `${colors.error}47`;
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["me"],
@@ -126,8 +115,8 @@ export default function ProfileScreen() {
 
   if (profileLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: DS.bg, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
-        <ActivityIndicator color={DS.cyan} size="large" />
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
@@ -136,12 +125,11 @@ export default function ProfileScreen() {
   const avatarImage = profile?.image || session?.user?.image;
 
   return (
-    <View style={{ flex: 1, backgroundColor: DS.bg }} testID="profile-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: DS.bg }}>
-        {/* Header */}
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="profile-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: DS.textPrimary, letterSpacing: -0.5 }}>
-            Profile
+          <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5 }}>
+            {t("profileTitle")}
           </Text>
           <TouchableOpacity
             onPress={openEdit}
@@ -150,17 +138,17 @@ export default function ProfileScreen() {
               flexDirection: "row",
               alignItems: "center",
               gap: 6,
-              backgroundColor: DS.cyanSoft,
+              backgroundColor: accentSoft,
               borderWidth: 1,
-              borderColor: DS.cyanBorder,
+              borderColor: accentBorder,
               borderRadius: 100,
               paddingHorizontal: 14,
               paddingVertical: 8,
               marginRight: 8,
             }}
           >
-            <Edit3 size={13} color={DS.cyan} />
-            <Text style={{ color: DS.cyan, fontSize: 13, fontWeight: "600" }}>Edit</Text>
+            <Edit3 size={13} color={colors.accent} />
+            <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>{t("edit")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSignOut}
@@ -169,14 +157,14 @@ export default function ProfileScreen() {
               width: 36,
               height: 36,
               borderRadius: 100,
-              backgroundColor: DS.redSoft,
+              backgroundColor: errorSoft,
               borderWidth: 1,
-              borderColor: DS.redBorder,
+              borderColor: errorBorder,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <LogOut size={15} color={DS.red} />
+            <LogOut size={15} color={colors.error} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -184,21 +172,20 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Hero block */}
         <View style={{
-          backgroundColor: DS.card,
+          backgroundColor: colors.card,
           borderRadius: 24,
           marginHorizontal: 16,
           marginTop: 4,
           marginBottom: 16,
           padding: 20,
           borderWidth: 1,
-          borderColor: DS.border,
+          borderColor: colors.border,
           shadowColor: "#000",
           shadowOpacity: 0.15,
           shadowRadius: 20,
           shadowOffset: { width: 0, height: 4 },
         }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-            {/* Avatar with cyan ring */}
             <TouchableOpacity
               onPress={handleAvatarPress}
               disabled={uploadingAvatar}
@@ -209,28 +196,27 @@ export default function ProfileScreen() {
                 width: 80,
                 height: 80,
                 borderRadius: 100,
-                backgroundColor: DS.cardAlt,
+                backgroundColor: colors.bg2,
                 borderWidth: 2.5,
-                borderColor: DS.cyan,
+                borderColor: colors.accent,
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                shadowColor: DS.cyan,
+                shadowColor: colors.accent,
                 shadowOpacity: 0.3,
                 shadowRadius: 10,
                 shadowOffset: { width: 0, height: 0 },
               }}>
                 {uploadingAvatar ? (
-                  <ActivityIndicator color={DS.cyan} />
+                  <ActivityIndicator color={colors.accent} />
                 ) : avatarImage ? (
                   <Image source={{ uri: avatarImage }} style={{ width: 80, height: 80 }} />
                 ) : (
-                  <Text style={{ color: DS.cyan, fontWeight: "800", fontSize: 30 }}>
+                  <Text style={{ color: colors.accent, fontWeight: "800", fontSize: 30 }}>
                     {displayName[0]?.toUpperCase()}
                   </Text>
                 )}
               </View>
-              {/* Camera overlay */}
               <View style={{
                 position: "absolute",
                 bottom: 0,
@@ -238,159 +224,137 @@ export default function ProfileScreen() {
                 width: 26,
                 height: 26,
                 borderRadius: 100,
-                backgroundColor: DS.cyan,
+                backgroundColor: colors.accent,
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 2,
-                borderColor: DS.card,
+                borderColor: colors.card,
               }}>
-                <Camera size={12} color={DS.bg} />
+                <Camera size={12} color={colors.bg} />
               </View>
             </TouchableOpacity>
 
-            {/* Name + username + badges */}
             <View style={{ flex: 1, paddingTop: 4 }}>
               <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
-                <Text style={{ color: DS.textPrimary, fontSize: 20, fontWeight: "800", letterSpacing: -0.3 }}>{displayName}</Text>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.3 }}>{displayName}</Text>
                 {profile?.isVerified ? (
                   <View style={{
                     width: 18,
                     height: 18,
                     borderRadius: 100,
-                    backgroundColor: DS.cyan,
+                    backgroundColor: colors.accent,
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
-                    <CheckCircle size={12} color={DS.bg} fill={DS.bg} />
+                    <CheckCircle size={12} color={colors.bg} fill={colors.bg} />
                   </View>
                 ) : null}
                 {profile?.role === "mentor" ? (
                   <View style={{
                     borderWidth: 1,
-                    borderColor: DS.cyanBorder,
-                    backgroundColor: DS.cyanSoft,
+                    borderColor: accentBorder,
+                    backgroundColor: accentSoft,
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     borderRadius: 100,
                   }}>
-                    <Text style={{ color: DS.cyan, fontSize: 10, fontWeight: "700" }}>Mentor</Text>
+                    <Text style={{ color: colors.accent, fontSize: 10, fontWeight: "700" }}>Mentor</Text>
                   </View>
                 ) : null}
               </View>
 
               {profile?.username ? (
-                <Text style={{ color: DS.textSecondary, fontSize: 13, marginBottom: 6 }}>@{profile.username}</Text>
+                <Text style={{ color: colors.text2, fontSize: 13, marginBottom: 6 }}>@{profile.username}</Text>
               ) : null}
 
               <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 {profile?.isPublic ? (
-                  <Globe size={11} color={DS.textMuted} />
+                  <Globe size={11} color={colors.text3} />
                 ) : (
-                  <Lock size={11} color={DS.textMuted} />
+                  <Lock size={11} color={colors.text3} />
                 )}
-                <Text style={{ color: DS.textMuted, fontSize: 11 }}>
-                  {profile?.isPublic ? "Public profile" : "Private profile"}
+                <Text style={{ color: colors.text3, fontSize: 11 }}>
+                  {profile?.isPublic ? t("publicProfile") : t("privateProfile")}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Bio */}
           {profile?.bio ? (
             <Text style={{
-              color: DS.textSecondary,
+              color: colors.text2,
               fontSize: 13,
               lineHeight: 20,
               marginTop: 14,
               paddingTop: 14,
               borderTopWidth: 1,
-              borderTopColor: DS.border,
+              borderTopColor: colors.border,
             }}>{profile.bio}</Text>
           ) : null}
         </View>
 
-        {/* Stats row - 3 pill cards */}
+        {/* Stats row */}
         <View style={{ flexDirection: "row", gap: 10, marginHorizontal: 16, marginBottom: 16 }}>
           {[
-            { label: "Followers", value: profile?._count?.followers || 0 },
-            { label: "Following", value: profile?._count?.following || 0 },
-            { label: "Posts", value: profile?._count?.posts || 0 },
-          ].map((item, idx) => (
+            { labelKey: "followers", value: profile?._count?.followers || 0 },
+            { labelKey: "following", value: profile?._count?.following || 0 },
+            { labelKey: "posts", value: profile?._count?.posts || 0 },
+          ].map((item) => (
             <View
-              key={item.label}
+              key={item.labelKey}
               style={{
                 flex: 1,
                 alignItems: "center",
                 paddingVertical: 14,
-                backgroundColor: DS.card,
+                backgroundColor: colors.card,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: DS.border,
+                borderColor: colors.border,
                 shadowColor: "#000",
                 shadowOpacity: 0.1,
                 shadowRadius: 10,
                 shadowOffset: { width: 0, height: 2 },
               }}
             >
-              <Text style={{ color: DS.textPrimary, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>{item.value}</Text>
-              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 3 }}>{item.label}</Text>
+              <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>{item.value}</Text>
+              <Text style={{ color: colors.text3, fontSize: 11, marginTop: 3 }}>{t(item.labelKey as any)}</Text>
             </View>
           ))}
         </View>
 
         {/* Performance stats */}
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
-            Progress
+          <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+            {t("progress")}
           </Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <View style={{
-              flex: 1,
-              backgroundColor: DS.card,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: DS.border,
-              padding: 16,
-              alignItems: "center",
-            }}>
-              <Target size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
-              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{completedGoals}</Text>
-              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>Goals done</Text>
-            </View>
-            <View style={{
-              flex: 1,
-              backgroundColor: DS.card,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: DS.border,
-              padding: 16,
-              alignItems: "center",
-            }}>
-              <Target size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
-              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{activeGoals}</Text>
-              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>In progress</Text>
-            </View>
-            <View style={{
-              flex: 1,
-              backgroundColor: DS.card,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: DS.border,
-              padding: 16,
-              alignItems: "center",
-            }}>
-              <Zap size={18} color={DS.cyan} style={{ marginBottom: 8 }} />
-              <Text style={{ color: DS.textPrimary, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{bestStreak}</Text>
-              <Text style={{ color: DS.textMuted, fontSize: 11, marginTop: 4, textAlign: "center" }}>Best streak</Text>
-            </View>
+            {[
+              { icon: Target, value: completedGoals, labelKey: "goalsDone" },
+              { icon: Target, value: activeGoals, labelKey: "inProgress" },
+              { icon: Zap, value: bestStreak, labelKey: "bestStreak" },
+            ].map(({ icon: Icon, value, labelKey }) => (
+              <View key={labelKey} style={{
+                flex: 1,
+                backgroundColor: colors.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
+                alignItems: "center",
+              }}>
+                <Icon size={18} color={colors.accent} style={{ marginBottom: 8 }} />
+                <Text style={{ color: colors.text, fontSize: 24, fontWeight: "800", letterSpacing: -1 }}>{value}</Text>
+                <Text style={{ color: colors.text3, fontSize: 11, marginTop: 4, textAlign: "center" }}>{t(labelKey as any)}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         {/* Interests */}
         {interests.length > 0 ? (
           <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
-              Interests
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+              {t("interests")}
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {interests.map((tag: string) => (
@@ -400,12 +364,12 @@ export default function ProfileScreen() {
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderWidth: 1,
-                    borderColor: DS.cyanBorder,
-                    backgroundColor: DS.cyanSoft,
+                    borderColor: accentBorder,
+                    backgroundColor: accentSoft,
                     borderRadius: 100,
                   }}
                 >
-                  <Text style={{ color: DS.cyan, fontSize: 12, fontWeight: "600" }}>{tag}</Text>
+                  <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>{tag}</Text>
                 </View>
               ))}
             </View>
@@ -417,66 +381,66 @@ export default function ProfileScreen() {
           <Animated.View
             entering={FadeInDown.duration(400)}
             style={{
-              backgroundColor: DS.card,
+              backgroundColor: colors.card,
               borderRadius: 20,
               borderWidth: 1,
-              borderColor: DS.border,
+              borderColor: colors.border,
               borderLeftWidth: 3,
-              borderLeftColor: DS.cyan,
+              borderLeftColor: colors.accent,
               padding: 16,
               marginHorizontal: 16,
               marginBottom: 16,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Award size={14} color={DS.cyan} />
-              <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600" }}>Main ambition</Text>
+              <Award size={14} color={colors.accent} />
+              <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600" }}>{t("mainAmbition")}</Text>
             </View>
-            <Text style={{ color: DS.textPrimary, fontSize: 14, lineHeight: 22 }}>{profile.mainAmbition}</Text>
+            <Text style={{ color: colors.text, fontSize: 14, lineHeight: 22 }}>{profile.mainAmbition}</Text>
           </Animated.View>
         ) : null}
 
         {/* Current Focus */}
         {profile?.currentGoals ? (
           <View style={{
-            backgroundColor: DS.card,
+            backgroundColor: colors.card,
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: DS.border,
+            borderColor: colors.border,
             padding: 16,
             marginHorizontal: 16,
             marginBottom: 16,
           }}>
-            <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>Current focus</Text>
-            <Text style={{ color: DS.textSecondary, fontSize: 13, lineHeight: 20 }}>{profile.currentGoals}</Text>
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>{t("currentFocus")}</Text>
+            <Text style={{ color: colors.text2, fontSize: 13, lineHeight: 20 }}>{profile.currentGoals}</Text>
           </View>
         ) : null}
 
         {/* Settings */}
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ color: DS.textMuted, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
-            Settings
+          <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 10, letterSpacing: 0.3 }}>
+            {t("settings")}
           </Text>
 
           {/* Language toggle */}
           <View style={{
-            backgroundColor: DS.card,
+            backgroundColor: colors.card,
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: DS.border,
+            borderColor: colors.border,
             padding: 16,
             flexDirection: "row",
             alignItems: "center",
             marginBottom: 10,
           }}>
-            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 14, fontWeight: "600" }}>Language</Text>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 14, fontWeight: "600" }}>{t("language")}</Text>
             <View style={{
               flexDirection: "row",
-              backgroundColor: DS.bg,
+              backgroundColor: colors.bg,
               borderRadius: 100,
               padding: 3,
               borderWidth: 1,
-              borderColor: DS.border,
+              borderColor: colors.border,
               gap: 3,
             }}>
               <TouchableOpacity
@@ -486,10 +450,10 @@ export default function ProfileScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 6,
                   borderRadius: 100,
-                  backgroundColor: lang === "en" ? DS.cyan : "transparent",
+                  backgroundColor: lang === "en" ? colors.accent : "transparent",
                 }}
               >
-                <Text style={{ color: lang === "en" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>EN</Text>
+                <Text style={{ color: lang === "en" ? colors.bg : colors.text3, fontWeight: "700", fontSize: 13 }}>EN</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setLang("es")}
@@ -498,32 +462,32 @@ export default function ProfileScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 6,
                   borderRadius: 100,
-                  backgroundColor: lang === "es" ? DS.cyan : "transparent",
+                  backgroundColor: lang === "es" ? colors.accent : "transparent",
                 }}
               >
-                <Text style={{ color: lang === "es" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>ES</Text>
+                <Text style={{ color: lang === "es" ? colors.bg : colors.text3, fontWeight: "700", fontSize: 13 }}>ES</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Theme toggle */}
           <View style={{
-            backgroundColor: DS.card,
+            backgroundColor: colors.card,
             borderRadius: 20,
             borderWidth: 1,
-            borderColor: DS.border,
+            borderColor: colors.border,
             padding: 16,
             flexDirection: "row",
             alignItems: "center",
           }}>
-            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 14, fontWeight: "600" }}>Display mode</Text>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 14, fontWeight: "600" }}>{t("displayMode")}</Text>
             <View style={{
               flexDirection: "row",
-              backgroundColor: DS.bg,
+              backgroundColor: colors.bg,
               borderRadius: 100,
               padding: 3,
               borderWidth: 1,
-              borderColor: DS.border,
+              borderColor: colors.border,
               gap: 3,
             }}>
               <TouchableOpacity
@@ -533,10 +497,10 @@ export default function ProfileScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 6,
                   borderRadius: 100,
-                  backgroundColor: mode === "dark" ? DS.cyan : "transparent",
+                  backgroundColor: mode === "dark" ? colors.accent : "transparent",
                 }}
               >
-                <Text style={{ color: mode === "dark" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>Dark</Text>
+                <Text style={{ color: mode === "dark" ? colors.bg : colors.text3, fontWeight: "700", fontSize: 13 }}>{t("dark")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setTheme("light")}
@@ -545,16 +509,15 @@ export default function ProfileScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 6,
                   borderRadius: 100,
-                  backgroundColor: mode === "light" ? DS.cyan : "transparent",
+                  backgroundColor: mode === "light" ? colors.accent : "transparent",
                 }}
               >
-                <Text style={{ color: mode === "light" ? DS.bg : DS.textMuted, fontWeight: "700", fontSize: 13 }}>Light</Text>
+                <Text style={{ color: mode === "light" ? colors.bg : colors.text3, fontWeight: "700", fontSize: 13 }}>{t("light")}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Sign out - destructive bottom button */}
         <TouchableOpacity
           onPress={handleSignOut}
           testID="sign-out-bottom-button"
@@ -565,31 +528,29 @@ export default function ProfileScreen() {
             gap: 8,
             marginHorizontal: 16,
             marginBottom: 24,
-            backgroundColor: DS.redSoft,
+            backgroundColor: errorSoft,
             borderWidth: 1,
-            borderColor: DS.redBorder,
+            borderColor: errorBorder,
             borderRadius: 100,
             padding: 16,
           }}
         >
-          <LogOut size={16} color={DS.red} />
-          <Text style={{ color: DS.red, fontSize: 15, fontWeight: "700" }}>{t("signOut")}</Text>
+          <LogOut size={16} color={colors.error} />
+          <Text style={{ color: colors.error, fontSize: 15, fontWeight: "700" }}>{t("signOut")}</Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Edit Modal */}
       <Modal visible={showEdit} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: DS.bg }}>
-          {/* Drag indicator */}
-          <View style={{ width: 36, height: 4, backgroundColor: DS.border, borderRadius: 100, alignSelf: "center", marginTop: 12, marginBottom: 4 }} />
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <View style={{ width: 36, height: 4, backgroundColor: colors.border, borderRadius: 100, alignSelf: "center", marginTop: 12, marginBottom: 4 }} />
 
-          {/* Modal header */}
           <View style={{
             flexDirection: "row",
             alignItems: "center",
             padding: 20,
             borderBottomWidth: 1,
-            borderBottomColor: DS.border,
+            borderBottomColor: colors.border,
           }}>
             <TouchableOpacity
               onPress={() => setShowEdit(false)}
@@ -598,68 +559,63 @@ export default function ProfileScreen() {
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: DS.border,
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 14,
               }}
             >
-              <X size={18} color={DS.textSecondary} />
+              <X size={18} color={colors.text2} />
             </TouchableOpacity>
-            <Text style={{ flex: 1, color: DS.textPrimary, fontSize: 17, fontWeight: "700" }}>Edit profile</Text>
+            <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "700" }}>{t("editProfile")}</Text>
             <TouchableOpacity
               onPress={() => updateProfile.mutate(editData)}
               disabled={updateProfile.isPending}
               testID="save-profile-button"
               style={{
-                backgroundColor: DS.cyan,
+                backgroundColor: colors.accent,
                 borderRadius: 100,
                 paddingHorizontal: 20,
                 paddingVertical: 9,
               }}
             >
               {updateProfile.isPending ? (
-                <ActivityIndicator color={DS.bg} size="small" />
+                <ActivityIndicator color={colors.bg} size="small" />
               ) : (
-                <Text style={{ color: DS.bg, fontWeight: "700", fontSize: 14 }}>Save</Text>
+                <Text style={{ color: colors.bg, fontWeight: "700", fontSize: 14 }}>{t("save")}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
             {([
-              { key: "name" as const, label: "Full name", placeholder: "Your name" },
-              { key: "username" as const, label: "Username", placeholder: "@username" },
-              { key: "bio" as const, label: "Bio", placeholder: "Tell your story...", multiline: true },
-              { key: "mainAmbition" as const, label: "Main ambition", placeholder: "What is your biggest goal in life?", multiline: true },
-              { key: "currentGoals" as const, label: "Current focus", placeholder: "What are you working on right now?", multiline: true },
-            ]).map(({ key, label, placeholder, multiline }) => (
+              { key: "name" as const, labelKey: "fullName", placeholder: "Your name" },
+              { key: "username" as const, labelKey: "username", placeholder: "@username" },
+              { key: "bio" as const, labelKey: "bio", placeholder: "Tell your story...", multiline: true },
+              { key: "mainAmbition" as const, labelKey: "mainAmbition", placeholder: "What is your biggest goal in life?", multiline: true },
+              { key: "currentGoals" as const, labelKey: "currentFocus", placeholder: "What are you working on right now?", multiline: true },
+            ]).map(({ key, labelKey, placeholder, multiline }) => (
               <View key={key} style={{ marginBottom: 20 }}>
-                <Text style={{
-                  color: DS.textSecondary,
-                  fontSize: 13,
-                  fontWeight: "600",
-                  marginBottom: 8,
-                }}>
-                  {label}
+                <Text style={{ color: colors.text2, fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
+                  {t(labelKey as any)}
                 </Text>
                 <TextInput
                   value={editData[key]}
                   onChangeText={(txt) => setEditData(p => ({ ...p, [key]: txt }))}
                   placeholder={placeholder}
-                  placeholderTextColor={DS.textMuted}
+                  placeholderTextColor={colors.text3}
                   multiline={multiline}
                   testID={`edit-${key}-input`}
                   style={{
-                    backgroundColor: DS.card,
+                    backgroundColor: colors.card,
                     borderWidth: 1,
-                    borderColor: DS.border,
+                    borderColor: colors.border,
                     borderRadius: 12,
                     padding: 14,
-                    color: DS.textPrimary,
+                    color: colors.text,
                     fontSize: 14,
                     lineHeight: 20,
-                    ...(multiline ? { minHeight: 80, textAlignVertical: "top" } : {}),
+                    ...(multiline ? { minHeight: 80, textAlignVertical: "top" as const } : {}),
                   }}
                 />
               </View>
