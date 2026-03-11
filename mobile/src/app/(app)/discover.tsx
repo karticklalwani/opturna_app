@@ -5,9 +5,10 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import {
   Search,
   UserPlus,
@@ -16,113 +17,87 @@ import {
   MessageCircle,
   TrendingUp,
   Users,
+  Compass,
+  Sparkles,
 } from "lucide-react-native";
 import { useTheme } from "@/lib/theme";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api/api";
 
-interface Profile {
+interface SearchUser {
   id: string;
-  initials: string;
   name: string;
-  role: string;
-  followers: string;
-  tags: string[];
+  username: string | null;
+  image: string | null;
+  role: string | null;
+  isVerified: boolean;
 }
 
-interface Connection {
+interface Post {
   id: string;
-  initials: string;
-  name: string;
-  role: string;
-  bio: string;
-  sharedGoals: number;
-}
-
-interface TrendingPost {
-  id: string;
-  authorInitials: string;
-  authorName: string;
-  time: string;
-  excerpt: string;
-  reactions: number;
-  comments: number;
-  tag: string;
-  tagColor: string;
+  content: string | null;
+  category: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    username: string | null;
+    image: string | null;
+    role: string | null;
+    isVerified: boolean;
+  };
+  _count: {
+    reactions: number;
+    comments: number;
+  };
 }
 
 const CATEGORIES = ["All", "Business", "Finance", "Trading", "Productivity", "Startups", "Growth"];
 
-const PROFILES: Profile[] = [
-  { id: "1", initials: "AC", name: "Alex Chen", role: "Startup Founder", followers: "12.4K", tags: ["B2B SaaS", "Fundraising", "GTM"] },
-  { id: "2", initials: "SR", name: "Sofia Reyes", role: "Finance Analyst", followers: "8.7K", tags: ["Markets", "Equity", "Options"] },
-  { id: "3", initials: "MJ", name: "Marcus Johnson", role: "Growth Strategist", followers: "21.1K", tags: ["Funnels", "Retention", "PLG"] },
-  { id: "4", initials: "EK", name: "Elena Kovacs", role: "Product Designer", followers: "5.2K", tags: ["UX", "Mobile", "Systems"] },
-  { id: "5", initials: "DP", name: "David Park", role: "Crypto Trader", followers: "18.9K", tags: ["DeFi", "Alts", "On-chain"] },
-];
+const CATEGORY_COLORS: Record<string, string> = {
+  Business: "#00B4D8",
+  Finance: "#00FF87",
+  Trading: "#FF3B30",
+  Growth: "#FFD60A",
+  Startups: "#00B4D8",
+  Productivity: "#FFD60A",
+  progress: "#00FF87",
+  mindset: "#FFD60A",
+  challenge: "#FF3B30",
+  milestone: "#00B4D8",
+};
 
-const CONNECTIONS: Connection[] = [
-  { id: "1", initials: "RT", name: "Rachel Torres", role: "Serial Entrepreneur", bio: "Built 3 companies from scratch. Currently scaling a fintech in LATAM.", sharedGoals: 5 },
-  { id: "2", initials: "JL", name: "James Liu", role: "Angel Investor", bio: "25+ portfolio companies. Focused on enterprise and AI infrastructure.", sharedGoals: 3 },
-  { id: "3", initials: "NK", name: "Nina Kowalski", role: "Growth Lead at Stripe", bio: "Obsessed with B2B growth loops and product-led acquisition models.", sharedGoals: 4 },
-  { id: "4", initials: "OA", name: "Omar Al-Hassan", role: "Quant Trader", bio: "Algorithmic systems, risk modeling, and volatility strategies.", sharedGoals: 2 },
-];
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
 
-const TRENDING_POSTS: TrendingPost[] = [
-  {
-    id: "1",
-    authorInitials: "AC",
-    authorName: "Alex Chen",
-    time: "2h ago",
-    excerpt: "After 18 months of building in stealth, we just closed our Series A. Here's what I wish someone had told me about the fundraising process...",
-    reactions: 284,
-    comments: 47,
-    tag: "Startups",
-    tagColor: "#00B4D8",
-  },
-  {
-    id: "2",
-    authorInitials: "SR",
-    authorName: "Sofia Reyes",
-    time: "5h ago",
-    excerpt: "The macro setup heading into Q2 is unlike anything I've seen in a decade. Three charts that explain why the next 60 days matter more than the last 12 months...",
-    reactions: 516,
-    comments: 93,
-    tag: "Finance",
-    tagColor: "#00FF87",
-  },
-  {
-    id: "3",
-    authorInitials: "MJ",
-    authorName: "Marcus Johnson",
-    time: "1d ago",
-    excerpt: "We doubled retention from 30% to 61% in 90 days without changing the product. The only thing we changed was our onboarding email sequence...",
-    reactions: 1203,
-    comments: 158,
-    tag: "Growth",
-    tagColor: "#FFD60A",
-  },
-  {
-    id: "4",
-    authorInitials: "DP",
-    authorName: "David Park",
-    time: "1d ago",
-    excerpt: "On-chain data is showing accumulation patterns I haven't seen since the last cycle. Here's the wallet activity that has my attention right now...",
-    reactions: 741,
-    comments: 89,
-    tag: "Trading",
-    tagColor: "#FF3B30",
-  },
-];
+function getTagColor(category: string): string {
+  return CATEGORY_COLORS[category] ?? "#00B4D8";
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 function InitialsAvatar({
   initials,
   size = 44,
   accentColor,
-  bgColor,
 }: {
   initials: string;
   size?: number;
   accentColor: string;
-  bgColor: string;
 }) {
   return (
     <View
@@ -146,33 +121,62 @@ function InitialsAvatar({
 
 export default function DiscoverScreen() {
   const { colors } = useTheme();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+  const [optimisticFollowed, setOptimisticFollowed] = useState<Set<string>>(new Set());
 
-  const toggleFollow = (id: string) => {
-    setFollowedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
+  const isSearching = searchQuery.length > 1;
 
-  const filteredProfiles = PROFILES.filter((p) =>
-    searchQuery.length === 0 ||
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ["users-search", searchQuery],
+    queryFn: () => api.get<SearchUser[]>(`/api/users/search?q=${encodeURIComponent(searchQuery)}`),
+    enabled: isSearching,
+  });
 
-  const filteredConnections = CONNECTIONS.filter((c) =>
-    searchQuery.length === 0 ||
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: posts, isLoading: postsLoading } = useQuery({
+    queryKey: ["posts"],
+    queryFn: () => api.get<Post[]>("/api/posts"),
+  });
+
+  const followMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/api/users/${userId}/follow`, {}),
+    onMutate: (userId: string) => {
+      setOptimisticFollowed((prev) => {
+        const next = new Set(prev);
+        if (next.has(userId)) {
+          next.delete(userId);
+        } else {
+          next.add(userId);
+        }
+        return next;
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (_err, userId: string) => {
+      setOptimisticFollowed((prev) => {
+        const next = new Set(prev);
+        if (next.has(userId)) {
+          next.delete(userId);
+        } else {
+          next.add(userId);
+        }
+        return next;
+      });
+    },
+  });
+
+  const trendingPosts = posts
+    ? [...posts]
+        .sort((a, b) => b._count.reactions - a._count.reactions)
+        .filter((p) => {
+          if (activeCategory === "All") return true;
+          return p.category?.toLowerCase() === activeCategory.toLowerCase();
+        })
+        .slice(0, 4)
+    : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="discover-screen">
@@ -209,6 +213,9 @@ export default function DiscoverScreen() {
               }}
               testID="discover-search-input"
             />
+            {searchLoading ? (
+              <ActivityIndicator size="small" color={colors.accent} testID="search-loading" />
+            ) : null}
           </View>
         </View>
 
@@ -251,281 +258,328 @@ export default function DiscoverScreen() {
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Rising Creators */}
-        <Animated.View entering={FadeInDown.duration(300).springify()} style={{ marginBottom: 24 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 14 }}>
-            <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", letterSpacing: -0.2 }}>
-              Rising Creators
+        {isSearching ? (
+          /* Search Results */
+          <Animated.View entering={FadeIn.duration(200)} style={{ paddingHorizontal: 16 }}>
+            <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500", marginBottom: 14, letterSpacing: 0.4 }}>
+              {searchLoading ? "Searching..." : `${(searchResults ?? []).length} people found`}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <TrendingUp size={14} color={colors.accent} />
-              <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
-                Trending
-              </Text>
-            </View>
-          </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0 }}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-          >
-            {filteredProfiles.map((profile) => {
-              const isFollowing = followedIds.has(profile.id);
-              return (
+            {searchLoading ? (
+              <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                <ActivityIndicator size="large" color={colors.accent} />
+              </View>
+            ) : (searchResults ?? []).length === 0 ? (
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingVertical: 60,
+                  gap: 12,
+                }}
+                testID="search-empty-state"
+              >
                 <View
-                  key={profile.id}
                   style={{
-                    width: 175,
-                    backgroundColor: colors.card,
-                    borderRadius: 20,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: colors.border,
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: `${colors.accent}14`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 4,
                   }}
                 >
-                  <InitialsAvatar
-                    initials={profile.initials}
-                    size={52}
-                    accentColor={colors.accent}
-                    bgColor={colors.bg}
-                  />
-                  <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginTop: 10, marginBottom: 2 }}>
-                    {profile.name}
-                  </Text>
-                  <Text style={{ color: colors.text3, fontSize: 12, marginBottom: 4 }}>
-                    {profile.role}
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 12 }}>
-                    <Users size={11} color={colors.text3} />
-                    <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "500" }}>
-                      {profile.followers}
-                    </Text>
-                  </View>
-
-                  <Pressable
-                    onPress={() => toggleFollow(profile.id)}
-                    testID={`follow-creator-${profile.id}`}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 5,
-                      paddingVertical: 8,
-                      borderRadius: 100,
-                      backgroundColor: isFollowing ? `${colors.accent}20` : colors.accent,
-                      marginBottom: 12,
-                    }}
-                  >
-                    {isFollowing ? (
-                      <Check size={12} color={colors.accent} strokeWidth={2.5} />
-                    ) : (
-                      <UserPlus size={12} color="#fff" />
-                    )}
-                    <Text
-                      style={{
-                        color: isFollowing ? colors.accent : "#fff",
-                        fontSize: 12,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {isFollowing ? "Following" : "Follow"}
-                    </Text>
-                  </Pressable>
-
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5 }}>
-                    {profile.tags.map((tag) => (
-                      <View
-                        key={tag}
-                        style={{
-                          backgroundColor: `${colors.accent}12`,
-                          borderRadius: 6,
-                          paddingHorizontal: 7,
-                          paddingVertical: 3,
-                        }}
-                      >
-                        <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "500" }}>
-                          {tag}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
+                  <Users size={28} color={colors.accent} />
                 </View>
-              );
-            })}
-          </ScrollView>
-        </Animated.View>
-
-        {/* Suggested Connections */}
-        <Animated.View entering={FadeInDown.duration(350).delay(80).springify()} style={{ marginHorizontal: 16, marginBottom: 24 }}>
-          <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 14, letterSpacing: -0.2 }}>
-            People With Similar Goals
-          </Text>
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-            }}
-          >
-            {filteredConnections.map((conn, index) => {
-              const isFollowing = followedIds.has(`conn-${conn.id}`);
-              return (
-                <View key={conn.id}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "flex-start",
-                      padding: 16,
-                    }}
-                  >
-                    <InitialsAvatar
-                      initials={conn.initials}
-                      size={46}
-                      accentColor={colors.accent}
-                      bgColor={colors.bg}
-                    />
-                    <View style={{ flex: 1, marginLeft: 12, marginRight: 10 }}>
-                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: 1 }}>
-                        {conn.name}
-                      </Text>
-                      <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "500", marginBottom: 5 }}>
-                        {conn.role}
-                      </Text>
-                      <Text style={{ color: colors.text3, fontSize: 12, lineHeight: 18, marginBottom: 8 }} numberOfLines={2}>
-                        {conn.bio}
-                      </Text>
+                <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center" }}>
+                  No people found
+                </Text>
+                <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 20, maxWidth: 260 }}>
+                  Try a different name or username to find someone in the community.
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderRadius: 24,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  overflow: "hidden",
+                }}
+              >
+                {(searchResults ?? []).map((user, index) => {
+                  const isFollowing = optimisticFollowed.has(user.id);
+                  const initials = getInitials(user.name ?? "?");
+                  return (
+                    <View key={user.id}>
                       <View
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          gap: 4,
-                          backgroundColor: `${colors.success}14`,
-                          borderRadius: 6,
-                          paddingHorizontal: 7,
-                          paddingVertical: 3,
-                          alignSelf: "flex-start",
+                          padding: 16,
                         }}
                       >
-                        <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.success }} />
-                        <Text style={{ color: colors.success, fontSize: 11, fontWeight: "600" }}>
-                          {conn.sharedGoals} shared goals
-                        </Text>
+                        <InitialsAvatar
+                          initials={initials}
+                          size={46}
+                          accentColor={colors.accent}
+                        />
+                        <View style={{ flex: 1, marginLeft: 12, marginRight: 10 }}>
+                          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: 1 }}>
+                            {user.name}
+                          </Text>
+                          {user.username ? (
+                            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "500", marginBottom: 2 }}>
+                              @{user.username}
+                            </Text>
+                          ) : null}
+                          {user.role ? (
+                            <Text style={{ color: colors.text3, fontSize: 12 }} numberOfLines={1}>
+                              {user.role}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <Pressable
+                          onPress={() => followMutation.mutate(user.id)}
+                          testID={`follow-user-${user.id}`}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 100,
+                            backgroundColor: isFollowing ? `${colors.accent}18` : `${colors.accent}28`,
+                            borderWidth: 1,
+                            borderColor: isFollowing ? `${colors.accent}30` : `${colors.accent}50`,
+                          }}
+                        >
+                          {isFollowing ? (
+                            <Check size={12} color={colors.accent} strokeWidth={2.5} />
+                          ) : (
+                            <UserPlus size={12} color={colors.accent} />
+                          )}
+                          <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>
+                            {isFollowing ? "Following" : "Follow"}
+                          </Text>
+                        </Pressable>
                       </View>
+                      {index < (searchResults ?? []).length - 1 ? (
+                        <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 74 }} />
+                      ) : null}
                     </View>
-                    <Pressable
-                      onPress={() => toggleFollow(`conn-${conn.id}`)}
-                      testID={`follow-conn-${conn.id}`}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        paddingHorizontal: 12,
-                        paddingVertical: 7,
-                        borderRadius: 100,
-                        backgroundColor: isFollowing ? `${colors.accent}18` : `${colors.accent}28`,
-                        borderWidth: 1,
-                        borderColor: isFollowing ? `${colors.accent}30` : `${colors.accent}50`,
-                      }}
-                    >
-                      {isFollowing ? (
-                        <Check size={11} color={colors.accent} strokeWidth={2.5} />
-                      ) : (
-                        <UserPlus size={11} color={colors.accent} />
-                      )}
-                      <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>
-                        {isFollowing ? "Following" : "Follow"}
-                      </Text>
-                    </Pressable>
-                  </View>
-                  {index < filteredConnections.length - 1 ? (
-                    <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 74 }} />
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-        </Animated.View>
-
-        {/* Trending Posts */}
-        <Animated.View entering={FadeInDown.duration(350).delay(160).springify()} style={{ marginHorizontal: 16 }}>
-          <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 14, letterSpacing: -0.2 }}>
-            Trending in the Community
-          </Text>
-          {TRENDING_POSTS.map((post, index) => (
-            <Animated.View
-              key={post.id}
-              entering={FadeInDown.duration(280).delay(index * 60).springify()}
-            >
+                  );
+                })}
+              </View>
+            )}
+          </Animated.View>
+        ) : (
+          /* Explore / Trending View */
+          <>
+            {/* Hero Banner */}
+            <Animated.View entering={FadeInDown.duration(300).springify()} style={{ marginHorizontal: 16, marginBottom: 24 }}>
               <View
                 style={{
+                  borderRadius: 24,
+                  padding: 24,
                   backgroundColor: colors.card,
-                  borderRadius: 20,
-                  padding: 16,
-                  marginBottom: 12,
                   borderWidth: 1,
-                  borderColor: colors.border,
+                  borderColor: `${colors.accent}28`,
+                  overflow: "hidden",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <InitialsAvatar
-                      initials={post.authorInitials}
-                      size={36}
-                      accentColor={colors.accent}
-                      bgColor={colors.bg}
-                    />
-                    <View>
-                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
-                        {post.authorName}
-                      </Text>
-                      <Text style={{ color: colors.text3, fontSize: 12 }}>
-                        {post.time}
-                      </Text>
-                    </View>
-                  </View>
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -30,
+                    right: -30,
+                    width: 120,
+                    height: 120,
+                    borderRadius: 60,
+                    backgroundColor: `${colors.accent}08`,
+                  }}
+                />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
                   <View
                     style={{
-                      backgroundColor: `${post.tagColor}18`,
-                      borderRadius: 8,
-                      paddingHorizontal: 9,
-                      paddingVertical: 4,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      backgroundColor: `${colors.accent}18`,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <Text style={{ color: post.tagColor, fontSize: 11, fontWeight: "600" }}>
-                      {post.tag}
+                    <Compass size={20} color={colors.accent} />
+                  </View>
+                  <View>
+                    <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", letterSpacing: -0.2 }}>
+                      Explore the Community
+                    </Text>
+                    <Text style={{ color: colors.text3, fontSize: 12 }}>
+                      Connect with ambitious builders
                     </Text>
                   </View>
                 </View>
-
-                <Text
-                  style={{ color: colors.text2, fontSize: 14, lineHeight: 21, marginBottom: 14 }}
-                  numberOfLines={2}
-                >
-                  {post.excerpt}
+                <Text style={{ color: colors.text2, fontSize: 14, lineHeight: 20, marginBottom: 14 }}>
+                  Search for people by name or username to connect, follow, and grow your network.
                 </Text>
-
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                    <Heart size={14} color={colors.text3} />
-                    <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
-                      {post.reactions >= 1000 ? `${(post.reactions / 1000).toFixed(1)}K` : post.reactions}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                    <MessageCircle size={14} color={colors.text3} />
-                    <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
-                      {post.comments}
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 5,
+                      backgroundColor: `${colors.success}14`,
+                      borderRadius: 8,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Sparkles size={12} color={colors.success} />
+                    <Text style={{ color: colors.success, fontSize: 12, fontWeight: "600" }}>
+                      Live community
                     </Text>
                   </View>
                 </View>
               </View>
             </Animated.View>
-          ))}
-        </Animated.View>
+
+            {/* Trending Posts */}
+            <Animated.View entering={FadeInDown.duration(350).delay(80).springify()} style={{ marginHorizontal: 16 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", letterSpacing: -0.2 }}>
+                  Trending in the Community
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <TrendingUp size={14} color={colors.accent} />
+                  <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
+                    Top posts
+                  </Text>
+                </View>
+              </View>
+
+              {postsLoading ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <ActivityIndicator size="large" color={colors.accent} testID="posts-loading" />
+                  <Text style={{ color: colors.text3, fontSize: 14, marginTop: 12 }}>
+                    Loading community posts...
+                  </Text>
+                </View>
+              ) : trendingPosts.length === 0 ? (
+                <View
+                  style={{
+                    backgroundColor: colors.card,
+                    borderRadius: 24,
+                    padding: 36,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                  testID="posts-empty-state"
+                >
+                  <View
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 32,
+                      backgroundColor: `${colors.accent}12`,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <MessageCircle size={28} color={colors.accent} />
+                  </View>
+                  <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", textAlign: "center" }}>
+                    No posts yet
+                  </Text>
+                  <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 20, maxWidth: 240 }}>
+                    Be the first to start a conversation. Share a milestone, insight, or challenge.
+                  </Text>
+                </View>
+              ) : (
+                trendingPosts.map((post, index) => {
+                  const initials = getInitials(post.author?.name ?? "?");
+                  const tagColor = getTagColor(post.category);
+                  const reactionCount = post._count?.reactions ?? 0;
+                  const commentCount = post._count?.comments ?? 0;
+                  return (
+                    <Animated.View
+                      key={post.id}
+                      entering={FadeInDown.duration(280).delay(index * 60).springify()}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: colors.card,
+                          borderRadius: 20,
+                          padding: 16,
+                          marginBottom: 12,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                            <InitialsAvatar
+                              initials={initials}
+                              size={36}
+                              accentColor={colors.accent}
+                            />
+                            <View>
+                              <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
+                                {post.author?.name ?? "Unknown"}
+                              </Text>
+                              <Text style={{ color: colors.text3, fontSize: 12 }}>
+                                {formatTimeAgo(post.createdAt)}
+                              </Text>
+                            </View>
+                          </View>
+                          <View
+                            style={{
+                              backgroundColor: `${tagColor}18`,
+                              borderRadius: 8,
+                              paddingHorizontal: 9,
+                              paddingVertical: 4,
+                            }}
+                          >
+                            <Text style={{ color: tagColor, fontSize: 11, fontWeight: "600", textTransform: "capitalize" }}>
+                              {post.category}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text
+                          style={{ color: colors.text2, fontSize: 14, lineHeight: 21, marginBottom: 14 }}
+                          numberOfLines={2}
+                        >
+                          {post.content}
+                        </Text>
+
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <Heart size={14} color={colors.text3} />
+                            <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
+                              {reactionCount >= 1000 ? `${(reactionCount / 1000).toFixed(1)}K` : reactionCount}
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <MessageCircle size={14} color={colors.text3} />
+                            <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
+                              {commentCount}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Animated.View>
+                  );
+                })
+              )}
+            </Animated.View>
+          </>
+        )}
       </ScrollView>
     </View>
   );

@@ -714,6 +714,96 @@ app.post("/api/upload", async (c) => {
   return c.json({ data: { id: asset.id, url: asset.url, name: asset.name, mimeType: asset.mimeType, type: asset.type } });
 });
 
+// ===== AI CHAT ROUTE =====
+app.post("/api/ai/chat", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+
+  const body = await c.req.json() as {
+    messages: Array<{ role: "user" | "assistant"; content: string }>;
+    stream?: boolean;
+  };
+
+  const { messages, stream = false } = body;
+
+  const SYSTEM_PROMPT = `You are Opturna AI — an expert financial and business intelligence assistant with deep, comprehensive knowledge of global taxation systems, tax law, tax planning, and fiscal strategy.
+
+TAXATION EXPERTISE (Global Coverage):
+- United States: Federal income tax (all brackets), capital gains tax (short/long-term), corporate tax (21%), pass-through entities (S-Corp, LLC, Partnership), estate/gift tax, AMT, SALT deduction, QBI deduction (199A), depreciation (MACRS, bonus depreciation, Section 179), R&D tax credits, foreign tax credits, FATCA, FBAR requirements, IRS audit procedures, installment agreements, OIC
+- European Union: VAT/IVA system (EU-wide), DAC6 reporting, EU Anti-Tax Avoidance Directive (ATAD), transfer pricing rules; Germany (Lohnsteuer, Körperschaftsteuer), France (IS, TVA, IFI), Spain (IRPF, IS, IVA), Italy (IRPEF, IRES, IVA), Netherlands (VPB, BTW, participation exemption), Ireland (12.5% corporate rate)
+- United Kingdom: Income tax bands, National Insurance, Corporation Tax, VAT, CGT, IHT, R&D tax relief, EMI options, EIS/SEIS
+- Latin America: Mexico (ISR, IVA, CFDI, SAT), Argentina (Ganancias, IVA, Bienes Personales), Brazil (IRPF, IRPJ, CSLL, PIS, COFINS, ICMS, Simples Nacional), Colombia (Renta, IVA), Chile (Impuesto a la Renta), Peru (IR, IGV)
+- Asia-Pacific: China (IIT, CIT, VAT), Japan (所得税, 法人税), Singapore (17% corporate, GST, no CGT), Hong Kong (profits tax, no CGT/VAT), Australia (income tax, CGT discount, franking credits, GST), India (new vs old regime, GST, TDS/TCS)
+- Middle East: UAE (0% personal tax, 9% corporate since 2023, VAT 5%), Saudi Arabia (zakat, WHT, VAT 15%), Israel (income tax, VAT)
+- International: OECD BEPS, Pillar One/Two global minimum tax (15%), tax treaties, CFC rules, transfer pricing (arm's length, OECD Guidelines), permanent establishment, digital services taxes, crypto taxation globally
+
+FINANCIAL & BUSINESS EXPERTISE:
+- Personal finance, budgeting, investment strategies, retirement planning
+- Business finance, cash flow, financial modeling, startup funding
+- Real estate investing, 1031 exchanges, depreciation strategies
+- Cryptocurrency & DeFi taxation
+- Business strategy, growth hacking, CAC/LTV, fundraising
+
+STYLE: Be direct and actionable. Use numbered lists. Cite specific laws, rates, and thresholds. Always remind users to consult a licensed professional for their specific situation. Mention jurisdiction and tax year when relevant.`;
+
+  // Build input array
+  const inputMessages = [
+    { role: "system" as const, content: SYSTEM_PROMPT },
+    ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+  ];
+
+  if (stream) {
+    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        input: inputMessages,
+        stream: true,
+      }),
+    });
+
+    if (!openaiRes.ok) {
+      const err = await openaiRes.text();
+      return c.json({ error: { message: `OpenAI error: ${err}` } }, 500);
+    }
+
+    return new Response(openaiRes.body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  } else {
+    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        input: inputMessages,
+      }),
+    });
+
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text();
+      return c.json({ error: { message: `OpenAI error: ${errText}` } }, 500);
+    }
+
+    const result = await openaiRes.json() as {
+      output: Array<{ content: Array<{ text: string }> }>;
+    };
+    const content = result.output?.[0]?.content?.[0]?.text ?? "";
+    return c.json({ data: { content } });
+  }
+});
+
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);
 

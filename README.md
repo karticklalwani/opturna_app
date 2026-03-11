@@ -1,6 +1,6 @@
 # Opturna
 
-A premium social network for ambitious people focused on business, growth, habits, and discipline.
+A premium social network and intelligence platform for ambitious people focused on business, growth, finance, and global taxation strategy.
 
 ## Stack
 
@@ -80,6 +80,16 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 | GET | /api/notifications | Notifications |
 | PATCH | /api/notifications/read-all | Mark all read |
 | POST | /api/reports | Report content |
+| POST | /api/ai/chat | AI chat (streaming SSE) — OpenAI gpt-4o |
+| POST | /api/upload | Upload file |
+
+## AI Assistant
+
+The AI Assistant (`/api/ai/chat`) uses OpenAI gpt-4o with a comprehensive system prompt covering:
+- **Global Taxation**: US (IRS, capital gains, pass-through entities), EU (VAT, ATAD, DAC6), UK, LATAM (Mexico ISR/IVA, Brazil IRPJ/CSLL, Argentina), APAC (Singapore, Australia, India GST), Middle East (UAE 9% corporate, Saudi zakat)
+- **International Tax**: OECD BEPS, Pillar One/Two (15% global minimum), transfer pricing, CFC rules, tax treaties
+- **Business & Finance**: startup strategy, investment, fundraising, financial modeling
+- Supports real-time SSE streaming: pass `stream: true` in body, parse `response.output_text.delta` events
 
 ## Design System
 
