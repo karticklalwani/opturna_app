@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Zap, BookOpen, MessageCircle, User, Radio } from "lucide-react-native";
+import { LayoutDashboard, Rss, Compass, Brain, BarChart3, User, Settings } from "lucide-react-native";
 import { useTheme } from "@/lib/theme";
 import { View } from "react-native";
 
@@ -33,7 +33,7 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#0A0F1E",
+          backgroundColor: "#060D1A",
           borderTopColor: "rgba(0, 180, 216, 0.08)",
           borderTopWidth: 1,
           height: 88,
@@ -58,38 +58,38 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: "Dashboard",
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={LayoutDashboard} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: "Feed",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Home} color={color} focused={focused} />,
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Rss} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="sprints"
+        name="discover"
         options={{
-          title: "Sprints",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Zap} color={color} focused={focused} />,
+          title: "Discover",
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Compass} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="live"
+        name="ai-assistant"
         options={{
-          title: "Live",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Radio} color={color} focused={focused} />,
+          title: "AI",
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Brain} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="academy"
+        name="finance"
         options={{
-          title: "Academy",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={BookOpen} color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: "Messages",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={MessageCircle} color={color} focused={focused} />,
+          title: "Finance",
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={BarChart3} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -99,6 +99,18 @@ export default function AppLayout() {
           tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={User} color={color} focused={focused} />,
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Settings} color={color} focused={focused} />,
+        }}
+      />
+      {/* Hide legacy screens from tab bar */}
+      <Tabs.Screen name="sprints" options={{ href: null }} />
+      <Tabs.Screen name="live" options={{ href: null }} />
+      <Tabs.Screen name="academy" options={{ href: null }} />
+      <Tabs.Screen name="messages" options={{ href: null }} />
     </Tabs>
   );
 }
