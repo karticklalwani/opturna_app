@@ -1,109 +1,78 @@
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Rss, Compass, Brain, BarChart3, User, Settings } from "lucide-react-native";
-import { useTheme } from "@/lib/theme";
 import { View } from "react-native";
 
-function PillTabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: boolean }) {
+function TabIcon({ Icon, focused }: { Icon: any; focused: boolean }) {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", width: 44, height: 32 }}>
+    <View style={{ alignItems: "center", justifyContent: "center", width: 44, height: 36, gap: 5 }}>
+      <Icon size={22} color={focused ? "#4ADE80" : "#404040"} strokeWidth={focused ? 2 : 1.5} />
       {focused ? (
-        <View
-          style={{
-            position: "absolute",
-            width: 40,
-            height: 30,
-            borderRadius: 100,
-            backgroundColor: "rgba(0, 180, 216, 0.12)",
-          }}
-        />
-      ) : null}
-      <Icon
-        size={21}
-        color={color}
-        strokeWidth={focused ? 2.2 : 1.6}
-      />
+        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "#4ADE80" }} />
+      ) : (
+        <View style={{ width: 4, height: 4 }} />
+      )}
     </View>
   );
 }
 
 export default function AppLayout() {
-  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#060D1A",
-          borderTopColor: "rgba(0, 180, 216, 0.08)",
+          backgroundColor: "#080808",
+          borderTopColor: "#1F1F1F",
           borderTopWidth: 1,
-          height: 88,
-          paddingBottom: 26,
+          height: 84,
+          paddingBottom: 28,
           paddingTop: 8,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 16,
         },
-        tabBarActiveTintColor: "#00B4D8",
-        tabBarInactiveTintColor: "#3A5568",
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: "500",
-          letterSpacing: 0.2,
-          textTransform: "none",
-          marginTop: 2,
-        },
-        tabBarShowLabel: true,
+        tabBarActiveTintColor: "#4ADE80",
+        tabBarInactiveTintColor: "#404040",
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={LayoutDashboard} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={LayoutDashboard} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
-          title: "Feed",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Rss} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Rss} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
-          title: "Discover",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Compass} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Compass} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="ai-assistant"
         options={{
-          title: "AI",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Brain} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Brain} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="finance"
         options={{
-          title: "Finance",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={BarChart3} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={BarChart3} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={User} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={User} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ color, focused }) => <PillTabIcon Icon={Settings} color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Settings} focused={focused} />,
         }}
       />
       {/* Hide legacy screens from tab bar */}

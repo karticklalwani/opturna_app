@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { OtpInput } from "react-native-otp-entry";
@@ -12,8 +11,6 @@ import { authClient } from "@/lib/auth/auth-client";
 import { useInvalidateSession } from "@/lib/auth/use-session";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
-
-const MONO: string = Platform.OS === "ios" ? "Courier New" : "monospace";
 
 export default function VerifyOTP() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -42,109 +39,52 @@ export default function VerifyOTP() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#020B18" }}>
+    <View style={{ flex: 1, backgroundColor: "#080808" }}>
       <StatusBar style="light" />
 
-      {/* HUD grid overlay */}
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.04 }}>
-        {Array.from({ length: 20 }).map((_, i) => (
-          <View
-            key={`h${i}`}
-            style={{
-              position: "absolute",
-              top: i * 42,
-              left: 0,
-              right: 0,
-              height: 1,
-              backgroundColor: "#00B4D8",
-            }}
-          />
-        ))}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <View
-            key={`v${i}`}
-            style={{
-              position: "absolute",
-              left: i * 36,
-              top: 0,
-              bottom: 0,
-              width: 1,
-              backgroundColor: "#00B4D8",
-            }}
-          />
-        ))}
-      </View>
-
-      {/* Top corner brackets */}
-      <View style={{ position: "absolute", top: 52, left: 20, width: 24, height: 24, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#00B4D8", opacity: 0.6 }} />
-      <View style={{ position: "absolute", top: 52, right: 20, width: 24, height: 24, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#00B4D8", opacity: 0.6 }} />
-
-      {/* Bottom corner brackets */}
-      <View style={{ position: "absolute", bottom: 32, left: 20, width: 24, height: 24, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#00B4D8", opacity: 0.6 }} />
-      <View style={{ position: "absolute", bottom: 32, right: 20, width: 24, height: 24, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#00B4D8", opacity: 0.6 }} />
-
-      <View style={{ flex: 1, padding: 24, paddingTop: 80 }}>
+      <View style={{ flex: 1, padding: 24, paddingTop: 72 }}>
         {/* Back button */}
         <TouchableOpacity
           onPress={() => router.back()}
           testID="back-button"
           style={{
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: "#0F0F0F",
             borderWidth: 1,
-            borderColor: "#00B4D8",
-            borderRadius: 0,
-            backgroundColor: "#041525",
+            borderColor: "#1F1F1F",
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: 40,
+            marginBottom: 48,
           }}
         >
-          <ArrowLeft size={18} color="#00B4D8" />
+          <ArrowLeft size={18} color="#A3A3A3" />
         </TouchableOpacity>
 
         {/* Header */}
         <View style={{ marginBottom: 48 }}>
-          {/* Scan line accent */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <View style={{ width: 20, height: 2, backgroundColor: "#00B4D8", marginRight: 8 }} />
-            <Text
-              style={{
-                fontSize: 9,
-                color: "#4A7A99",
-                letterSpacing: 3,
-                fontFamily: MONO,
-                textTransform: "uppercase",
-              }}
-            >
-              IDENTITY VERIFICATION
-            </Text>
-          </View>
-
           <Text
             style={{
-              fontSize: 24,
+              fontSize: 32,
               fontWeight: "800",
-              color: "#C8E8FF",
-              letterSpacing: 4,
-              textTransform: "uppercase",
+              color: "#F5F5F5",
+              letterSpacing: -1,
               marginBottom: 8,
             }}
           >
-            VERIFY IDENTITY
+            Check your{"\n"}email
           </Text>
 
           <Text
             style={{
-              fontSize: 11,
-              color: "#4A7A99",
-              letterSpacing: 2,
-              fontFamily: MONO,
-              textTransform: "uppercase",
-              marginBottom: 16,
+              fontSize: 15,
+              color: "#737373",
+              lineHeight: 22,
+              marginBottom: 20,
             }}
           >
-            ENTER AUTHORIZATION CODE
+            We sent a 6-digit code to
           </Text>
 
           {/* Email display */}
@@ -152,21 +92,20 @@ export default function VerifyOTP() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#041525",
+              backgroundColor: "#0F0F0F",
               borderWidth: 1,
-              borderColor: "#0D3352",
-              borderRadius: 0,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
+              borderColor: "#1F1F1F",
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
             }}
           >
-            <View style={{ width: 6, height: 6, backgroundColor: "#00B4D8", marginRight: 10, opacity: 0.8 }} />
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#4ADE80", marginRight: 10 }} />
             <Text
               style={{
-                fontSize: 12,
-                color: "#00B4D8",
-                letterSpacing: 1,
-                fontFamily: MONO,
+                fontSize: 14,
+                color: "#F5F5F5",
+                fontWeight: "500",
               }}
             >
               {email}
@@ -177,35 +116,29 @@ export default function VerifyOTP() {
         {/* OTP input or loading */}
         {loading ? (
           <View style={{ alignItems: "center", paddingVertical: 40 }} testID="loading-indicator">
-            {/* Scanning animation frame */}
             <View
               style={{
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                backgroundColor: "#0F0F0F",
                 borderWidth: 1,
-                borderColor: "#00B4D8",
-                borderRadius: 0,
+                borderColor: "#4ADE8030",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 20,
+                marginBottom: 16,
               }}
             >
-              <View style={{ position: "absolute", top: -1, left: -1, width: 12, height: 12, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#00B4D8" }} />
-              <View style={{ position: "absolute", top: -1, right: -1, width: 12, height: 12, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#00B4D8" }} />
-              <View style={{ position: "absolute", bottom: -1, left: -1, width: 12, height: 12, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#00B4D8" }} />
-              <View style={{ position: "absolute", bottom: -1, right: -1, width: 12, height: 12, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#00B4D8" }} />
-              <ActivityIndicator color="#00B4D8" size="large" />
+              <ActivityIndicator color="#4ADE80" size="large" />
             </View>
             <Text
               style={{
-                color: "#4A7A99",
-                fontSize: 10,
-                letterSpacing: 3,
-                fontFamily: MONO,
-                textTransform: "uppercase",
+                color: "#737373",
+                fontSize: 13,
+                fontWeight: "500",
               }}
             >
-              AUTHENTICATING...
+              Verifying...
             </Text>
           </View>
         ) : (
@@ -213,41 +146,38 @@ export default function VerifyOTP() {
             numberOfDigits={6}
             onFilled={handleVerifyOTP}
             type="numeric"
-            focusColor="#00B4D8"
+            focusColor="#4ADE80"
             theme={{
               containerStyle: { gap: 8 },
               pinCodeContainerStyle: {
                 flex: 1,
                 height: 64,
-                borderRadius: 0,
-                backgroundColor: "#041525",
+                borderRadius: 12,
+                backgroundColor: "#0F0F0F",
                 borderWidth: 1,
-                borderColor: "#0D3352",
+                borderColor: "#1F1F1F",
               },
               pinCodeTextStyle: {
-                color: "#C8E8FF",
+                color: "#F5F5F5",
                 fontSize: 22,
                 fontWeight: "700",
-                fontFamily: MONO,
               },
               focusedPinCodeContainerStyle: {
-                borderColor: "#00B4D8",
-                backgroundColor: "#051E36",
+                borderColor: "#4ADE80",
+                backgroundColor: "#0F0F0F",
               },
             }}
           />
         )}
 
         {error ? (
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}>
-            <View style={{ width: 6, height: 6, backgroundColor: "#FF3B30", marginRight: 8 }} />
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, gap: 8 }}>
+            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: "#EF4444" }} />
             <Text
               style={{
-                color: "#FF3B30",
-                fontSize: 11,
-                letterSpacing: 1.5,
-                fontFamily: MONO,
-                textTransform: "uppercase",
+                color: "#EF4444",
+                fontSize: 13,
+                fontWeight: "500",
               }}
             >
               {error}
@@ -258,38 +188,18 @@ export default function VerifyOTP() {
         {/* Resend */}
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ marginTop: 36, alignItems: "center" }}
+          style={{ marginTop: 32, alignItems: "center" }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#0D3352" }} />
-            <Text
-              style={{
-                color: "#4A7A99",
-                fontSize: 10,
-                letterSpacing: 2,
-                fontFamily: MONO,
-                textTransform: "uppercase",
-              }}
-            >
-              CODE NOT RECEIVED?{" "}
-              <Text style={{ color: "#00B4D8", fontWeight: "700" }}>RESEND</Text>
-            </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#0D3352" }} />
-          </View>
-        </TouchableOpacity>
-
-        {/* Bottom status */}
-        <View style={{ marginTop: 48, flexDirection: "row", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#00B4D8", opacity: 0.7 }} />
-            <Text style={{ color: "#1E4060", fontSize: 9, letterSpacing: 2, fontFamily: MONO }}>
-              CHANNEL SECURE
-            </Text>
-          </View>
-          <Text style={{ color: "#1E4060", fontSize: 9, letterSpacing: 2, fontFamily: MONO }}>
-            OTP MODULE v4.2
+          <Text
+            style={{
+              color: "#737373",
+              fontSize: 13,
+            }}
+          >
+            Didn't receive a code?{" "}
+            <Text style={{ color: "#4ADE80", fontWeight: "600" }}>Resend</Text>
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );

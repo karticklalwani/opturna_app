@@ -2,6 +2,16 @@
 
 A premium social network and intelligence platform for ambitious people focused on business, growth, finance, and global taxation strategy.
 
+## Design System
+
+**Theme**: Ultra-dark premium fintech terminal aesthetic (Robinhood meets Linear)
+- **Background**: `#080808` (near-black), surface layers `#0F0F0F`, `#141414`, `#1A1A1A`
+- **Text**: `#F5F5F5` primary, `#A3A3A3` secondary, `#737373` muted, `#404040` ghost
+- **Accent**: `#4ADE80` green (single bold accent — all CTAs, active states, highlights)
+- **Destructive**: `#EF4444` red (errors, delete actions only)
+- **Tab bar**: Icon-only with green dot indicator for active tab, no labels
+- **Typography**: Bold editorial style — large headings with tight letter-spacing (-1 to -2)
+
 ## Stack
 
 - **Mobile**: Expo SDK 53, React Native 0.79, NativeWind (Tailwind), expo-router

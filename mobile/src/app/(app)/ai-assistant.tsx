@@ -257,7 +257,7 @@ function TypingDot({ delay }: { delay: number }) {
           width: 7,
           height: 7,
           borderRadius: 4,
-          backgroundColor: "#F59E0B",
+          backgroundColor: "#4ADE80",
           marginHorizontal: 2,
         },
         animStyle,
@@ -279,12 +279,10 @@ export default function AiAssistantScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const abortRef = useRef<boolean>(false);
 
-  const accentSoft = "#F59E0B18";
-  const accentBorder = "#F59E0B38";
-  const cyanSoft = "#00B4D818";
-  const cyanBorder = "#00B4D838";
-  const AMBER = "#F59E0B";
-  const CYAN = "#00B4D8";
+  const accentSoft = `${colors.accent}18`;
+  const accentBorder = `${colors.accent}38`;
+  const cyanSoft = `${colors.accent}18`;
+  const cyanBorder = `${colors.accent}38`;
 
   const filteredPrompts = SUGGESTED_PROMPTS.filter(
     (p) => p.category === activeCategory
@@ -466,7 +464,7 @@ export default function AiAssistantScreen() {
                 justifyContent: "center",
               }}
             >
-              <Cpu size={18} color={AMBER} />
+              <Cpu size={18} color={colors.accent} />
             </View>
 
             {/* Title + Subtitle */}
@@ -575,13 +573,13 @@ export default function AiAssistantScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 20,
-                shadowColor: AMBER,
+                shadowColor: colors.accent,
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.25,
                 shadowRadius: 20,
               }}
             >
-              <Cpu size={34} color={AMBER} />
+              <Cpu size={34} color={colors.accent} />
             </View>
 
             <Text
@@ -637,9 +635,9 @@ export default function AiAssistantScreen() {
                     paddingHorizontal: 14,
                     paddingVertical: 7,
                     borderRadius: 100,
-                    backgroundColor: isActive ? AMBER : colors.card,
+                    backgroundColor: isActive ? colors.accent : colors.card,
                     borderWidth: 1,
-                    borderColor: isActive ? AMBER : colors.border,
+                    borderColor: isActive ? colors.accent : colors.border,
                   }}
                 >
                   <Text
@@ -718,7 +716,7 @@ export default function AiAssistantScreen() {
                           marginBottom: 8,
                         }}
                       >
-                        <Icon size={13} color={AMBER} />
+                        <Icon size={13} color={colors.accent} />
                       </View>
                       <Text
                         style={{
@@ -775,7 +773,7 @@ export default function AiAssistantScreen() {
                           justifyContent: "center",
                         }}
                       >
-                        <Cpu size={10} color={AMBER} />
+                        <Cpu size={10} color={colors.accent} />
                       </View>
                       <Text
                         style={{
@@ -792,7 +790,7 @@ export default function AiAssistantScreen() {
                   <View
                     style={{
                       maxWidth: "82%",
-                      backgroundColor: isUser ? AMBER : colors.card,
+                      backgroundColor: isUser ? colors.accent : colors.card,
                       borderRadius: 18,
                       borderBottomRightRadius: isUser ? 4 : 18,
                       borderBottomLeftRadius: isUser ? 18 : 4,
@@ -844,11 +842,11 @@ export default function AiAssistantScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    <Cpu size={10} color={CYAN} />
+                    <Cpu size={10} color={colors.accent} />
                   </View>
                   <Text
                     style={{
-                      color: CYAN,
+                      color: colors.accent,
                       fontSize: 10,
                       fontWeight: "700",
                       letterSpacing: 0.4,
@@ -910,7 +908,7 @@ export default function AiAssistantScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    <Cpu size={10} color={AMBER} />
+                    <Cpu size={10} color={colors.accent} />
                   </View>
                   <Text
                     style={{
@@ -1004,14 +1002,14 @@ export default function AiAssistantScreen() {
                 borderRadius: 12,
                 backgroundColor:
                   inputText.trim() && !isStreaming && !isThinking
-                    ? AMBER
+                    ? colors.accent
                     : colors.bg,
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
                 borderColor:
                   inputText.trim() && !isStreaming && !isThinking
-                    ? AMBER
+                    ? colors.accent
                     : colors.border,
               }}
             >

@@ -83,13 +83,13 @@ function getNotificationIcon(type: string) {
       return { Icon: UserPlus, color: "#00B4D8" };
     case "like":
     case "reaction":
-      return { Icon: Heart, color: "#FF3B30" };
+      return { Icon: Heart, color: "#EF4444" };
     case "comment":
-      return { Icon: MessageCircle, color: "#FFD60A" };
+      return { Icon: MessageCircle, color: "#F5F5F5" };
     case "repost":
-      return { Icon: Repeat2, color: "#00FF87" };
+      return { Icon: Repeat2, color: "#4ADE80" };
     default:
-      return { Icon: Star, color: "#FFD60A" };
+      return { Icon: Star, color: "#4ADE80" };
   }
 }
 
@@ -128,47 +128,37 @@ export default function DashboardScreen() {
   const hasUnread = unreadCount > 0;
 
   // Color utilities
-  const accentSoft = `${colors.accent}18`;
-  const accentBorder = `${colors.accent}38`;
-  const goldSoft = `${colors.accent3}18`;
-  const goldBorder = `${colors.accent3}38`;
-  const successSoft = `${colors.success}18`;
+  const accentGreen = "#4ADE80";
+  const accentSoft = "#4ADE8015";
+  const accentBorder = "#4ADE8040";
 
   const QUICK_ACTIONS = [
     {
       id: "new-post",
       label: "Post",
       icon: Plus,
-      color: colors.accent3,
-      bg: goldSoft,
-      border: goldBorder,
+      color: accentGreen,
       onPress: () => router.push("/(app)/index" as any),
     },
     {
       id: "ai-assistant",
       label: "AI",
       icon: Cpu,
-      color: colors.accent,
-      bg: accentSoft,
-      border: accentBorder,
+      color: accentGreen,
       onPress: () => router.push("/(app)/ai-assistant" as any),
     },
     {
       id: "finance",
       label: "Finance",
       icon: TrendingUp,
-      color: colors.success,
-      bg: successSoft,
-      border: `${colors.success}38`,
+      color: accentGreen,
       onPress: () => router.push("/(app)/finance" as any),
     },
     {
       id: "discover",
       label: "Discover",
       icon: Compass,
-      color: "#7DB8D9",
-      bg: "#7DB8D918",
-      border: "#7DB8D938",
+      color: colors.text3,
       onPress: () => router.push("/(app)/discover" as any),
     },
   ];
@@ -176,17 +166,17 @@ export default function DashboardScreen() {
   if (sessionLoading || profileLoading) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }}
+        style={{ flex: 1, backgroundColor: "#080808", alignItems: "center", justifyContent: "center" }}
         testID="dashboard-loading"
       >
-        <ActivityIndicator color={colors.accent} size="large" />
+        <ActivityIndicator color={accentGreen} size="large" />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="dashboard-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="dashboard-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
         {/* ── Header ── */}
         <View
           style={{
@@ -202,10 +192,10 @@ export default function DashboardScreen() {
               style={{
                 color: colors.text3,
                 fontSize: 11,
-                fontWeight: "600",
+                fontWeight: "500",
                 letterSpacing: 1,
                 textTransform: "uppercase",
-                marginBottom: 3,
+                marginBottom: 4,
               }}
             >
               {greeting}
@@ -213,10 +203,10 @@ export default function DashboardScreen() {
             <Text
               style={{
                 color: colors.text,
-                fontSize: 26,
+                fontSize: 32,
                 fontWeight: "800",
-                letterSpacing: -0.8,
-                lineHeight: 30,
+                letterSpacing: -1.5,
+                lineHeight: 36,
               }}
             >
               {firstName}
@@ -228,33 +218,29 @@ export default function DashboardScreen() {
             testID="notification-bell-button"
             onPress={() => router.push("/(app)/settings" as any)}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 100,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: colors.card,
+              backgroundColor: "#141414",
               borderWidth: 1,
-              borderColor: hasUnread ? `${colors.accent}50` : colors.border,
-              shadowColor: hasUnread ? colors.accent : "transparent",
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
+              borderColor: hasUnread ? accentGreen : "#1F1F1F",
             }}
           >
-            <Bell size={18} color={hasUnread ? colors.accent : colors.text2} />
+            <Bell size={17} color={hasUnread ? accentGreen : colors.text2} />
             {hasUnread ? (
               <View
                 style={{
                   position: "absolute",
                   top: 8,
                   right: 8,
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   borderRadius: 4,
-                  backgroundColor: colors.error,
+                  backgroundColor: "#EF4444",
                   borderWidth: 1.5,
-                  borderColor: colors.bg,
+                  borderColor: "#080808",
                 }}
               />
             ) : null}
@@ -273,50 +259,29 @@ export default function DashboardScreen() {
         >
           <View
             style={{
-              backgroundColor: colors.card,
-              borderRadius: 22,
+              backgroundColor: "#0F0F0F",
+              borderRadius: 16,
               borderWidth: 1,
-              borderColor: colors.border,
-              padding: 18,
-              shadowColor: "#000",
-              shadowOpacity: 0.25,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 6 },
+              borderColor: "#1F1F1F",
+              padding: 16,
             }}
           >
-            {/* Top accent line */}
-            <View
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 24,
-                right: 24,
-                height: 1,
-                backgroundColor: `${colors.accent}30`,
-                borderRadius: 1,
-              }}
-            />
-
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {/* Avatar */}
               <View
                 style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 100,
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
                   backgroundColor: accentSoft,
                   borderWidth: 2,
-                  borderColor: `${colors.accent}60`,
+                  borderColor: accentBorder,
                   alignItems: "center",
                   justifyContent: "center",
                   marginRight: 14,
-                  shadowColor: colors.accent,
-                  shadowOpacity: 0.3,
-                  shadowRadius: 10,
-                  shadowOffset: { width: 0, height: 0 },
                 }}
               >
-                <Text style={{ color: colors.accent, fontSize: 24, fontWeight: "800" }}>
+                <Text style={{ color: accentGreen, fontSize: 22, fontWeight: "800" }}>
                   {avatarInitial}
                 </Text>
               </View>
@@ -344,7 +309,7 @@ export default function DashboardScreen() {
                   </Text>
                 ) : (
                   <Text
-                    style={{ color: colors.text4, fontSize: 12, lineHeight: 16, marginBottom: 8, fontStyle: "italic" }}
+                    style={{ color: "#404040", fontSize: 12, lineHeight: 16, marginBottom: 8, fontStyle: "italic" }}
                     numberOfLines={1}
                   >
                     No bio yet
@@ -371,16 +336,16 @@ export default function DashboardScreen() {
                 testID="dashboard-edit-profile-button"
                 onPress={() => router.push("/(app)/profile" as any)}
                 style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 100,
-                  backgroundColor: accentSoft,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 8,
+                  backgroundColor: "#141414",
                   borderWidth: 1,
-                  borderColor: accentBorder,
+                  borderColor: "#1F1F1F",
                   alignSelf: "flex-start",
                 }}
               >
-                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "700" }}>
+                <Text style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "600" }}>
                   Edit
                 </Text>
               </Pressable>
@@ -416,31 +381,19 @@ export default function DashboardScreen() {
                   style={({ pressed }) => ({
                     flex: 1,
                     alignItems: "center",
-                    paddingVertical: 16,
-                    backgroundColor: pressed ? colors.bg3 : colors.card,
-                    borderRadius: 18,
+                    justifyContent: "center",
+                    paddingVertical: 18,
+                    backgroundColor: pressed ? "#141414" : "#0F0F0F",
+                    borderRadius: 16,
                     borderWidth: 1,
-                    borderColor: pressed ? action.border : colors.border,
+                    borderColor: "#1F1F1F",
                     gap: 8,
                   })}
                 >
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 13,
-                      backgroundColor: action.bg,
-                      borderWidth: 1,
-                      borderColor: action.border,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon size={18} color={action.color} />
-                  </View>
+                  <Icon size={20} color={action.color} />
                   <Text
                     style={{
-                      color: colors.text2,
+                      color: colors.text3,
                       fontSize: 11,
                       fontWeight: "600",
                       letterSpacing: 0.2,
@@ -462,52 +415,35 @@ export default function DashboardScreen() {
           >
             <View
               style={{
-                backgroundColor: colors.card,
-                borderRadius: 22,
+                backgroundColor: "#0F0F0F",
+                borderRadius: 16,
                 borderWidth: 1,
-                borderColor: `${colors.accent3}30`,
-                padding: 22,
-                shadowColor: colors.accent3,
-                shadowOpacity: 0.08,
-                shadowRadius: 16,
-                shadowOffset: { width: 0, height: 4 },
+                borderColor: "#1F1F1F",
+                padding: 20,
                 overflow: "hidden",
               }}
             >
-              {/* Decorative corner glow */}
-              <View
-                style={{
-                  position: "absolute",
-                  top: -30,
-                  right: -30,
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-                  backgroundColor: `${colors.accent3}08`,
-                }}
-              />
-
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
                 <View
                   style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 12,
-                    backgroundColor: goldSoft,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    backgroundColor: accentSoft,
                     borderWidth: 1,
-                    borderColor: goldBorder,
+                    borderColor: accentBorder,
                     alignItems: "center",
                     justifyContent: "center",
                     marginRight: 10,
                   }}
                 >
-                  <Flame size={18} color={colors.accent3} />
+                  <Flame size={17} color={accentGreen} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800", letterSpacing: -0.3 }}>
+                  <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800", letterSpacing: -0.3 }}>
                     Start your journey
                   </Text>
-                  <Text style={{ color: colors.text3, fontSize: 12 }}>
+                  <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>
                     Your story begins with one post
                   </Text>
                 </View>
@@ -528,7 +464,7 @@ export default function DashboardScreen() {
                       alignItems: "center",
                       paddingVertical: 10,
                       borderBottomWidth: i < 2 ? 1 : 0,
-                      borderBottomColor: colors.border,
+                      borderBottomColor: "#1F1F1F",
                       gap: 12,
                     }}
                   >
@@ -537,16 +473,16 @@ export default function DashboardScreen() {
                         width: 28,
                         height: 28,
                         borderRadius: 8,
-                        backgroundColor: goldSoft,
+                        backgroundColor: accentSoft,
                         borderWidth: 1,
-                        borderColor: goldBorder,
+                        borderColor: accentBorder,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      <StepIcon size={13} color={colors.accent3} />
+                      <StepIcon size={13} color={accentGreen} />
                     </View>
-                    <Text style={{ flex: 1, color: colors.text2, fontSize: 13, fontWeight: "500" }}>
+                    <Text style={{ flex: 1, color: "#A3A3A3", fontSize: 13, fontWeight: "500" }}>
                       {step.label}
                     </Text>
                     <View
@@ -555,7 +491,7 @@ export default function DashboardScreen() {
                         height: 18,
                         borderRadius: 9,
                         borderWidth: 1.5,
-                        borderColor: colors.border,
+                        borderColor: "#1F1F1F",
                       }}
                     />
                   </View>
@@ -565,23 +501,23 @@ export default function DashboardScreen() {
               <Pressable
                 testID="start-journey-post-button"
                 onPress={() => router.push("/(app)/index" as any)}
-                style={{
+                style={({ pressed }) => ({
                   marginTop: 16,
-                  backgroundColor: colors.accent3,
-                  borderRadius: 13,
+                  backgroundColor: pressed ? "#3fcf70" : accentGreen,
+                  borderRadius: 12,
                   paddingVertical: 13,
                   alignItems: "center",
                   flexDirection: "row",
                   justifyContent: "center",
                   gap: 7,
-                  shadowColor: colors.accent3,
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
+                  shadowColor: accentGreen,
+                  shadowOpacity: 0.4,
+                  shadowRadius: 16,
                   shadowOffset: { width: 0, height: 4 },
-                }}
+                })}
               >
-                <Plus size={15} color={colors.bg} />
-                <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "800" }}>
+                <Plus size={15} color="#080808" />
+                <Text style={{ color: "#080808", fontSize: 14, fontWeight: "800" }}>
                   Write Your First Post
                 </Text>
               </Pressable>
@@ -594,10 +530,10 @@ export default function DashboardScreen() {
           >
             <View
               style={{
-                backgroundColor: colors.card,
-                borderRadius: 22,
+                backgroundColor: "#0F0F0F",
+                borderRadius: 16,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: "#1F1F1F",
                 padding: 18,
               }}
             >
@@ -606,24 +542,24 @@ export default function DashboardScreen() {
               </Text>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 {[
-                  { label: "Posts", value: postCount, color: colors.accent3 },
-                  { label: "Followers", value: followerCount, color: colors.accent },
-                  { label: "Following", value: followingCount, color: colors.success },
+                  { label: "Posts", value: postCount },
+                  { label: "Followers", value: followerCount },
+                  { label: "Following", value: followingCount },
                 ].map((stat) => (
                   <View
                     key={stat.label}
                     style={{
                       flex: 1,
-                      backgroundColor: colors.bg3,
-                      borderRadius: 14,
+                      backgroundColor: "#141414",
+                      borderRadius: 12,
                       borderWidth: 1,
-                      borderColor: colors.border,
+                      borderColor: "#1F1F1F",
                       padding: 14,
                       alignItems: "center",
                       gap: 4,
                     }}
                   >
-                    <Text style={{ color: stat.color, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
+                    <Text style={{ color: accentGreen, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
                       {stat.value}
                     </Text>
                     <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase" }}>
@@ -643,15 +579,11 @@ export default function DashboardScreen() {
         >
           <View
             style={{
-              backgroundColor: colors.card,
-              borderRadius: 22,
+              backgroundColor: "#0F0F0F",
+              borderRadius: 16,
               borderWidth: 1,
-              borderColor: `${colors.accent}28`,
+              borderColor: "#4ADE8020",
               padding: 20,
-              shadowColor: colors.accent,
-              shadowOpacity: 0.07,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 4 },
               overflow: "hidden",
             }}
           >
@@ -664,19 +596,20 @@ export default function DashboardScreen() {
                 width: 120,
                 height: 120,
                 borderRadius: 60,
-                backgroundColor: `${colors.accent}08`,
+                backgroundColor: "#4ADE8008",
               }}
             />
 
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                {/* Green dot */}
                 <View
                   style={{
                     width: 8,
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor: colors.accent,
-                    shadowColor: colors.accent,
+                    backgroundColor: accentGreen,
+                    shadowColor: accentGreen,
                     shadowOpacity: 0.9,
                     shadowRadius: 5,
                     shadowOffset: { width: 0, height: 0 },
@@ -686,17 +619,18 @@ export default function DashboardScreen() {
                   AI Assistant
                 </Text>
               </View>
+              {/* LIVE badge */}
               <View
                 style={{
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 100,
-                  backgroundColor: accentSoft,
+                  backgroundColor: "#4ADE8012",
                   borderWidth: 1,
-                  borderColor: accentBorder,
+                  borderColor: "#4ADE8030",
                 }}
               >
-                <Text style={{ color: colors.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
+                <Text style={{ color: accentGreen, fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
                   LIVE
                 </Text>
               </View>
@@ -718,10 +652,10 @@ export default function DashboardScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 8,
-                backgroundColor: colors.bg3,
-                borderRadius: 12,
+                backgroundColor: "#141414",
+                borderRadius: 10,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: "#1F1F1F",
                 paddingHorizontal: 13,
                 paddingVertical: 11,
                 marginBottom: 14,
@@ -738,21 +672,21 @@ export default function DashboardScreen() {
               onPress={() => router.push("/(app)/ai-assistant" as any)}
               testID="open-ai-workspace-button"
               style={({ pressed }) => ({
-                backgroundColor: pressed ? `${colors.accent}CC` : colors.accent,
-                borderRadius: 13,
+                backgroundColor: pressed ? "#3fcf70" : accentGreen,
+                borderRadius: 12,
                 paddingVertical: 13,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: 7,
-                shadowColor: colors.accent,
-                shadowOpacity: pressed ? 0.1 : 0.3,
-                shadowRadius: 12,
+                shadowColor: accentGreen,
+                shadowOpacity: pressed ? 0.1 : 0.4,
+                shadowRadius: 16,
                 shadowOffset: { width: 0, height: 4 },
               })}
             >
-              <Cpu size={15} color={colors.bg} />
-              <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "800" }}>
+              <Cpu size={15} color="#080808" />
+              <Text style={{ color: "#080808", fontSize: 14, fontWeight: "800" }}>
                 Open Workspace
               </Text>
             </Pressable>
@@ -789,12 +723,12 @@ export default function DashboardScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 100,
-                  backgroundColor: `${colors.error}18`,
+                  backgroundColor: "#EF444418",
                   borderWidth: 1,
-                  borderColor: `${colors.error}30`,
+                  borderColor: "#EF444430",
                 }}
               >
-                <Text style={{ color: colors.error, fontSize: 10, fontWeight: "700" }}>
+                <Text style={{ color: "#EF4444", fontSize: 10, fontWeight: "700" }}>
                   {unreadCount} new
                 </Text>
               </View>
@@ -803,10 +737,10 @@ export default function DashboardScreen() {
 
           <View
             style={{
-              backgroundColor: colors.card,
-              borderRadius: 22,
+              backgroundColor: "#0F0F0F",
+              borderRadius: 16,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: "#1F1F1F",
               overflow: "hidden",
             }}
           >
@@ -823,30 +757,18 @@ export default function DashboardScreen() {
                       paddingHorizontal: 16,
                       paddingVertical: 13,
                       borderBottomWidth: isLast ? 0 : 1,
-                      borderBottomColor: colors.border,
+                      borderBottomColor: "#1F1F1F",
                       gap: 12,
-                      backgroundColor: !item.isRead ? `${colors.accent}06` : "transparent",
+                      backgroundColor: !item.isRead ? "#4ADE8006" : "transparent",
+                      borderLeftWidth: !item.isRead ? 2 : 0,
+                      borderLeftColor: !item.isRead ? accentGreen : "transparent",
                     }}
                   >
-                    {/* Unread indicator */}
-                    {!item.isRead ? (
-                      <View
-                        style={{
-                          position: "absolute",
-                          left: 6,
-                          width: 4,
-                          height: 4,
-                          borderRadius: 2,
-                          backgroundColor: colors.accent,
-                        }}
-                      />
-                    ) : null}
-
                     <View
                       style={{
                         width: 36,
                         height: 36,
-                        borderRadius: 11,
+                        borderRadius: 10,
                         backgroundColor: `${color}18`,
                         borderWidth: 1,
                         borderColor: `${color}30`,
@@ -859,7 +781,7 @@ export default function DashboardScreen() {
                     <Text
                       style={{
                         flex: 1,
-                        color: item.isRead ? colors.text3 : colors.text2,
+                        color: item.isRead ? colors.text3 : "#A3A3A3",
                         fontSize: 13,
                         lineHeight: 18,
                         fontWeight: item.isRead ? "400" : "500",
@@ -868,7 +790,7 @@ export default function DashboardScreen() {
                     >
                       {item.message}
                     </Text>
-                    <Text style={{ color: colors.text4, fontSize: 10, fontWeight: "500" }}>
+                    <Text style={{ color: "#404040", fontSize: 10, fontWeight: "500" }}>
                       {timeAgo(item.createdAt)}
                     </Text>
                   </View>
@@ -888,7 +810,7 @@ export default function DashboardScreen() {
                   style={{
                     width: 52,
                     height: 52,
-                    borderRadius: 16,
+                    borderRadius: 14,
                     backgroundColor: accentSoft,
                     borderWidth: 1,
                     borderColor: accentBorder,
@@ -897,11 +819,11 @@ export default function DashboardScreen() {
                     marginBottom: 4,
                   }}
                 >
-                  <Bell size={22} color={colors.accent} />
+                  <Bell size={22} color={accentGreen} />
                 </View>
                 <Text
                   style={{
-                    color: colors.text2,
+                    color: "#A3A3A3",
                     fontSize: 14,
                     fontWeight: "700",
                     letterSpacing: -0.2,
@@ -934,10 +856,10 @@ export default function DashboardScreen() {
                 gap: 4,
               }}
             >
-              <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
+              <Text style={{ color: accentGreen, fontSize: 13, fontWeight: "600" }}>
                 View all {notifications.length} notifications
               </Text>
-              <ChevronRight size={13} color={colors.accent} />
+              <ChevronRight size={13} color={accentGreen} />
             </Pressable>
           ) : null}
         </Animated.View>
