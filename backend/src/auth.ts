@@ -20,6 +20,23 @@ export const auth = betterAuth({
     "https://*.vibecode.dev",
     "https://vibecode.dev",
   ],
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false,
+    minPasswordLength: 8,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    },
+    tiktok: {
+      clientSecret: process.env.TIKTOK_CLIENT_SECRET || "",
+      clientKey: process.env.TIKTOK_CLIENT_KEY || "",
+      enabled: !!(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET),
+    },
+  },
   plugins: [
     expo(),
     emailOTP({
