@@ -1,32 +1,76 @@
 import { Tabs } from "expo-router";
-import { LayoutDashboard, Rss, Compass, Brain, BarChart3, User, Settings } from "lucide-react-native";
-import { View } from "react-native";
+import { Home, Compass, Radio, Brain, BarChart3, Target, User } from "lucide-react-native";
+import { View, Text } from "react-native";
+import { useTheme } from "@/lib/theme";
+import { useI18n } from "@/lib/i18n";
 
-function TabIcon({ Icon, focused }: { Icon: any; focused: boolean }) {
+type TabIconProps = {
+  Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+  focused: boolean;
+  label: string;
+};
+
+function TabIcon({ Icon, focused, label }: TabIconProps) {
+  const { colors } = useTheme();
+  const activeColor = "#4ADE80";
+  const inactiveColor = "#404040";
+
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", width: 44, height: 36, gap: 5 }}>
-      <Icon size={22} color={focused ? "#4ADE80" : "#404040"} strokeWidth={focused ? 2 : 1.5} />
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        width: 52,
+        paddingTop: 2,
+        gap: 4,
+      }}
+    >
       {focused ? (
-        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "#4ADE80" }} />
-      ) : (
-        <View style={{ width: 4, height: 4 }} />
-      )}
+        <View
+          style={{
+            position: "absolute",
+            top: -6,
+            width: 24,
+            height: 2,
+            borderRadius: 1,
+            backgroundColor: activeColor,
+          }}
+        />
+      ) : null}
+      <Icon
+        size={21}
+        color={focused ? activeColor : inactiveColor}
+        strokeWidth={focused ? 2.2 : 1.6}
+      />
+      <Text
+        style={{
+          fontSize: 10,
+          fontWeight: focused ? "600" : "400",
+          color: focused ? activeColor : inactiveColor,
+          letterSpacing: 0.1,
+        }}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
 export default function AppLayout() {
+  const { colors } = useTheme();
+  const { t } = useI18n();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#080808",
-          borderTopColor: "#1F1F1F",
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 84,
-          paddingBottom: 28,
-          paddingTop: 8,
+          height: 88,
+          paddingBottom: 30,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: "#4ADE80",
         tabBarInactiveTintColor: "#404040",
@@ -34,52 +78,68 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen
-        name="dashboard"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={LayoutDashboard} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Rss} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Home} focused={focused} label="Inicio" />
+          ),
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Compass} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Compass} focused={focused} label="Descubrir" />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="live"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Radio} focused={focused} label="Directos" />
+          ),
         }}
       />
       <Tabs.Screen
         name="ai-assistant"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Brain} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Brain} focused={focused} label="IA" />
+          ),
         }}
       />
       <Tabs.Screen
         name="finance"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={BarChart3} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={BarChart3} focused={focused} label="Finanzas" />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="goals"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Target} focused={focused} label="Objetivos" />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={User} focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={User} focused={focused} label={t("profile")} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Settings} focused={focused} />,
-        }}
-      />
-      {/* Hide legacy screens from tab bar */}
-      <Tabs.Screen name="sprints" options={{ href: null }} />
-      <Tabs.Screen name="live" options={{ href: null }} />
-      <Tabs.Screen name="academy" options={{ href: null }} />
+
+      {/* Hidden screens — still reachable as routes */}
+      <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
+      <Tabs.Screen name="sprints" options={{ href: null }} />
+      <Tabs.Screen name="academy" options={{ href: null }} />
+      <Tabs.Screen name="dashboard" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -68,6 +68,43 @@ const translations = {
     edit: "Edit", publicProfile: "Public profile", privateProfile: "Private profile",
     interests: "Interests", displayMode: "Display mode", goalsDone: "Goals done",
     goalsDoneLabel: "Goals done",
+    // Feed tabs
+    feedTabForYou: "For You", feedTabFollowing: "Following", feedTabTrending: "Trending", feedTabRecent: "Recent",
+    // Discover
+    discover: "Discover", exploreTitle: "Explore", trendingPosts: "Trending Posts",
+    trendingUsers: "Trending Users", liveNowSection: "Live Now", seeAll: "See all",
+    suggestedUsers: "Suggested", categories: "Categories",
+    // Goals
+    objetivos: "Goals", activeGoals: "Active", completedGoals: "Completed",
+    noActiveGoals: "No active goals", noCompletedGoals: "No completed goals yet",
+    createFirstGoal: "Create your first goal", targetDate: "Target Date",
+    markComplete: "Mark Complete", updateProgress: "Update Progress",
+    // Live
+    liveTitle2: "Live", goLive: "Go Live", viewers: "viewers", chat: "Chat",
+    joinBroadcast: "Join", endLive: "End Broadcast", broadcasting: "Broadcasting",
+    // Finance
+    finance: "Finance", balance: "Balance", income: "Income", expenses: "Expenses",
+    investments: "Investments", savings: "Savings", financialGoals: "Financial Goals",
+    addTransaction: "Add Transaction", thisMonth: "This Month", netWorth: "Net Worth",
+    savingsRate: "Savings Rate", portfolio: "Portfolio",
+    // AI
+    aiAssistant: "AI Assistant", newChat: "New Chat", chatHistory: "Chat History",
+    suggestions: "Suggestions", copyMessage: "Copy", regenerate: "Regenerate",
+    // Settings (merged into profile)
+    appearance: "Appearance", notificationsSettings: "Notifications",
+    privacy: "Privacy", account: "Account", connectedAccounts: "Connected Accounts",
+    dangerZone: "Danger Zone", pushNotifications: "Push Notifications",
+    emailNotifications: "Email Notifications", newFollowers: "New Followers",
+    postReactions: "Post Reactions", commentsNotif: "Comments",
+    allowMessages: "Allow Messages", showOnlineStatus: "Show Online Status",
+    dataAnalytics: "Data & Analytics", changePassword: "Change Password",
+    exportData: "Export Data", deleteAccount: "Delete Account",
+    profileVisibility: "Profile Visibility", showEmail: "Show Email", profileStats: "Profile Stats",
+    // Profile sections
+    skills: "Skills", projects: "Projects", experience: "Experience",
+    externalLinks: "External Links", savedPosts: "Saved", activity: "Activity",
+    videos: "Videos", publications: "Posts",
+    ambition: "Ambition", coverPhoto: "Cover Photo",
   },
   es: {
     feed: "Inicio", forYou: "Para Ti", progress: "Progreso", learning: "Aprendizaje",
@@ -132,6 +169,43 @@ const translations = {
     edit: "Editar", publicProfile: "Perfil público", privateProfile: "Perfil privado",
     interests: "Intereses", displayMode: "Modo de pantalla", goalsDone: "Metas completadas",
     goalsDoneLabel: "Metas completadas",
+    // Feed tabs
+    feedTabForYou: "Para Ti", feedTabFollowing: "Siguiendo", feedTabTrending: "Tendencias", feedTabRecent: "Recientes",
+    // Discover
+    discover: "Descubrir", exploreTitle: "Explora", trendingPosts: "Posts en Tendencia",
+    trendingUsers: "Usuarios en Tendencia", liveNowSection: "En Vivo Ahora", seeAll: "Ver todos",
+    suggestedUsers: "Sugeridos", categories: "Categorías",
+    // Goals
+    objetivos: "Objetivos", activeGoals: "Activos", completedGoals: "Completados",
+    noActiveGoals: "Sin objetivos activos", noCompletedGoals: "Sin objetivos completados aún",
+    createFirstGoal: "Crea tu primer objetivo", targetDate: "Fecha Objetivo",
+    markComplete: "Marcar Completo", updateProgress: "Actualizar Progreso",
+    // Live
+    liveTitle2: "Directos", goLive: "Ir en Vivo", viewers: "espectadores", chat: "Chat",
+    joinBroadcast: "Unirse", endLive: "Finalizar Directo", broadcasting: "Transmitiendo",
+    // Finance
+    finance: "Finanzas", balance: "Balance", income: "Ingresos", expenses: "Gastos",
+    investments: "Inversiones", savings: "Ahorro", financialGoals: "Objetivos Financieros",
+    addTransaction: "Añadir Transacción", thisMonth: "Este Mes", netWorth: "Patrimonio Neto",
+    savingsRate: "Tasa de Ahorro", portfolio: "Portafolio",
+    // AI
+    aiAssistant: "Asistente IA", newChat: "Nuevo Chat", chatHistory: "Historial",
+    suggestions: "Sugerencias", copyMessage: "Copiar", regenerate: "Regenerar",
+    // Settings (merged into profile)
+    appearance: "Apariencia", notificationsSettings: "Notificaciones",
+    privacy: "Privacidad", account: "Cuenta", connectedAccounts: "Cuentas Conectadas",
+    dangerZone: "Zona de Peligro", pushNotifications: "Notificaciones Push",
+    emailNotifications: "Notificaciones por Email", newFollowers: "Nuevos Seguidores",
+    postReactions: "Reacciones en Posts", commentsNotif: "Comentarios",
+    allowMessages: "Permitir Mensajes", showOnlineStatus: "Mostrar Estado Online",
+    dataAnalytics: "Datos y Analíticas", changePassword: "Cambiar Contraseña",
+    exportData: "Exportar Datos", deleteAccount: "Eliminar Cuenta",
+    profileVisibility: "Visibilidad del Perfil", showEmail: "Mostrar Email", profileStats: "Estadísticas",
+    // Profile sections
+    skills: "Habilidades", projects: "Proyectos", experience: "Experiencia",
+    externalLinks: "Enlaces Externos", savedPosts: "Guardados", activity: "Actividad",
+    videos: "Vídeos", publications: "Publicaciones",
+    ambition: "Ambición", coverPhoto: "Portada",
   }
 };
 

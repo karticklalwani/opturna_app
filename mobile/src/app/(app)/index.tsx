@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, RefreshControl,
-  ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert,
+  ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert, Share,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
@@ -12,6 +12,7 @@ import {
   TrendingUp, Lightbulb, HelpCircle, Heart, Sparkles,
   Plus, Bell, Search, X, Bookmark, MessageCircle,
   MoreHorizontal, CheckCircle, Send, ImageIcon, UserPlus, FileText,
+  Play, Images, Share2, UserCheck, Clock, Flame, Users,
 } from "lucide-react-native";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
@@ -27,12 +28,61 @@ const REACTION_TYPES = [
   { id: "interesting", emoji: "✨" },
 ];
 
+// Feed tab definitions
+const FEED_TABS = [
+  { id: "all", label: "Para Ti", icon: Sparkles, filter: "" },
+  { id: "following", label: "Siguiendo", icon: Users, filter: "following" },
+  { id: "trending", label: "Tendencias", icon: Flame, filter: "trending" },
+  { id: "recent", label: "Recientes", icon: Clock, filter: "recent" },
+] as const;
+
+type FeedTabId = typeof FEED_TABS[number]["id"];
+
 const CATEGORY_COLORS_KEYS = {
   progress: "success",
   learning: "accent",
   question: "accent3",
   inspiration: "accent3",
+  negocios: "success",
+  finanzas: "success",
+  lifestyle: "accent",
+  trading: "success",
+  filosofia: "accent3",
+  espiritualidad: "accent3",
+  lectura: "accent",
+  proyectos: "success",
+  disciplina: "accent",
 } as const;
+
+// Category display labels
+const CATEGORY_LABELS: Record<string, string> = {
+  progress: "Negocios/Proyectos",
+  learning: "Desarrollo Personal",
+  inspiration: "Filosofía/Espiritualidad",
+  question: "General",
+  negocios: "Negocios",
+  finanzas: "Finanzas",
+  lifestyle: "Lifestyle",
+  trading: "Trading",
+  filosofia: "Filosofía",
+  espiritualidad: "Espiritualidad",
+  lectura: "Lectura",
+  proyectos: "Proyectos",
+  disciplina: "Disciplina",
+};
+
+// Extra categories for compose (beyond the base CATEGORIES list)
+const EXTRA_COMPOSE_CATEGORIES = [
+  { id: "negocios", label: "Negocios" },
+  { id: "finanzas", label: "Finanzas" },
+  { id: "lifestyle", label: "Lifestyle" },
+  { id: "trading", label: "Trading" },
+  { id: "filosofia", label: "Filosofía" },
+  { id: "espiritualidad", label: "Espiritualidad" },
+  { id: "lectura", label: "Lectura" },
+  { id: "proyectos", label: "Proyectos" },
+  { id: "disciplina", label: "Disciplina" },
+];
 
 function Avatar({ uri, name, size = 38, radius = 50, colors }: { uri?: string | null; name?: string | null; size?: number; radius?: number; colors: any }) {
   return (
@@ -64,7 +114,7 @@ function Divider({ colors }: { colors: any }) {
   return <View style={{ height: 1, backgroundColor: "#1F1F1F", marginVertical: 12 }} />;
 }
 
-function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: string; colors: any }) {
+function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; currentUserId: string; colors: any; onFollowUser?: (userId: string) => void }) {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const [showReactions, setShowReactions] = useState(false);
@@ -72,11 +122,15 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
   const [commentText, setCommentText] = useState("");
   const myReaction = post.reactions?.[0];
   const isMyPost = post.author?.id === currentUserId;
+  const isLiked = myReaction?.type === "like";
 
   const accentGreen = "#4ADE80";
   const accentSoft = "#4ADE8015";
   const accentMid = "#4ADE8025";
   const accentBorder = "#4ADE8040";
+  const accentRed = "#EF4444";
+  const accentRedSoft = "#EF444415";
+  const accentRedBorder = "#EF444440";
 
   const reactMutation = useMutation({
     mutationFn: (type: string) => api.post(`/api/posts/${post.id}/react`, { type }),
@@ -92,6 +146,11 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
   });
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/api/posts/${post.id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
+  });
+
+  const followInPostMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/api/users/${userId}/follow`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
   });
 
@@ -118,16 +177,36 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
     ]);
   };
 
-  const catColor = CATEGORY_COLORS_KEYS[post.category as keyof typeof CATEGORY_COLORS_KEYS]
-    ? colors[CATEGORY_COLORS_KEYS[post.category as keyof typeof CATEGORY_COLORS_KEYS]]
-    : accentGreen;
+  const handleShare = async () => {
+    try {
+      const shareContent = post.content
+        ? `${post.content}${post.author?.name ? `\n\n— ${post.author.name}` : ""}`
+        : `Post by ${post.author?.name ?? "someone"} on Opturna`;
+      await Share.share({
+        message: shareContent,
+        title: "Compartir desde Opturna",
+      });
+    } catch {
+      // User cancelled or error — ignore
+    }
+  };
+
+  const handleLike = () => {
+    reactMutation.mutate("like");
+  };
+
+  const catColorKey = CATEGORY_COLORS_KEYS[post.category as keyof typeof CATEGORY_COLORS_KEYS];
+  const catColor = catColorKey ? colors[catColorKey] : accentGreen;
   const catLabel = post.category
-    ? post.category.charAt(0).toUpperCase() + post.category.slice(1)
+    ? (CATEGORY_LABELS[post.category] ?? (post.category.charAt(0).toUpperCase() + post.category.slice(1)))
     : "Post";
 
   const mediaUrls: string[] = (() => {
     try { return post.mediaUrls ? JSON.parse(post.mediaUrls) : []; } catch { return []; }
   })();
+
+  const isVideo = post.type === "video" || (mediaUrls[0] && (mediaUrls[0].includes(".mp4") || mediaUrls[0].includes(".mov") || mediaUrls[0].includes("video")));
+  const isCarousel = mediaUrls.length > 1;
 
   return (
     <Animated.View entering={FadeInDown.duration(280).springify()}>
@@ -161,6 +240,35 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
                 <Text style={{ color: "#737373", fontSize: 12, fontWeight: "500" }}>{catLabel}</Text>
               </View>
             </View>
+
+            {/* Follow button (only for other users' posts) */}
+            {!isMyPost && post.author?.id ? (
+              <TouchableOpacity
+                onPress={() => followInPostMutation.mutate(post.author!.id)}
+                disabled={followInPostMutation.isPending}
+                testID={`follow-in-post-${post.id}`}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 100,
+                  backgroundColor: accentSoft,
+                  borderWidth: 1,
+                  borderColor: accentBorder,
+                  marginRight: 6,
+                }}
+              >
+                {followInPostMutation.isPending ? (
+                  <ActivityIndicator size="small" color={accentGreen} style={{ width: 12, height: 12 }} />
+                ) : (
+                  <UserCheck size={11} color={accentGreen} />
+                )}
+                <Text style={{ color: accentGreen, fontSize: 11, fontWeight: "600" }}>Seguir</Text>
+              </TouchableOpacity>
+            ) : null}
+
             {isMyPost ? (
               <TouchableOpacity onPress={handleMorePress} testID="more-options-button" style={{ padding: 6 }}>
                 <MoreHorizontal size={17} color="#737373" />
@@ -177,10 +285,63 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
             </Text>
           ) : null}
 
-          {/* Media */}
+          {/* Media — full-width with video/carousel overlays */}
           {mediaUrls.length > 0 ? (
-            <View style={{ marginBottom: 12, borderRadius: 12, overflow: "hidden" }}>
-              <Image source={{ uri: mediaUrls[0] }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+            <View style={{ marginBottom: 12, borderRadius: 12, overflow: "hidden", position: "relative" }}>
+              <Image
+                source={{ uri: mediaUrls[0] }}
+                style={{ width: "100%", height: 220 }}
+                resizeMode="cover"
+              />
+              {/* Video play button overlay */}
+              {isVideo ? (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 26,
+                      backgroundColor: "rgba(0,0,0,0.65)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: 2,
+                      borderColor: "rgba(255,255,255,0.6)",
+                    }}
+                  >
+                    <Play size={22} color="#ffffff" fill="#ffffff" />
+                  </View>
+                </View>
+              ) : null}
+              {/* Carousel indicator */}
+              {isCarousel ? (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 100,
+                  }}
+                >
+                  <Images size={11} color="#ffffff" />
+                  <Text style={{ color: "#ffffff", fontSize: 11, fontWeight: "600" }}>
+                    {mediaUrls.length}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -204,7 +365,33 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
 
           {/* Actions row */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            {/* Reaction button - pill style */}
+            {/* Like (Heart) quick action */}
+            <TouchableOpacity
+              onPress={handleLike}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 100,
+                backgroundColor: isLiked ? accentRedSoft : "#141414",
+                borderWidth: 1,
+                borderColor: isLiked ? accentRedBorder : "#1F1F1F",
+              }}
+              testID="like-button"
+            >
+              <Heart
+                size={14}
+                color={isLiked ? accentRed : "#737373"}
+                fill={isLiked ? accentRed : "transparent"}
+              />
+              <Text style={{ color: isLiked ? accentRed : "#737373", fontSize: 13, fontWeight: "500" }}>
+                {post._count?.reactions || 0}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Reaction button — emoji picker */}
             <TouchableOpacity
               onPress={() => setShowReactions(!showReactions)}
               style={{
@@ -214,21 +401,20 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
                 paddingVertical: 7,
                 paddingHorizontal: 12,
                 borderRadius: 100,
-                backgroundColor: myReaction ? accentMid : "#141414",
+                backgroundColor: (myReaction && myReaction.type !== "like") ? accentMid : "#141414",
                 borderWidth: 1,
-                borderColor: myReaction ? accentBorder : "#1F1F1F",
+                borderColor: (myReaction && myReaction.type !== "like") ? accentBorder : "#1F1F1F",
               }}
               testID="react-button"
             >
               <Text style={{ fontSize: 14 }}>
-                {myReaction ? REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡" : "💡"}
-              </Text>
-              <Text style={{ color: myReaction ? accentGreen : "#737373", fontSize: 13, fontWeight: "500" }}>
-                {post._count?.reactions || 0}
+                {(myReaction && myReaction.type !== "like")
+                  ? (REACTION_TYPES.find(r => r.id === myReaction.type)?.emoji || "💡")
+                  : "💡"}
               </Text>
             </TouchableOpacity>
 
-            {/* Comment button - pill style */}
+            {/* Comment button */}
             <TouchableOpacity
               onPress={() => setShowComments(!showComments)}
               style={{
@@ -252,7 +438,25 @@ function PostCard({ post, currentUserId, colors }: { post: Post; currentUserId: 
 
             <View style={{ flex: 1 }} />
 
-            {/* Save button - circle */}
+            {/* Share button */}
+            <TouchableOpacity
+              onPress={handleShare}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#141414",
+                borderWidth: 1,
+                borderColor: "#1F1F1F",
+              }}
+              testID="share-button"
+            >
+              <Share2 size={14} color="#737373" />
+            </TouchableOpacity>
+
+            {/* Save button */}
             <TouchableOpacity
               onPress={() => saveMutation.mutate()}
               style={{
@@ -358,11 +562,21 @@ const CATEGORIES = [
   { id: "inspiration", labelKey: "inspiration" as const, icon: Heart },
 ];
 
+// All compose categories (base + extra)
+const ALL_COMPOSE_CATEGORIES = [
+  { id: "progress", label: "Progreso" },
+  { id: "learning", label: "Aprendizaje" },
+  { id: "question", label: "Pregunta" },
+  { id: "inspiration", label: "Inspiración" },
+  ...EXTRA_COMPOSE_CATEGORIES,
+];
+
 export default function FeedScreen() {
   const { data: session } = useSession();
   const { colors } = useTheme();
   const { t } = useI18n();
   const [category, setCategory] = useState("all");
+  const [feedTab, setFeedTab] = useState<FeedTabId>("all");
   const [showCompose, setShowCompose] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -378,9 +592,18 @@ export default function FeedScreen() {
   const accentMid = "#4ADE8025";
   const accentBorder = "#4ADE8040";
 
+  // Build the API URL based on both category filter and feed tab filter
+  const buildPostsUrl = () => {
+    const params: string[] = [];
+    if (category !== "all") params.push(`category=${category}`);
+    const tab = FEED_TABS.find(t => t.id === feedTab);
+    if (tab && tab.filter) params.push(`filter=${tab.filter}`);
+    return `/api/posts${params.length > 0 ? `?${params.join("&")}` : ""}`;
+  };
+
   const { data: posts, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["posts", category],
-    queryFn: () => api.get<Post[]>(`/api/posts${category !== "all" ? `?category=${category}` : ""}`),
+    queryKey: ["posts", category, feedTab],
+    queryFn: () => api.get<Post[]>(buildPostsUrl()),
   });
 
   const { data: searchResults } = useQuery({
@@ -538,6 +761,47 @@ export default function FeedScreen() {
           </View>
         </View>
 
+        {/* Feed tabs — Para Ti / Siguiendo / Tendencias / Recientes */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
+          testID="feed-tabs"
+        >
+          {FEED_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = feedTab === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => setFeedTab(tab.id)}
+                testID={`feed-tab-${tab.id}`}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 100,
+                  backgroundColor: isActive ? "#4ADE8015" : "#141414",
+                  borderWidth: 1,
+                  borderColor: isActive ? "#4ADE8040" : "#1F1F1F",
+                }}
+              >
+                <Icon size={13} color={isActive ? accentGreen : "#737373"} />
+                <Text style={{
+                  color: isActive ? accentGreen : "#737373",
+                  fontSize: 13,
+                  fontWeight: isActive ? "600" : "400",
+                }}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         {/* Category filter pills */}
         <ScrollView
           horizontal
@@ -589,7 +853,14 @@ export default function FeedScreen() {
         <FlatList
           data={posts || []}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <PostCard post={item} currentUserId={session?.user?.id || ""} colors={colors} />}
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              currentUserId={session?.user?.id || ""}
+              colors={colors}
+              onFollowUser={(userId) => followMutation.mutate(userId)}
+            />
+          )}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={accentGreen} />}
           contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
           testID="posts-list"
@@ -1151,7 +1422,7 @@ export default function FeedScreen() {
               {t("category")}
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-              {CATEGORIES.filter(c => c.id !== "all").map((cat) => (
+              {ALL_COMPOSE_CATEGORIES.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   onPress={() => setNewPost(p => ({ ...p, category: cat.id }))}
@@ -1169,7 +1440,7 @@ export default function FeedScreen() {
                     fontSize: 13,
                     fontWeight: newPost.category === cat.id ? "600" : "400",
                   }}>
-                    {t(cat.labelKey)}
+                    {cat.label}
                   </Text>
                 </TouchableOpacity>
               ))}

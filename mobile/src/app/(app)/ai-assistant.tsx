@@ -7,13 +7,17 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  Clipboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, {
   FadeInDown,
   FadeInLeft,
   FadeInRight,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -36,6 +40,15 @@ import {
   FileText,
   RotateCcw,
   Sparkles,
+  Clock,
+  Plus,
+  Copy,
+  RefreshCw,
+  Brain,
+  BookOpen,
+  X,
+  ChevronRight,
+  MessageSquare,
 } from "lucide-react-native";
 import { authClient } from "@/lib/auth/auth-client";
 import { fetch } from "expo/fetch";
@@ -48,6 +61,16 @@ interface Message {
   id: string;
   role: MessageRole;
   content: string;
+  timestamp: number;
+}
+
+interface ChatSession {
+  id: string;
+  messages: Message[];
+  createdAt: number;
+  updatedAt: number;
+  preview: string;
+  messageCount: number;
 }
 
 interface SuggestedPrompt {
@@ -59,68 +82,172 @@ interface SuggestedPrompt {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const HISTORY_STORAGE_KEY = "opturna-ai-chat-sessions";
+const MAX_SESSIONS = 30;
+
 const CATEGORIES = [
-  "Business",
-  "Finance",
+  "Negocios",
+  "Finanzas",
+  "Productividad",
+  "Filosofía",
+  "Trading",
+  "Personal",
   "Taxation",
   "Strategy",
-  "Productivity",
-  "Mindset",
-  "Growth",
 ];
 
 const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
-  // Business
+  // Negocios
   {
-    id: "b1",
-    icon: TrendingUp,
-    text: "How to structure a startup for tax efficiency?",
-    category: "Business",
-  },
-  {
-    id: "b2",
-    icon: Users,
-    text: "Cap table basics for founders",
-    category: "Business",
-  },
-  {
-    id: "b3",
-    icon: FileText,
-    text: "Give me a business model for a digital product",
-    category: "Business",
-  },
-  {
-    id: "b4",
+    id: "neg1",
     icon: Target,
-    text: "How to validate a business idea in 2 weeks?",
-    category: "Business",
-  },
-  // Finance
-  {
-    id: "f1",
-    icon: BarChart2,
-    text: "Analyze my personal finance structure",
-    category: "Finance",
+    text: "¿Cómo validar una idea de negocio?",
+    category: "Negocios",
   },
   {
-    id: "f2",
-    icon: DollarSign,
-    text: "Best investment strategies for 2025",
-    category: "Finance",
-  },
-  {
-    id: "f3",
+    id: "neg2",
     icon: TrendingUp,
-    text: "How to build a 6-month emergency fund?",
-    category: "Finance",
+    text: "Dame 5 estrategias de marketing digital",
+    category: "Negocios",
   },
   {
-    id: "f4",
-    icon: BarChart2,
-    text: "Explain compound interest with real examples",
-    category: "Finance",
+    id: "neg3",
+    icon: Users,
+    text: "¿Cómo construir un equipo de alto rendimiento?",
+    category: "Negocios",
   },
-  // Taxation
+  {
+    id: "neg4",
+    icon: FileText,
+    text: "¿Qué es un modelo de negocio canvas?",
+    category: "Negocios",
+  },
+  // Finanzas
+  {
+    id: "fin1",
+    icon: DollarSign,
+    text: "¿Cómo crear un presupuesto personal efectivo?",
+    category: "Finanzas",
+  },
+  {
+    id: "fin2",
+    icon: BarChart2,
+    text: "Explícame la regla del 50/30/20",
+    category: "Finanzas",
+  },
+  {
+    id: "fin3",
+    icon: TrendingUp,
+    text: "¿Cómo invertir con poco dinero?",
+    category: "Finanzas",
+  },
+  {
+    id: "fin4",
+    icon: Landmark,
+    text: "¿Qué es el interés compuesto?",
+    category: "Finanzas",
+  },
+  // Productividad
+  {
+    id: "prod1",
+    icon: Zap,
+    text: "¿Cómo aplicar el método Pomodoro?",
+    category: "Productividad",
+  },
+  {
+    id: "prod2",
+    icon: Target,
+    text: "Dame una rutina matutina de alto rendimiento",
+    category: "Productividad",
+  },
+  {
+    id: "prod3",
+    icon: Brain,
+    text: "¿Cómo eliminar procrastinación?",
+    category: "Productividad",
+  },
+  {
+    id: "prod4",
+    icon: BookOpen,
+    text: "Técnicas para aprender más rápido",
+    category: "Productividad",
+  },
+  // Filosofía
+  {
+    id: "fil1",
+    icon: Sparkles,
+    text: "¿Qué enseña el estoicismo sobre el éxito?",
+    category: "Filosofía",
+  },
+  {
+    id: "fil2",
+    icon: Lightbulb,
+    text: "¿Cuál es el significado del ikigai?",
+    category: "Filosofía",
+  },
+  {
+    id: "fil3",
+    icon: Brain,
+    text: "Explícame la filosofía de Nietzsche",
+    category: "Filosofía",
+  },
+  {
+    id: "fil4",
+    icon: BookOpen,
+    text: "¿Qué es la mentalidad de crecimiento?",
+    category: "Filosofía",
+  },
+  // Trading
+  {
+    id: "trd1",
+    icon: BarChart2,
+    text: "Explícame el análisis técnico",
+    category: "Trading",
+  },
+  {
+    id: "trd2",
+    icon: TrendingUp,
+    text: "¿Qué es el RSI y cómo usarlo?",
+    category: "Trading",
+  },
+  {
+    id: "trd3",
+    icon: Target,
+    text: "Estrategias de gestión de riesgo",
+    category: "Trading",
+  },
+  {
+    id: "trd4",
+    icon: DollarSign,
+    text: "¿Qué son las medias móviles?",
+    category: "Trading",
+  },
+  // Personal
+  {
+    id: "per1",
+    icon: Sparkles,
+    text: "¿Cómo mejorar mi inteligencia emocional?",
+    category: "Personal",
+  },
+  {
+    id: "per2",
+    icon: TrendingUp,
+    text: "Hábitos para mejorar mi vida en 90 días",
+    category: "Personal",
+  },
+  {
+    id: "per3",
+    icon: Brain,
+    text: "¿Cómo desarrollar más confianza?",
+    category: "Personal",
+  },
+  {
+    id: "per4",
+    icon: Target,
+    text: "¿Cómo establecer metas que realmente logre?",
+    category: "Personal",
+  },
+  // Taxation (existing)
   {
     id: "t1",
     icon: Globe,
@@ -145,7 +272,7 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
     text: "What's the difference between ISR and IVA in Mexico?",
     category: "Taxation",
   },
-  // Strategy
+  // Strategy (existing)
   {
     id: "s1",
     icon: Zap,
@@ -170,71 +297,67 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
     text: "How to do a SWOT analysis for my business?",
     category: "Strategy",
   },
-  // Productivity
-  {
-    id: "p1",
-    icon: Target,
-    text: "Help me organize my week for maximum focus",
-    category: "Productivity",
-  },
-  {
-    id: "p2",
-    icon: Zap,
-    text: "Best deep work techniques for entrepreneurs",
-    category: "Productivity",
-  },
-  // Mindset
-  {
-    id: "m1",
-    icon: Lightbulb,
-    text: "How to build discipline and consistency",
-    category: "Mindset",
-  },
-  {
-    id: "m2",
-    icon: Sparkles,
-    text: "How do high performers manage stress?",
-    category: "Mindset",
-  },
-  // Growth
-  {
-    id: "g1",
-    icon: Users,
-    text: "Help me improve my personal brand",
-    category: "Growth",
-  },
-  {
-    id: "g2",
-    icon: TrendingUp,
-    text: "How to grow from 0 to 1000 customers?",
-    category: "Growth",
-  },
 ];
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL!;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } else if (diffDays === 1) {
+    return "Yesterday";
+  } else if (diffDays < 7) {
+    return date.toLocaleDateString([], { weekday: "short" });
+  } else {
+    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
+}
+
+function formatSessionDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return `Today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  } else if (diffDays === 1) {
+    return `Yesterday at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  } else {
+    return date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+  }
+}
+
+async function loadSessions(): Promise<ChatSession[]> {
+  try {
+    const raw = await AsyncStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as ChatSession[];
+  } catch {
+    return [];
+  }
+}
+
+async function saveSessions(sessions: ChatSession[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(sessions));
+  } catch {
+    // silently fail
+  }
+}
 
 // ─── Dot animation component ─────────────────────────────────────────────────
 
 function TypingDot({ delay }: { delay: number }) {
   const translateY = useSharedValue(0);
 
-  useEffect(() => {
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(-5, { duration: 300, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }),
-        withTiming(0, { duration: 200 })
-      ),
-      -1,
-      false
-    );
-  }, [translateY, delay]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  // Stagger via delay in JS side — start with an initial pause
   useEffect(() => {
     const timeout = setTimeout(() => {
       translateY.value = withRepeat(
@@ -249,6 +372,10 @@ function TypingDot({ delay }: { delay: number }) {
     }, delay);
     return () => clearTimeout(timeout);
   }, [delay, translateY]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
   return (
     <Animated.View
@@ -266,27 +393,308 @@ function TypingDot({ delay }: { delay: number }) {
   );
 }
 
+// ─── History Modal ────────────────────────────────────────────────────────────
+
+interface HistoryModalProps {
+  visible: boolean;
+  sessions: ChatSession[];
+  onClose: () => void;
+  onSelectSession: (session: ChatSession) => void;
+  onNewConversation: () => void;
+  onDeleteSession: (sessionId: string) => void;
+}
+
+function HistoryModal({
+  visible,
+  sessions,
+  onClose,
+  onSelectSession,
+  onNewConversation,
+  onDeleteSession,
+}: HistoryModalProps) {
+  const { colors } = useTheme();
+  const accentSoft = `${colors.accent}18`;
+  const accentBorder = `${colors.accent}38`;
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 8,
+              paddingBottom: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: 20,
+                  fontWeight: "800",
+                  letterSpacing: -0.4,
+                }}
+              >
+                Historial
+              </Text>
+              <Text
+                style={{
+                  color: colors.text3,
+                  fontSize: 12,
+                  marginTop: 2,
+                }}
+              >
+                {sessions.length} conversacion{sessions.length !== 1 ? "es" : ""}
+              </Text>
+            </View>
+            <Pressable
+              onPress={onClose}
+              testID="history-close-button"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <X size={16} color={colors.text3} />
+            </Pressable>
+          </View>
+        </SafeAreaView>
+
+        {/* New Conversation Button */}
+        <Pressable
+          onPress={() => {
+            onNewConversation();
+            onClose();
+          }}
+          testID="new-conversation-button"
+          style={{
+            marginHorizontal: 16,
+            marginTop: 16,
+            marginBottom: 8,
+            backgroundColor: accentSoft,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: accentBorder,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              backgroundColor: colors.accent,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Plus size={16} color="#000" />
+          </View>
+          <Text
+            style={{
+              color: colors.accent,
+              fontSize: 15,
+              fontWeight: "700",
+            }}
+          >
+            Nueva Conversacion
+          </Text>
+        </Pressable>
+
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, gap: 8, paddingTop: 8 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {sessions.length === 0 ? (
+            <View
+              style={{
+                alignItems: "center",
+                paddingTop: 60,
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 18,
+                  backgroundColor: accentSoft,
+                  borderWidth: 1,
+                  borderColor: accentBorder,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <MessageSquare size={26} color={colors.text4} />
+              </View>
+              <Text
+                style={{
+                  color: colors.text3,
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+              >
+                No hay conversaciones anteriores
+              </Text>
+            </View>
+          ) : null}
+
+          {sessions.map((session) => (
+            <Pressable
+              key={session.id}
+              onPress={() => {
+                onSelectSession(session);
+                onClose();
+              }}
+              testID={`session-${session.id}`}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? colors.bg3 : colors.card,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              })}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: accentSoft,
+                  borderWidth: 1,
+                  borderColor: accentBorder,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <MessageSquare size={17} color={colors.accent} />
+              </View>
+
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 13,
+                    fontWeight: "600",
+                    lineHeight: 18,
+                  }}
+                  numberOfLines={2}
+                >
+                  {session.preview}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text
+                    style={{
+                      color: colors.text3,
+                      fontSize: 11,
+                    }}
+                  >
+                    {formatSessionDate(session.updatedAt)}
+                  </Text>
+                  <View
+                    style={{
+                      width: 3,
+                      height: 3,
+                      borderRadius: 2,
+                      backgroundColor: colors.text4,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: colors.text3,
+                      fontSize: 11,
+                    }}
+                  >
+                    {session.messageCount} msg{session.messageCount !== 1 ? "s" : ""}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Pressable
+                  onPress={() => onDeleteSession(session.id)}
+                  testID={`delete-session-${session.id}`}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    backgroundColor: `${colors.accent2}15`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  hitSlop={8}
+                >
+                  <X size={12} color={colors.accent2} />
+                </Pressable>
+                <ChevronRight size={14} color={colors.text4} />
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function AiAssistantScreen() {
   const { colors } = useTheme();
-  const [activeCategory, setActiveCategory] = useState<string>("Taxation");
+
+  // Chat state
+  const [activeCategory, setActiveCategory] = useState<string>("Negocios");
   const [messages, setMessages] = useState<Message[]>([]);
   const [streamingText, setStreamingText] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [isThinking, setIsThinking] = useState<boolean>(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  // Session / history state
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [historyVisible, setHistoryVisible] = useState<boolean>(false);
+
   const scrollViewRef = useRef<ScrollView>(null);
   const abortRef = useRef<boolean>(false);
 
   const accentSoft = `${colors.accent}18`;
   const accentBorder = `${colors.accent}38`;
-  const cyanSoft = `${colors.accent}18`;
   const cyanBorder = `${colors.accent}38`;
 
   const filteredPrompts = SUGGESTED_PROMPTS.filter(
     (p) => p.category === activeCategory
   );
+
+  // Load sessions on mount
+  useEffect(() => {
+    loadSessions().then(setSessions);
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -294,22 +702,58 @@ export default function AiAssistantScreen() {
     }, 80);
   }, []);
 
-  // Auto-scroll when streaming text updates
   useEffect(() => {
     if (streamingText) {
       scrollToBottom();
     }
   }, [streamingText, scrollToBottom]);
 
+  // Persist session whenever messages change
+  const persistSession = useCallback(
+    async (updatedMessages: Message[], sessionId: string) => {
+      if (updatedMessages.length === 0) return;
+
+      const firstUserMsg = updatedMessages.find((m) => m.role === "user");
+      const preview = firstUserMsg
+        ? firstUserMsg.content.slice(0, 80)
+        : "Conversacion";
+
+      const now = Date.now();
+      const session: ChatSession = {
+        id: sessionId,
+        messages: updatedMessages,
+        createdAt: now,
+        updatedAt: now,
+        preview,
+        messageCount: updatedMessages.length,
+      };
+
+      const existingSessions = await loadSessions();
+      const filtered = existingSessions.filter((s) => s.id !== sessionId);
+      const updated = [session, ...filtered].slice(0, MAX_SESSIONS);
+      setSessions(updated);
+      await saveSessions(updated);
+    },
+    []
+  );
+
   const handleSend = useCallback(
     async (text?: string) => {
       const trimmed = (text ?? inputText).trim();
       if (!trimmed || isStreaming || isThinking) return;
 
+      // Create or reuse session id
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        sessionId = `session-${Date.now()}`;
+        setCurrentSessionId(sessionId);
+      }
+
       const userMessage: Message = {
         id: `msg-${Date.now()}-user`,
         role: "user",
         content: trimmed,
+        timestamp: Date.now(),
       };
 
       const updatedMessages = [...messages, userMessage];
@@ -385,14 +829,16 @@ export default function AiAssistantScreen() {
           }
         }
 
-        // Commit the streamed text as a permanent message
         if (accumulatedText) {
           const aiMessage: Message = {
             id: `msg-${Date.now()}-assistant`,
             role: "assistant",
             content: accumulatedText,
+            timestamp: Date.now(),
           };
-          setMessages((prev) => [...prev, aiMessage]);
+          const finalMessages = [...updatedMessages, aiMessage];
+          setMessages(finalMessages);
+          await persistSession(finalMessages, sessionId);
         }
         setStreamingText("");
         setIsStreaming(false);
@@ -407,14 +853,29 @@ export default function AiAssistantScreen() {
           role: "assistant",
           content:
             "Sorry, I encountered an error. Please check your connection and try again.",
+          timestamp: Date.now(),
         };
-        setMessages((prev) => [...prev, errorMessage]);
+        const finalMessages = [...updatedMessages, errorMessage];
+        setMessages(finalMessages);
+        await persistSession(finalMessages, sessionId);
         scrollToBottom();
         console.error("AI stream error:", err);
       }
     },
-    [inputText, messages, isStreaming, isThinking, scrollToBottom]
+    [inputText, messages, isStreaming, isThinking, scrollToBottom, currentSessionId, persistSession]
   );
+
+  const handleRegenerate = useCallback(async () => {
+    if (isStreaming || isThinking || messages.length < 2) return;
+    // Remove last assistant message and resend
+    const lastUserIdx = [...messages].reverse().findIndex((m) => m.role === "user");
+    if (lastUserIdx === -1) return;
+    const userMsgIdx = messages.length - 1 - lastUserIdx;
+    const messagesUpToUser = messages.slice(0, userMsgIdx + 1);
+    const lastUserMsg = messages[userMsgIdx];
+    setMessages(messagesUpToUser.slice(0, -1));
+    await handleSend(lastUserMsg.content);
+  }, [messages, isStreaming, isThinking, handleSend]);
 
   const handleClear = useCallback(() => {
     abortRef.current = true;
@@ -423,9 +884,44 @@ export default function AiAssistantScreen() {
     setIsThinking(false);
     setIsStreaming(false);
     setInputText("");
+    setCurrentSessionId(null);
+  }, []);
+
+  const handleLoadSession = useCallback((session: ChatSession) => {
+    abortRef.current = true;
+    setMessages(session.messages);
+    setCurrentSessionId(session.id);
+    setStreamingText("");
+    setIsThinking(false);
+    setIsStreaming(false);
+    setInputText("");
+    setTimeout(() => scrollToBottom(), 200);
+  }, [scrollToBottom]);
+
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    const updated = sessions.filter((s) => s.id !== sessionId);
+    setSessions(updated);
+    await saveSessions(updated);
+    if (currentSessionId === sessionId) {
+      handleClear();
+    }
+  }, [sessions, currentSessionId, handleClear]);
+
+  const handleCopyMessage = useCallback((content: string, messageId: string) => {
+    Clipboard.setString(content);
+    setCopiedMessageId(messageId);
+    setTimeout(() => setCopiedMessageId(null), 2000);
   }, []);
 
   const hasConversation = messages.length > 0 || isThinking || isStreaming;
+
+  // Find index of last assistant message for regenerate button
+  const lastAssistantIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return i;
+    }
+    return -1;
+  })();
 
   return (
     <KeyboardAvoidingView
@@ -526,7 +1022,25 @@ export default function AiAssistantScreen() {
               </Text>
             </View>
 
-            {/* Clear button */}
+            {/* History button */}
+            <Pressable
+              onPress={() => setHistoryVisible(true)}
+              testID="history-button"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Clock size={15} color={colors.text3} />
+            </Pressable>
+
+            {/* Clear / New conversation button */}
             {hasConversation ? (
               <Pressable
                 onPress={handleClear}
@@ -542,7 +1056,7 @@ export default function AiAssistantScreen() {
                   justifyContent: "center",
                 }}
               >
-                <RotateCcw size={14} color={colors.text3} />
+                <Plus size={15} color={colors.text3} />
               </Pressable>
             ) : null}
           </View>
@@ -555,7 +1069,7 @@ export default function AiAssistantScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ── Welcome State ── */}
+        {/* ── Welcome / Empty State ── */}
         {!hasConversation ? (
           <Animated.View
             entering={FadeInDown.delay(60).duration(400).springify()}
@@ -655,7 +1169,7 @@ export default function AiAssistantScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* ── Suggestion prompts ── */}
+        {/* ── Suggestion prompts (empty state only) ── */}
         {!hasConversation ? (
           <Animated.View
             entering={FadeInDown.delay(160).duration(350).springify()}
@@ -671,7 +1185,7 @@ export default function AiAssistantScreen() {
                 marginBottom: 10,
               }}
             >
-              Suggested
+              Sugerencias
             </Text>
             <View
               style={{
@@ -693,15 +1207,15 @@ export default function AiAssistantScreen() {
                     <Pressable
                       onPress={() => handleSend(prompt.text)}
                       testID={`prompt-${prompt.id}`}
-                      style={{
-                        backgroundColor: colors.card,
+                      style={({ pressed }) => ({
+                        backgroundColor: pressed ? colors.bg3 : colors.card,
                         borderRadius: 14,
                         borderWidth: 1,
-                        borderColor: colors.border,
+                        borderColor: pressed ? accentBorder : colors.border,
                         padding: 14,
                         minHeight: 92,
                         justifyContent: "space-between",
-                      }}
+                      })}
                     >
                       <View
                         style={{
@@ -740,8 +1254,11 @@ export default function AiAssistantScreen() {
         {/* ── Conversation ── */}
         {hasConversation ? (
           <View style={{ marginHorizontal: 16, marginTop: 16, gap: 14 }}>
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               const isUser = message.role === "user";
+              const isLastAssistant = index === lastAssistantIndex;
+              const isCopied = copiedMessageId === message.id;
+
               return (
                 <Animated.View
                   key={message.id}
@@ -787,36 +1304,112 @@ export default function AiAssistantScreen() {
                       </Text>
                     </View>
                   ) : null}
-                  <View
+
+                  <Pressable
+                    onLongPress={() => handleCopyMessage(message.content, message.id)}
+                    delayLongPress={400}
+                    testID={`message-${message.id}`}
                     style={{
                       maxWidth: "82%",
-                      backgroundColor: isUser ? colors.accent : colors.card,
-                      borderRadius: 18,
-                      borderBottomRightRadius: isUser ? 4 : 18,
-                      borderBottomLeftRadius: isUser ? 18 : 4,
-                      paddingHorizontal: 15,
-                      paddingVertical: 12,
-                      borderWidth: isUser ? 0 : 1,
-                      borderColor: colors.border,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: isUser ? colors.accent : colors.card,
+                        borderRadius: 18,
+                        borderBottomRightRadius: isUser ? 4 : 18,
+                        borderBottomLeftRadius: isUser ? 18 : 4,
+                        paddingHorizontal: 15,
+                        paddingVertical: 12,
+                        borderWidth: isUser ? 0 : 1,
+                        borderColor: colors.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: isUser ? "#000" : colors.text2,
+                          fontSize: 14,
+                          lineHeight: 22,
+                          fontWeight: isUser ? "600" : "400",
+                        }}
+                      >
+                        {message.content}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {/* Timestamp + Copy row */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      marginTop: 4,
+                      paddingHorizontal: 4,
                     }}
                   >
                     <Text
                       style={{
-                        color: isUser ? "#000" : colors.text2,
-                        fontSize: 14,
-                        lineHeight: 22,
-                        fontWeight: isUser ? "600" : "400",
+                        color: colors.text4,
+                        fontSize: 10,
                       }}
                     >
-                      {message.content}
+                      {formatTime(message.timestamp)}
                     </Text>
+                    <Pressable
+                      onPress={() => handleCopyMessage(message.content, message.id)}
+                      testID={`copy-${message.id}`}
+                      hitSlop={6}
+                    >
+                      {isCopied ? (
+                        <Animated.View entering={FadeIn.duration(150)}>
+                          <Text
+                            style={{
+                              color: colors.accent,
+                              fontSize: 10,
+                              fontWeight: "600",
+                            }}
+                          >
+                            Copiado
+                          </Text>
+                        </Animated.View>
+                      ) : (
+                        <Copy size={11} color={colors.text4} />
+                      )}
+                    </Pressable>
                   </View>
+
+                  {/* Regenerate button on last AI message */}
+                  {!isUser && isLastAssistant && !isStreaming && !isThinking ? (
+                    <Pressable
+                      onPress={handleRegenerate}
+                      testID="regenerate-button"
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5,
+                        marginTop: 2,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <RefreshCw size={11} color={colors.text3} />
+                      <Text
+                        style={{
+                          color: colors.text3,
+                          fontSize: 11,
+                          fontWeight: "500",
+                        }}
+                      >
+                        Regenerar
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </Animated.View>
               );
             })}
 
             {/* Streaming message bubble */}
-            {(isStreaming && streamingText) ? (
+            {isStreaming && streamingText ? (
               <Animated.View
                 entering={FadeInLeft.duration(200)}
                 style={{ alignItems: "flex-start" }}
@@ -835,7 +1428,7 @@ export default function AiAssistantScreen() {
                       width: 20,
                       height: 20,
                       borderRadius: 6,
-                      backgroundColor: cyanSoft,
+                      backgroundColor: accentSoft,
                       borderWidth: 1,
                       borderColor: cyanBorder,
                       alignItems: "center",
@@ -978,7 +1571,7 @@ export default function AiAssistantScreen() {
             <TextInput
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Ask anything about tax, finance, business..."
+              placeholder="Pregunta sobre negocios, finanzas, trading..."
               placeholderTextColor={colors.text3}
               multiline
               testID="ai-input"
@@ -1036,6 +1629,16 @@ export default function AiAssistantScreen() {
           </Text>
         </View>
       </SafeAreaView>
+
+      {/* ── History Modal ── */}
+      <HistoryModal
+        visible={historyVisible}
+        sessions={sessions}
+        onClose={() => setHistoryVisible(false)}
+        onSelectSession={handleLoadSession}
+        onNewConversation={handleClear}
+        onDeleteSession={handleDeleteSession}
+      />
     </KeyboardAvoidingView>
   );
 }

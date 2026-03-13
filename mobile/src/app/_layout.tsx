@@ -1,5 +1,5 @@
 import "../../global.css";
-import { DarkTheme, ThemeProvider } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -10,6 +10,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth/use-session";
 import { View } from "react-native";
+import { useTheme } from "@/lib/theme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,14 +20,20 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const { data: session, isLoading } = useSession();
+  const { mode, colors } = useTheme();
 
   if (isLoading) {
-    return <View style={{ flex: 1, backgroundColor: "#0A0A0A" }} />;
+    return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   }
 
+  const navTheme = mode === "dark" ? DarkTheme : {
+    ...DefaultTheme,
+    colors: { ...DefaultTheme.colors, background: colors.bg, card: colors.bg2, text: colors.text, border: colors.border },
+  };
+
   return (
-    <ThemeProvider value={DarkTheme}>
-      <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+    <ThemeProvider value={navTheme}>
+      <Stack screenOptions={{ headerShown: false, animation: "fade", contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={!!session?.user}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
@@ -35,7 +42,7 @@ function RootLayoutNav() {
           <Stack.Screen name="verify-otp" />
         </Stack.Protected>
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
     </ThemeProvider>
   );
 }
