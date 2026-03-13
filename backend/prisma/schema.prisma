@@ -53,6 +53,9 @@ model User {
   reportedBy    Report[]      @relation("ReportedUser")
   collections   Collection[]
   savedPosts    SavedPost[]
+  liveStreams    LiveStream[]
+  liveMessages  LiveMessage[]
+  liveViewers   LiveViewer[]
 }
 
 model Session {
@@ -409,4 +412,48 @@ model Report {
   reason       String
   description  String?
   status       String   @default("pending") // pending | reviewed | resolved
+}
+
+// ============ LIVE STREAMING ============
+model LiveStream {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  category     String       @default("general")
+  status       String       @default("live") // "live" | "ended"
+  viewerCount  Int          @default(0)
+  peakViewers  Int          @default(0)
+  startedAt    DateTime     @default(now())
+  endedAt      DateTime?
+  thumbnailUrl String?
+  liveMessages LiveMessage[]
+  liveViewers  LiveViewer[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model LiveMessage {
+  id        String     @id @default(cuid())
+  streamId  String
+  stream    LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime   @default(now())
+
+  @@index([streamId])
+}
+
+model LiveViewer {
+  id       String     @id @default(cuid())
+  streamId String
+  stream   LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime   @default(now())
+
+  @@index([streamId])
+  @@unique([streamId, userId])
 }

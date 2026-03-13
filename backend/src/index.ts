@@ -4,6 +4,8 @@ import { cors } from "hono/cors";
 import { auth } from "./auth";
 import { prisma } from "./prisma";
 import { env } from "./env";
+import { liveRouter } from "./routes/live";
+import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 
 type Variables = {
   user: typeof auth.$Infer.Session.user | null;
@@ -804,10 +806,59 @@ STYLE: Be direct and actionable. Use numbered lists. Cite specific laws, rates, 
   }
 });
 
+// ===== LIVE STREAMING ROUTES =====
+app.route("/api/live", liveRouter);
+
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);
 
 export default {
   port,
-  fetch: app.fetch,
+  fetch(req: Request, server: import("bun").Server) {
+    const url = new URL(req.url);
+    if (url.pathname.startsWith("/ws/live/")) {
+      const pathParts = url.pathname.split("/ws/live/");
+      const streamId = pathParts[1] || "";
+      const userId = url.searchParams.get("userId") || "anonymous";
+      const userName = url.searchParams.get("userName") || "Usuario";
+      const userImage = url.searchParams.get("userImage") || undefined;
+
+      const success = server.upgrade(req, {
+        data: { streamId, userId, userName, userImage },
+      });
+      if (success) return undefined as unknown as Response;
+    }
+    return app.fetch(req, { server });
+  },
+  websocket: {
+    open(ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>) {
+      const { streamId, userId, userName, userImage } = ws.data;
+      joinRoom(streamId, { ws, userId, userName, userImage });
+    },
+    message(
+      ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>,
+      message: string | Buffer
+    ) {
+      const { streamId, userId, userName, userImage } = ws.data;
+      try {
+        const data = JSON.parse(message as string) as { type: string; content?: string };
+        if (data.type === "chat" && data.content) {
+          broadcastToRoom(streamId, {
+            type: "chat",
+            content: data.content,
+            userId,
+            userName,
+            userImage,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    },
+    close(ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>) {
+      const { streamId, userId, userName, userImage } = ws.data;
+      leaveRoom(streamId, { ws, userId, userName, userImage });
+    },
+  },
 };
