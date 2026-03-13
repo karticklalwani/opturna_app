@@ -56,6 +56,7 @@ model User {
   liveStreams    LiveStream[]
   liveMessages  LiveMessage[]
   liveViewers   LiveViewer[]
+  messageReads  MessageRead[]
 }
 
 model Session {
@@ -259,19 +260,32 @@ model ChatMember {
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
   chatId      String
-  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat        Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade)
   senderId    String
-  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  sender      User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   content     String?
-  type        String   @default("text") // text | image | audio | video | file | emoji
+  type        String        @default("text") // text | image | audio | video | file | emoji
   fileId      String?
   fileUrl     String?
   fileName    String?
   fileMimeType String?
-  isRead      Boolean  @default(false)
+  isRead      Boolean       @default(false)
+  reads       MessageRead[]
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
 }
 
 // ============ ACADEMY / COURSES ============

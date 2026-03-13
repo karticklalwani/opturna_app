@@ -6,6 +6,8 @@ import { prisma } from "./prisma";
 import { env } from "./env";
 import { liveRouter } from "./routes/live";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
+import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
+import type { ChatWSClient } from "./chat-ws";
 
 type Variables = {
   user: typeof auth.$Infer.Session.user | null;
@@ -507,9 +509,10 @@ app.post("/api/chats/:id/messages", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
   const body = await c.req.json() as { content?: string; type?: string; fileUrl?: string; fileName?: string; fileMimeType?: string };
+  const chatId = c.req.param("id");
   const message = await prisma.message.create({
     data: {
-      chatId: c.req.param("id"),
+      chatId,
       senderId: user.id,
       content: body.content,
       type: body.type || "text",
@@ -519,8 +522,50 @@ app.post("/api/chats/:id/messages", async (c) => {
     },
     include: { sender: { select: { id: true, name: true, image: true, username: true } } }
   });
-  await prisma.chat.update({ where: { id: c.req.param("id") }, data: { updatedAt: new Date() } });
+  await prisma.chat.update({ where: { id: chatId }, data: { updatedAt: new Date() } });
+
+  // Broadcast to all WebSocket clients in the chat room
+  broadcastNewMessage(chatId, {
+    id: message.id,
+    content: message.content ?? undefined,
+    type: message.type,
+    fileUrl: message.fileUrl ?? undefined,
+    fileName: message.fileName ?? undefined,
+    fileMimeType: message.fileMimeType ?? undefined,
+    createdAt: message.createdAt.toISOString(),
+    isRead: false,
+    sender: {
+      id: user.id,
+      name: user.name,
+      image: user.image ?? undefined,
+    },
+  });
+
   return c.json({ data: message }, 201);
+});
+
+app.patch("/api/chats/:id/messages/read", async (c) => {
+  const session = c.get("session");
+  if (!session) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const user = c.get("user")!;
+
+  const chatId = c.req.param("id");
+
+  // Get all messages in this chat not sent by the current user
+  const messages = await prisma.message.findMany({
+    where: { chatId, NOT: { senderId: user.id } }
+  });
+
+  // Upsert read receipts for each message
+  for (const msg of messages) {
+    await prisma.messageRead.upsert({
+      where: { messageId_userId: { messageId: msg.id, userId: user.id } },
+      create: { messageId: msg.id, userId: user.id },
+      update: {}
+    });
+  }
+
+  return c.json({ data: { ok: true } });
 });
 
 // ===== COURSES ROUTES =====
@@ -816,6 +861,8 @@ export default {
   port,
   fetch(req: Request, server: import("bun").Server) {
     const url = new URL(req.url);
+
+    // Live stream WebSocket
     if (url.pathname.startsWith("/ws/live/")) {
       const pathParts = url.pathname.split("/ws/live/");
       const streamId = pathParts[1] || "";
@@ -824,41 +871,84 @@ export default {
       const userImage = url.searchParams.get("userImage") || undefined;
 
       const success = server.upgrade(req, {
-        data: { streamId, userId, userName, userImage },
+        data: { type: "live", streamId, userId, userName, userImage },
       });
       if (success) return undefined as unknown as Response;
     }
+
+    // Chat WebSocket
+    if (url.pathname.startsWith("/ws/chat/")) {
+      const chatId = url.pathname.split("/ws/chat/")[1] || "";
+      const userId = url.searchParams.get("userId") || "anonymous";
+      const userName = url.searchParams.get("userName") || "Usuario";
+      const userImage = url.searchParams.get("userImage") || undefined;
+
+      const success = server.upgrade(req, {
+        data: { type: "chat", chatId, userId, userName, userImage },
+      });
+      if (success) return undefined as unknown as Response;
+      return new Response("WebSocket upgrade failed", { status: 400 });
+    }
+
     return app.fetch(req, { server });
   },
   websocket: {
-    open(ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>) {
-      const { streamId, userId, userName, userImage } = ws.data;
-      joinRoom(streamId, { ws, userId, userName, userImage });
-    },
-    message(
-      ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>,
-      message: string | Buffer
-    ) {
-      const { streamId, userId, userName, userImage } = ws.data;
-      try {
-        const data = JSON.parse(message as string) as { type: string; content?: string };
-        if (data.type === "chat" && data.content) {
-          broadcastToRoom(streamId, {
-            type: "chat",
-            content: data.content,
-            userId,
-            userName,
-            userImage,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      } catch {
-        // ignore malformed messages
+    open(ws: import("bun").ServerWebSocket<{ type: string; streamId?: string; chatId?: string; userId: string; userName: string; userImage?: string }>) {
+      if (ws.data.type === "live") {
+        const { streamId, userId, userName, userImage } = ws.data as { type: string; streamId: string; userId: string; userName: string; userImage?: string };
+        joinRoom(streamId, { ws, userId, userName, userImage });
+      } else if (ws.data.type === "chat") {
+        const { chatId, userId, userName, userImage } = ws.data as { type: string; chatId: string; userId: string; userName: string; userImage?: string };
+        joinChatRoom(chatId, { ws, userId, userName, userImage, chatId });
       }
     },
-    close(ws: import("bun").ServerWebSocket<{ streamId: string; userId: string; userName: string; userImage?: string }>) {
-      const { streamId, userId, userName, userImage } = ws.data;
-      leaveRoom(streamId, { ws, userId, userName, userImage });
+    message(
+      ws: import("bun").ServerWebSocket<{ type: string; streamId?: string; chatId?: string; userId: string; userName: string; userImage?: string }>,
+      message: string | Buffer
+    ) {
+      if (ws.data.type === "live") {
+        const { streamId, userId, userName, userImage } = ws.data as { type: string; streamId: string; userId: string; userName: string; userImage?: string };
+        try {
+          const data = JSON.parse(message as string) as { type: string; content?: string };
+          if (data.type === "chat" && data.content) {
+            broadcastToRoom(streamId, {
+              type: "chat",
+              content: data.content,
+              userId,
+              userName,
+              userImage,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      } else if (ws.data.type === "chat") {
+        const { chatId, userId, userName, userImage } = ws.data as { type: string; chatId: string; userId: string; userName: string; userImage?: string };
+        // Build a reference to the current client for exclusion in broadcasts
+        const currentClient: ChatWSClient = { ws, userId, userName, userImage, chatId };
+        try {
+          const payload = JSON.parse(message as string) as { type: string; messageId?: string };
+          if (payload.type === "typing_start") {
+            broadcastToChatRoom(chatId, { type: "typing", userId, userName, typing: true }, currentClient);
+          } else if (payload.type === "typing_stop") {
+            broadcastToChatRoom(chatId, { type: "typing", userId, userName, typing: false }, currentClient);
+          }
+          // Actual messages are sent via REST POST /api/chats/:id/messages
+          // which calls broadcastNewMessage after persisting to DB
+        } catch {
+          // ignore malformed messages
+        }
+      }
+    },
+    close(ws: import("bun").ServerWebSocket<{ type: string; streamId?: string; chatId?: string; userId: string; userName: string; userImage?: string }>) {
+      if (ws.data.type === "live") {
+        const { streamId, userId, userName, userImage } = ws.data as { type: string; streamId: string; userId: string; userName: string; userImage?: string };
+        leaveRoom(streamId, { ws, userId, userName, userImage });
+      } else if (ws.data.type === "chat") {
+        const { chatId, userId, userName, userImage } = ws.data as { type: string; chatId: string; userId: string; userName: string; userImage?: string };
+        leaveChatRoom(chatId, { ws, userId, userName, userImage, chatId });
+      }
     },
   },
 };
