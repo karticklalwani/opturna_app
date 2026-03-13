@@ -575,7 +575,6 @@ export default function FeedScreen() {
   const { data: session } = useSession();
   const { colors } = useTheme();
   const { t } = useI18n();
-  const [category, setCategory] = useState("all");
   const [feedTab, setFeedTab] = useState<FeedTabId>("all");
   const [showCompose, setShowCompose] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -592,17 +591,14 @@ export default function FeedScreen() {
   const accentMid = "#4ADE8025";
   const accentBorder = "#4ADE8040";
 
-  // Build the API URL based on both category filter and feed tab filter
+  // Build the API URL based on feed tab filter
   const buildPostsUrl = () => {
-    const params: string[] = [];
-    if (category !== "all") params.push(`category=${category}`);
     const tab = FEED_TABS.find(t => t.id === feedTab);
-    if (tab && tab.filter) params.push(`filter=${tab.filter}`);
-    return `/api/posts${params.length > 0 ? `?${params.join("&")}` : ""}`;
+    return `/api/posts${tab && tab.filter ? `?filter=${tab.filter}` : ""}`;
   };
 
   const { data: posts, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["posts", category, feedTab],
+    queryKey: ["posts", feedTab],
     queryFn: () => api.get<Post[]>(buildPostsUrl()),
   });
 
@@ -766,7 +762,7 @@ export default function FeedScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ flexGrow: 0 }}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 10 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
           testID="feed-tabs"
         >
           {FEED_TABS.map((tab) => {
@@ -796,45 +792,6 @@ export default function FeedScreen() {
                   fontWeight: isActive ? "600" : "400",
                 }}>
                   {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Category filter pills */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0 }}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}
-        >
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isActive = category === cat.id;
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                onPress={() => setCategory(cat.id)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  paddingHorizontal: 14,
-                  paddingVertical: 7,
-                  borderRadius: 100,
-                  backgroundColor: isActive ? "#4ADE8015" : "#141414",
-                  borderWidth: 1,
-                  borderColor: isActive ? "#4ADE8040" : "#1F1F1F",
-                }}
-              >
-                <Icon size={13} color={isActive ? accentGreen : "#737373"} />
-                <Text style={{
-                  color: isActive ? accentGreen : "#737373",
-                  fontSize: 13,
-                  fontWeight: isActive ? "600" : "400",
-                }}>
-                  {t(cat.labelKey)}
                 </Text>
               </TouchableOpacity>
             );

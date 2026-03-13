@@ -37,11 +37,11 @@ import {
   Clock,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
-
-type ThemeColors = typeof DARK;
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type ThemeColors = typeof DARK;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
