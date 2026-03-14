@@ -31,6 +31,10 @@ import {
   Calendar,
   Layers,
   Award,
+  SquareCheck,
+  Flame,
+  Star,
+  BookOpen,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Goal } from "@/types";
@@ -927,45 +931,36 @@ export default function GoalsScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={{ flexGrow: 0 }}
-            contentContainerStyle={{ gap: 8, paddingTop: 14, paddingBottom: 2 }}
+            contentContainerStyle={{ paddingHorizontal: 0, gap: 10, paddingTop: 14, paddingBottom: 2 }}
           >
             {[
-              { label: "Objetivos", route: null },
-              { label: "Tareas", route: "/(app)/tasks" },
-              { label: "Hábitos", route: "/(app)/habits" },
-              { label: "Proyectos", route: "/(app)/projects" },
-            ].map((item) => {
-              const isCurrent = item.route === null;
-              return (
-                <Pressable
-                  key={item.label}
-                  onPress={() => {
-                    if (item.route) {
-                      router.push(item.route as Parameters<typeof router.push>[0]);
-                    }
-                  }}
-                  testID={`productivity-nav-${item.label.toLowerCase()}`}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 100,
-                    backgroundColor: isCurrent ? "#4ADE80" : "#0F0F0F",
-                    borderWidth: 1,
-                    borderColor: isCurrent ? "#4ADE80" : "#1F1F1F",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isCurrent ? "#080808" : "#737373",
-                      fontSize: 13,
-                      fontWeight: isCurrent ? "700" : "500",
-                    }}
-                  >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+              { label: "Progreso", icon: TrendingUp, route: "/(app)/progress", color: "#4ADE80" },
+              { label: "Tareas", icon: SquareCheck, route: "/(app)/tasks", color: "#FBBF24" },
+              { label: "Hábitos", icon: Flame, route: "/(app)/habits", color: "#F97316" },
+              { label: "Proyectos", icon: Layers, route: "/(app)/projects", color: "#60A5FA" },
+              { label: "Metas", icon: Star, route: "/(app)/life-goals", color: "#818CF8" },
+              { label: "Diario", icon: BookOpen, route: "/(app)/journal", color: "#F472B6" },
+            ].map((item) => (
+              <Pressable
+                key={item.route}
+                onPress={() => router.push(item.route as any)}
+                testID={`productivity-nav-${item.label.toLowerCase()}`}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingHorizontal: 14,
+                  paddingVertical: 9,
+                  backgroundColor: `${item.color}15`,
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: `${item.color}30`,
+                }}
+              >
+                <item.icon size={14} color={item.color} />
+                <Text style={{ color: item.color, fontSize: 13, fontWeight: "600" }}>{item.label}</Text>
+              </Pressable>
+            ))}
           </ScrollView>
         </View>
       </SafeAreaView>

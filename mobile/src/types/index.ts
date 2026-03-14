@@ -169,3 +169,26 @@ export interface Project {
   createdAt: string;
   userId: string;
 }
+
+export interface JournalEntry {
+  id: string;
+  content: string;
+  mood?: string | null;
+  tags?: string | null; // JSON string of string[]
+  date: string; // YYYY-MM-DD
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LifeGoal {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  progress: number;
+  isCompleted: boolean;
+  isPublic: boolean;
+  targetDate?: string | null;
+  emoji?: string | null;
+  createdAt: string;
+}

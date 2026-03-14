@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Compass, Radio, Brain, BarChart3, Target, User } from "lucide-react-native";
+import { Home, Compass, Radio, Brain, ChartBar, Target, User } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
@@ -113,7 +113,7 @@ export default function AppLayout() {
         name="finance"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={BarChart3} focused={focused} label="Finanzas" />
+            <TabIcon Icon={ChartBar} focused={focused} label="Finanzas" />
           ),
         }}
       />
@@ -144,6 +144,9 @@ export default function AppLayout() {
       <Tabs.Screen name="tasks" options={{ href: null }} />
       <Tabs.Screen name="habits" options={{ href: null }} />
       <Tabs.Screen name="projects" options={{ href: null }} />
+      <Tabs.Screen name="progress" options={{ href: null }} />
+      <Tabs.Screen name="journal" options={{ href: null }} />
+      <Tabs.Screen name="life-goals" options={{ href: null }} />
     </Tabs>
   );
 }

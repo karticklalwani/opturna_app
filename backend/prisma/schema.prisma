@@ -60,6 +60,8 @@ model User {
   tasks         Task[]
   habits        Habit[]
   projects      Project[]
+  journalEntries JournalEntry[]
+  lifeGoals      LifeGoal[]
 }
 
 model Session {
@@ -533,4 +535,34 @@ model Project {
   progress    Int      @default(0) // 0-100
   url         String?
   isPublic    Boolean  @default(false)
+}
+
+// ============ JOURNAL ============
+model JournalEntry {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content     String
+  mood        String?  // great | good | okay | bad | terrible
+  tags        String?  // JSON array of strings
+  date        String   // YYYY-MM-DD (the date of the entry)
+}
+
+// ============ LIFE GOALS ============
+model LifeGoal {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  category    String?  // dinero | negocio | salud | aprendizaje | viajes | relaciones | libertad | otro
+  progress    Int      @default(0) // 0-100
+  isCompleted Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  targetDate  DateTime?
+  emoji       String?  // An emoji representing the goal
 }
