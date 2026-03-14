@@ -5,6 +5,9 @@ import { auth } from "./auth";
 import { prisma } from "./prisma";
 import { env } from "./env";
 import { liveRouter } from "./routes/live";
+import tasks from "./routes/tasks";
+import habits from "./routes/habits";
+import projects from "./routes/projects";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -853,6 +856,15 @@ STYLE: Be direct and actionable. Use numbered lists. Cite specific laws, rates, 
 
 // ===== LIVE STREAMING ROUTES =====
 app.route("/api/live", liveRouter);
+
+// ===== TASKS ROUTES =====
+app.route("/api/tasks", tasks);
+
+// ===== HABITS ROUTES =====
+app.route("/api/habits", habits);
+
+// ===== PROJECTS ROUTES =====
+app.route("/api/projects", projects);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);

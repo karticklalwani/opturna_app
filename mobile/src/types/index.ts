@@ -112,6 +112,40 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface Task {
+  id: string;
+  title: string;
+  description?: string | null;
+  isCompleted: boolean;
+  goalId?: string | null;
+  goal?: { id: string; title: string } | null;
+  dueDate?: string | null;
+  priority: "low" | "medium" | "high";
+  createdAt: string;
+  userId: string;
+}
+
+export interface HabitCheckIn {
+  id: string;
+  date: string;
+  habitId: string;
+  userId: string;
+}
+
+export interface Habit {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  color?: string | null;
+  streak: number;
+  bestStreak: number;
+  isActive: boolean;
+  createdAt: string;
+  userId: string;
+  checkIns: HabitCheckIn[];
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -122,4 +156,16 @@ export interface Event {
   location?: string | null;
   creator: Pick<User, 'id' | 'name' | 'image'>;
   _count?: { rsvps: number };
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: "active" | "paused" | "completed" | "archived";
+  progress: number;
+  url?: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  userId: string;
 }

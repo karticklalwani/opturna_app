@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Animated, {
@@ -32,8 +33,6 @@ import {
   Award,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
-import { useTheme } from "@/lib/theme";
-import { useI18n } from "@/lib/i18n";
 import { Goal } from "@/types";
 
 // ─── Category config ──────────────────────────────────────────────────────────
@@ -775,8 +774,7 @@ function StatsRow({ goals }: { goals: Goal[] }) {
 type TabFilter = "activos" | "completados";
 
 export default function GoalsScreen() {
-  const { colors } = useTheme();
-  const { t } = useI18n();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<TabFilter>("activos");
   const [showCreate, setShowCreate] = useState(false);
@@ -923,6 +921,52 @@ export default function GoalsScreen() {
               </Pressable>
             ))}
           </View>
+
+          {/* Productivity hub navigation */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ gap: 8, paddingTop: 14, paddingBottom: 2 }}
+          >
+            {[
+              { label: "Objetivos", route: null },
+              { label: "Tareas", route: "/(app)/tasks" },
+              { label: "Hábitos", route: "/(app)/habits" },
+              { label: "Proyectos", route: "/(app)/projects" },
+            ].map((item) => {
+              const isCurrent = item.route === null;
+              return (
+                <Pressable
+                  key={item.label}
+                  onPress={() => {
+                    if (item.route) {
+                      router.push(item.route as Parameters<typeof router.push>[0]);
+                    }
+                  }}
+                  testID={`productivity-nav-${item.label.toLowerCase()}`}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 100,
+                    backgroundColor: isCurrent ? "#4ADE80" : "#0F0F0F",
+                    borderWidth: 1,
+                    borderColor: isCurrent ? "#4ADE80" : "#1F1F1F",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isCurrent ? "#080808" : "#737373",
+                      fontSize: 13,
+                      fontWeight: isCurrent ? "700" : "500",
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
       </SafeAreaView>
 

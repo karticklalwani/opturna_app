@@ -105,6 +105,7 @@ const translations = {
     externalLinks: "External Links", savedPosts: "Saved", activity: "Activity",
     videos: "Videos", publications: "Posts",
     ambition: "Ambition", coverPhoto: "Cover Photo",
+    tagline: "Your ambition amplified.",
   },
   es: {
     feed: "Inicio", forYou: "Para Ti", progress: "Progreso", learning: "Aprendizaje",
@@ -206,6 +207,7 @@ const translations = {
     externalLinks: "Enlaces Externos", savedPosts: "Guardados", activity: "Actividad",
     videos: "Vídeos", publications: "Publicaciones",
     ambition: "Ambición", coverPhoto: "Portada",
+    tagline: "Tu ambición amplificada.",
   }
 };
 

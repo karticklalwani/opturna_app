@@ -49,6 +49,8 @@ import {
   X,
   ChevronRight,
   MessageSquare,
+  Calendar,
+  Flame,
 } from "lucide-react-native";
 import { authClient } from "@/lib/auth/auth-client";
 import { fetch } from "expo/fetch";
@@ -92,6 +94,7 @@ const CATEGORIES = [
   "Filosofía",
   "Trading",
   "Personal",
+  "Plan",
   "Taxation",
   "Strategy",
 ];
@@ -296,6 +299,49 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
     icon: BarChart2,
     text: "How to do a SWOT analysis for my business?",
     category: "Strategy",
+  },
+  // Plan / Organización
+  {
+    id: "plan1",
+    icon: Calendar,
+    text: "Organiza mi día de forma efectiva",
+    category: "Plan",
+  },
+  {
+    id: "plan2",
+    icon: Target,
+    text: "Crea un plan semanal de productividad para mí",
+    category: "Plan",
+  },
+  {
+    id: "plan3",
+    icon: Target,
+    text: "Ayúdame a definir mis objetivos para este año",
+    category: "Plan",
+  },
+  {
+    id: "plan4",
+    icon: Flame,
+    text: "Dame un plan para mejorar mis hábitos en 30 días",
+    category: "Plan",
+  },
+  {
+    id: "plan5",
+    icon: DollarSign,
+    text: "Crea un plan financiero personal completo",
+    category: "Plan",
+  },
+  {
+    id: "plan6",
+    icon: BookOpen,
+    text: "Diseña un plan de estudio efectivo para mí",
+    category: "Plan",
+  },
+  {
+    id: "plan7",
+    icon: TrendingUp,
+    text: "Ayúdame a crear un plan de negocio desde cero",
+    category: "Plan",
   },
 ];
 

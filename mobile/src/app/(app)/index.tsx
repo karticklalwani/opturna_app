@@ -648,8 +648,9 @@ export default function FeedScreen() {
           setUploadingMedia(false);
         }
       }
+      const isVideoMedia = pickedMedia?.mimeType.startsWith("video/");
       const postType = mediaUrls.length > 0
-        ? (isDocumentMedia ? "document" : "media")
+        ? (isDocumentMedia ? "document" : isVideoMedia ? "video" : "media")
         : "text";
       return api.post("/api/posts", {
         content: newPost.content,
@@ -1326,7 +1327,37 @@ export default function FeedScreen() {
                     </View>
                   ) : (
                     <>
-                      <Image source={{ uri: pickedMedia.uri }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+                      {pickedMedia.mimeType.startsWith("video/") ? (
+                        <View style={{
+                          width: "100%",
+                          height: 200,
+                          backgroundColor: "#0F0F0F",
+                          borderRadius: 14,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderWidth: 1,
+                          borderColor: accentBorder,
+                        }}>
+                          <View style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: 26,
+                            backgroundColor: accentSoft,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderWidth: 1,
+                            borderColor: accentBorder,
+                            marginBottom: 10,
+                          }}>
+                            <Play size={22} color={accentGreen} fill={accentGreen} />
+                          </View>
+                          <Text style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "500" }} numberOfLines={1}>
+                            {pickedMedia.fileName}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Image source={{ uri: pickedMedia.uri }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+                      )}
                       <TouchableOpacity
                         onPress={() => setPickedMedia(null)}
                         style={{

@@ -141,6 +141,9 @@ export default function AppLayout() {
       <Tabs.Screen name="academy" options={{ href: null }} />
       <Tabs.Screen name="dashboard" options={{ href: null }} />
       <Tabs.Screen name="go-live" options={{ href: null }} />
+      <Tabs.Screen name="tasks" options={{ href: null }} />
+      <Tabs.Screen name="habits" options={{ href: null }} />
+      <Tabs.Screen name="projects" options={{ href: null }} />
     </Tabs>
   );
 }

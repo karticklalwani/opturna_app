@@ -112,6 +112,31 @@ The AI Assistant (`/api/ai/chat`) uses OpenAI gpt-4o with a comprehensive system
 - Info: `#3B82F6`
 - Error: `#EF4444`
 
+### Tasks API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/tasks | Get user tasks (optional ?goalId=) |
+| POST | /api/tasks | Create task |
+| PATCH | /api/tasks/:id | Update task |
+| DELETE | /api/tasks/:id | Delete task |
+
+### Habits API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/habits | Get user habits (with last 60 check-ins) |
+| POST | /api/habits | Create habit |
+| PATCH | /api/habits/:id | Update habit |
+| DELETE | /api/habits/:id | Delete habit |
+| POST | /api/habits/:id/checkin | Toggle today's check-in, auto-recalculates streak |
+
+### Projects API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/projects | Get user projects |
+| POST | /api/projects | Create project |
+| PATCH | /api/projects/:id | Update project |
+| DELETE | /api/projects/:id | Delete project |
+
 ## Database Models
 
-Users, Sessions, Accounts, Verification, Posts, Comments, Reactions, Follows, SavedPosts, Collections, Goals, Sprints, SprintMembers, CheckIns, Chats, ChatMembers, Messages, Courses, Lessons, Enrollments, UploadedFiles, Events, EventRsvps, Circles, CircleMembers, Notifications, Reports
+Users, Sessions, Accounts, Verification, Posts, Comments, Reactions, Follows, SavedPosts, Collections, Goals, Tasks, Habits, HabitCheckIns, Projects, Sprints, SprintMembers, CheckIns, Chats, ChatMembers, Messages, Courses, Lessons, Enrollments, UploadedFiles, Events, EventRsvps, Circles, CircleMembers, Notifications, Reports

@@ -33,6 +33,7 @@ import {
 } from "lucide-react-native";
 import { authClient } from "@/lib/auth/auth-client";
 import { useInvalidateSession } from "@/lib/auth/use-session";
+import { useI18n } from "@/lib/i18n";
 
 // ─── Animated Pressable ────────────────────────────────────────────────────
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -404,6 +405,7 @@ function InstagramLogo() {
 export default function SignIn() {
   const [mode, setMode] = useState<Mode>("login");
   const invalidateSession = useInvalidateSession();
+  const { t } = useI18n();
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -663,7 +665,7 @@ export default function SignIn() {
                   textTransform: "uppercase",
                 }}
               >
-                La red de los ambiciosos
+                {t("tagline")}
               </Text>
             </View>
           </Animated.View>

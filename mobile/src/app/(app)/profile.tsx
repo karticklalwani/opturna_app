@@ -12,6 +12,7 @@ import {
   Switch,
   Dimensions,
   Linking,
+  Pressable,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
@@ -19,6 +20,7 @@ import { useSession, useInvalidateSession } from "@/lib/auth/use-session";
 import { authClient } from "@/lib/auth/auth-client";
 import { User, Post } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import {
   Edit3,
   Camera,
@@ -55,6 +57,12 @@ import {
   Video,
   Activity,
   Users,
+  Star,
+  CheckSquare,
+  Repeat2,
+  FolderOpen,
+  Briefcase,
+  TrendingUp,
 } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
@@ -98,6 +106,62 @@ function parseSkills(raw: string): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+// ---------------------------------------------------------------------------
+// Reputation / Level helpers
+// ---------------------------------------------------------------------------
+
+interface ReputationLevel {
+  level: number;
+  name: string;
+  points: number;
+  color: string;
+}
+
+function calcReputation(opts: {
+  posts: number;
+  followers: number;
+  following: number;
+  hasBio: boolean;
+  hasSkills: boolean;
+  hasUsername: boolean;
+}): ReputationLevel {
+  const points =
+    opts.posts * 10 +
+    opts.followers * 5 +
+    opts.following * 1 +
+    (opts.hasBio ? 20 : 0) +
+    (opts.hasSkills ? 20 : 0) +
+    (opts.hasUsername ? 10 : 0);
+
+  let level = 1;
+  let name = "Explorador";
+  let color = "#A3A3A3";
+
+  if (points >= 1000) {
+    level = 5; name = "Elite"; color = "#F59E0B";
+  } else if (points >= 500) {
+    level = 4; name = "Líder"; color = "#4ADE80";
+  } else if (points >= 250) {
+    level = 3; name = "Progresista"; color = "#60A5FA";
+  } else if (points >= 100) {
+    level = 2; name = "Ambicioso"; color = "#C084FC";
+  }
+
+  return { level, name, points, color };
+}
+
+// Skill chip colors palette
+const SKILL_COLORS: Array<{ bg: string; border: string; text: string }> = [
+  { bg: "#4ADE8018", border: "#4ADE8040", text: "#4ADE80" },
+  { bg: "#60A5FA18", border: "#60A5FA40", text: "#60A5FA" },
+  { bg: "#F59E0B18", border: "#F59E0B40", text: "#F59E0B" },
+  { bg: "#C084FC18", border: "#C084FC40", text: "#C084FC" },
+  { bg: "#FB718518", border: "#FB718540", text: "#FB7185" },
+  { bg: "#34D39918", border: "#34D39940", text: "#34D399" },
+  { bg: "#FBBF2418", border: "#FBBF2440", text: "#FBBF24" },
+  { bg: "#818CF818", border: "#818CF840", text: "#818CF8" },
+];
 
 // ---------------------------------------------------------------------------
 // EditData interface
@@ -155,6 +219,7 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient();
   const { mode, colors, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
+  const router = useRouter();
 
   // Modal
   const [showEdit, setShowEdit] = useState<boolean>(false);
@@ -340,6 +405,16 @@ export default function ProfileScreen() {
 
   const postsAll = userPosts || [];
   const videoPosts = postsAll.filter((p) => p.type === "video");
+
+  // Reputation
+  const reputation = calcReputation({
+    posts: profile?._count?.posts ?? 0,
+    followers: profile?._count?.followers ?? 0,
+    following: profile?._count?.following ?? 0,
+    hasBio: !!(profile?.bio?.trim()),
+    hasSkills: !!(profile?.skills?.trim()),
+    hasUsername: !!(profile?.username?.trim()),
+  });
 
   // ---------------------------------------------------------------------------
   // Loading state
@@ -1053,7 +1128,7 @@ export default function ProfileScreen() {
         {/* ---- PROFILE INFO ---- */}
         <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginBottom: 16 }}>
           {/* Name + verified */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
             <Text style={{ color: colors.text, fontSize: 24, fontWeight: "800", letterSpacing: -0.5 }}>
               {displayName}
             </Text>
@@ -1087,6 +1162,29 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             ) : null}
+          </View>
+
+          {/* Reputation badge */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                backgroundColor: `${reputation.color}18`,
+                borderWidth: 1,
+                borderColor: `${reputation.color}40`,
+                borderRadius: 100,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Star size={10} color={reputation.color} fill={reputation.color} />
+              <Text style={{ color: reputation.color, fontSize: 11, fontWeight: "700" }}>
+                Nivel {reputation.level} · {reputation.name}
+              </Text>
+            </View>
+            <Text style={{ color: colors.text4 ?? colors.text3, fontSize: 10 }}>{reputation.points} pts</Text>
           </View>
 
           {/* @username */}
@@ -1192,24 +1290,35 @@ export default function ProfileScreen() {
             </View>
           ) : null}
 
-          {/* Skill chips */}
+          {/* Skill chips - Marca Personal preview */}
           {skills.length > 0 ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-              {skills.map((skill) => (
-                <View
-                  key={skill}
-                  style={{
-                    paddingHorizontal: 11,
-                    paddingVertical: 5,
-                    borderWidth: 1,
-                    borderColor: accentBorder,
-                    backgroundColor: accentSoft,
-                    borderRadius: 100,
-                  }}
-                >
-                  <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "600" }}>{skill}</Text>
-                </View>
-              ))}
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Briefcase size={11} color={colors.text3} />
+                <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.8, textTransform: "uppercase" }}>
+                  Habilidades
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                {skills.map((skill, idx) => {
+                  const palette = SKILL_COLORS[idx % SKILL_COLORS.length];
+                  return (
+                    <View
+                      key={skill}
+                      style={{
+                        paddingHorizontal: 11,
+                        paddingVertical: 5,
+                        borderWidth: 1,
+                        borderColor: palette.border,
+                        backgroundColor: palette.bg,
+                        borderRadius: 100,
+                      }}
+                    >
+                      <Text style={{ color: palette.text, fontSize: 11, fontWeight: "600" }}>{skill}</Text>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           ) : (
             <TouchableOpacity
@@ -1321,8 +1430,145 @@ export default function ProfileScreen() {
           {renderTabContent()}
         </Animated.View>
 
-        {/* ---- About / Ambition / Projects (shown below tabs) ---- */}
-        {(profile?.mainAmbition || profile?.currentGoals) ? (
+        {/* ---- MI PRODUCTIVIDAD ---- */}
+        <Animated.View
+          entering={FadeInDown.duration(320).delay(70)}
+          style={{ marginHorizontal: 16, marginBottom: 16, marginTop: 8 }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <View
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 8,
+                backgroundColor: accentSoft,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <TrendingUp size={12} color={colors.accent} />
+            </View>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>Mi productividad</Text>
+          </View>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {/* Tareas */}
+            <Pressable
+              onPress={() => router.push("/(app)/tasks")}
+              testID="nav-tasks-button"
+              style={({ pressed }) => ({
+                flex: 1,
+                backgroundColor: pressed ? "#1A2A1F" : colors.card,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: `${colors.accent}30`,
+                padding: 14,
+                alignItems: "flex-start",
+                gap: 8,
+                shadowColor: colors.accent,
+                shadowOpacity: pressed ? 0.12 : 0.04,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+              })}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: `${colors.accent}20`,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CheckSquare size={16} color={colors.accent} />
+              </View>
+              <View>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>Tareas</Text>
+                <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>Gestiona tus pendientes</Text>
+              </View>
+              <ChevronRight size={12} color={colors.text3} style={{ alignSelf: "flex-end" }} />
+            </Pressable>
+
+            {/* Hábitos */}
+            <Pressable
+              onPress={() => router.push("/(app)/habits")}
+              testID="nav-habits-button"
+              style={({ pressed }) => ({
+                flex: 1,
+                backgroundColor: pressed ? "#1A1A2A" : colors.card,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: "#818CF830",
+                padding: 14,
+                alignItems: "flex-start",
+                gap: 8,
+                shadowColor: "#818CF8",
+                shadowOpacity: pressed ? 0.12 : 0.04,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+              })}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: "#818CF820",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Repeat2 size={16} color="#818CF8" />
+              </View>
+              <View>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>Hábitos</Text>
+                <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>Rutinas diarias</Text>
+              </View>
+              <ChevronRight size={12} color={colors.text3} style={{ alignSelf: "flex-end" }} />
+            </Pressable>
+
+            {/* Proyectos */}
+            <Pressable
+              onPress={() => router.push("/(app)/projects")}
+              testID="nav-projects-button"
+              style={({ pressed }) => ({
+                flex: 1,
+                backgroundColor: pressed ? "#2A1A10" : colors.card,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: "#F59E0B30",
+                padding: 14,
+                alignItems: "flex-start",
+                gap: 8,
+                shadowColor: "#F59E0B",
+                shadowOpacity: pressed ? 0.12 : 0.04,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+              })}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: "#F59E0B20",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Briefcase size={16} color="#F59E0B" />
+              </View>
+              <View>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>Proyectos</Text>
+                <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>Tus iniciativas</Text>
+              </View>
+              <ChevronRight size={12} color={colors.text3} style={{ alignSelf: "flex-end" }} />
+            </Pressable>
+          </View>
+        </Animated.View>
+
+        {/* ---- About / Ambition / Projects (shown below tabs) ---- */}        {(profile?.mainAmbition || profile?.currentGoals) ? (
           <Animated.View
             entering={FadeInDown.duration(320).delay(80)}
             style={{
@@ -1366,8 +1612,8 @@ export default function ProfileScreen() {
           </Animated.View>
         ) : null}
 
-        {/* Projects */}
-        {projects.length > 0 ? (
+        {/* ---- MARCA PERSONAL ---- */}
+        {(skills.length > 0 || projects.length > 0) ? (
           <Animated.View
             entering={FadeInDown.duration(320).delay(100)}
             style={{
@@ -1381,43 +1627,147 @@ export default function ProfileScreen() {
             }}
           >
             <View style={{ padding: 18 }}>
-              <SectionLabel label="Proyectos" />
-              {projects.map((project, idx) => (
-                <View key={idx}>
-                  {idx > 0 ? (
-                    <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 12 }} />
-                  ) : null}
-                  <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-                    <View
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        backgroundColor: accentSoft,
-                        borderWidth: 1,
-                        borderColor: accentBorder,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginTop: 1,
-                      }}
-                    >
-                      <Text style={{ color: colors.accent, fontSize: 14, fontWeight: "800" }}>
-                        {project.title[0]?.toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: 3 }}>
-                        {project.title}
-                      </Text>
-                      {project.description ? (
-                        <Text style={{ color: colors.text2, fontSize: 13, lineHeight: 19 }}>
-                          {project.description}
-                        </Text>
-                      ) : null}
-                    </View>
+              {/* Section header */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <View
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    backgroundColor: "#F59E0B20",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Star size={13} color="#F59E0B" fill="#F59E0B" />
+                </View>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", flex: 1 }}>Marca Personal</Text>
+                <TouchableOpacity onPress={openEdit} testID="edit-marca-personal-button">
+                  <Edit3 size={13} color={colors.text3} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Skills chips with colors */}
+              {skills.length > 0 ? (
+                <View style={{ marginBottom: projects.length > 0 ? 16 : 0 }}>
+                  <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
+                    Habilidades &amp; Especialidades
+                  </Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                    {skills.map((skill, idx) => {
+                      const palette = SKILL_COLORS[idx % SKILL_COLORS.length];
+                      return (
+                        <View
+                          key={skill}
+                          style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
+                            borderWidth: 1,
+                            borderColor: palette.border,
+                            backgroundColor: palette.bg,
+                            borderRadius: 100,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 3,
+                              backgroundColor: palette.text,
+                            }}
+                          />
+                          <Text style={{ color: palette.text, fontSize: 12, fontWeight: "600" }}>{skill}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
                 </View>
-              ))}
+              ) : null}
+
+              {/* Divider between skills and projects */}
+              {skills.length > 0 && projects.length > 0 ? (
+                <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16 }} />
+              ) : null}
+
+              {/* Projects as cards with status dots */}
+              {projects.length > 0 ? (
+                <View>
+                  <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
+                    Proyectos activos
+                  </Text>
+                  <View style={{ gap: 10 }}>
+                    {projects.map((project, idx) => {
+                      const dotColors = ["#4ADE80", "#60A5FA", "#F59E0B", "#C084FC", "#FB7185", "#34D399"];
+                      const dotColor = dotColors[idx % dotColors.length];
+                      return (
+                        <View
+                          key={idx}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "flex-start",
+                            gap: 12,
+                            backgroundColor: colors.bg,
+                            borderRadius: 14,
+                            padding: 12,
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                          }}
+                        >
+                          {/* Status dot + initial */}
+                          <View
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 12,
+                              backgroundColor: `${dotColor}18`,
+                              borderWidth: 1,
+                              borderColor: `${dotColor}40`,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              position: "relative",
+                            }}
+                          >
+                            <Text style={{ color: dotColor, fontSize: 15, fontWeight: "800" }}>
+                              {project.title[0]?.toUpperCase() ?? "P"}
+                            </Text>
+                            {/* Active dot */}
+                            <View
+                              style={{
+                                position: "absolute",
+                                top: -2,
+                                right: -2,
+                                width: 10,
+                                height: 10,
+                                borderRadius: 5,
+                                backgroundColor: dotColor,
+                                borderWidth: 2,
+                                borderColor: colors.bg,
+                              }}
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700", marginBottom: 3 }}>
+                              {project.title}
+                            </Text>
+                            {project.description ? (
+                              <Text style={{ color: colors.text2, fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
+                                {project.description}
+                              </Text>
+                            ) : null}
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}>
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dotColor }} />
+                              <Text style={{ color: dotColor, fontSize: 10, fontWeight: "600" }}>En progreso</Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
             </View>
           </Animated.View>
         ) : null}

@@ -2454,43 +2454,53 @@ function InversionesTab({
   const tradingViewHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <style>
-      body { margin: 0; padding: 0; background: #0F0F0F; }
-      .tradingview-widget-container { height: 100%; width: 100%; }
-      .tradingview-widget-container__widget { height: calc(100% - 32px); width: 100%; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0F0F0F; overflow: hidden; }
+      #container { width: 100%; height: 350px; }
     </style>
   </head>
   <body>
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-        {
-          "allow_symbol_change": true,
-          "calendar": false,
-          "details": false,
-          "hide_side_toolbar": true,
-          "hide_top_toolbar": false,
-          "hide_legend": false,
-          "hide_volume": false,
-          "hotlist": false,
-          "interval": "D",
-          "locale": "es",
-          "save_image": true,
-          "style": "1",
-          "symbol": "NASDAQ:AAPL",
-          "theme": "dark",
-          "timezone": "Etc/UTC",
-          "backgroundColor": "#0F0F0F",
-          "gridColor": "rgba(242, 242, 242, 0.06)",
-          "watchlist": [],
-          "withdateranges": false,
-          "compareSymbols": [],
-          "studies": [],
-          "autosize": true
-        }
-      </script>
-    </div>
+    <div id="container"></div>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script>
+      const chart = LightweightCharts.createChart(document.getElementById('container'), {
+        width: window.innerWidth,
+        height: 350,
+        layout: { background: { color: '#0F0F0F' }, textColor: '#A3A3A3' },
+        grid: { vertLines: { color: '#1F1F1F' }, horzLines: { color: '#1F1F1F' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: '#1F1F1F' },
+        timeScale: { borderColor: '#1F1F1F', timeVisible: true, secondsVisible: false },
+      });
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: '#4ADE80',
+        downColor: '#EF4444',
+        borderDownColor: '#EF4444',
+        borderUpColor: '#4ADE80',
+        wickDownColor: '#EF4444',
+        wickUpColor: '#4ADE80',
+      });
+      const data = [];
+      let price = 45000;
+      const now = Math.floor(Date.now() / 1000);
+      for (let i = 29; i >= 0; i--) {
+        const time = now - i * 86400;
+        const open = price;
+        const change = (Math.random() - 0.48) * 1200;
+        const close = open + change;
+        const high = Math.max(open, close) + Math.random() * 400;
+        const low = Math.min(open, close) - Math.random() * 400;
+        price = close;
+        data.push({ time, open: Math.round(open), high: Math.round(high), low: Math.round(low), close: Math.round(close) });
+      }
+      candleSeries.setData(data);
+      chart.timeScale().fitContent();
+      window.addEventListener('resize', () => {
+        chart.applyOptions({ width: window.innerWidth });
+      });
+    </script>
   </body>
 </html>`;
 
@@ -2509,6 +2519,10 @@ function InversionesTab({
         >
           Gráfico de Mercado
         </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>BTC / Gráfico Demo</Text>
+          <Text style={{ color: colors.text4 ?? colors.text3, fontSize: 11 }}>* Datos de demostración</Text>
+        </View>
         <Animated.View
           entering={FadeInDown.duration(300).springify()}
           style={{
@@ -2520,7 +2534,7 @@ function InversionesTab({
         >
           <WebView
             source={{ html: tradingViewHtml }}
-            style={{ height: 350, borderRadius: 16, overflow: "hidden" }}
+            style={{ height: 360, backgroundColor: "#0F0F0F" }}
             javaScriptEnabled={true}
             domStorageEnabled={true}
             startInLoadingState={true}
@@ -3383,15 +3397,15 @@ export default function FinanceScreen() {
           AsyncStorage.getItem(STORAGE_KEY_FINANCIAL_GOALS),
         ]);
 
-        setTransactions(txRaw ? (JSON.parse(txRaw) as Transaction[]) : SEED_TRANSACTIONS);
-        setInvestments(invRaw ? (JSON.parse(invRaw) as Investment[]) : SEED_INVESTMENTS);
-        setSavingsGoals(sgRaw ? (JSON.parse(sgRaw) as SavingsGoal[]) : SEED_SAVINGS_GOALS);
-        setFinancialGoals(fgRaw ? (JSON.parse(fgRaw) as FinancialGoal[]) : SEED_FINANCIAL_GOALS);
+        setTransactions(txRaw ? (JSON.parse(txRaw) as Transaction[]) : []);
+        setInvestments(invRaw ? (JSON.parse(invRaw) as Investment[]) : []);
+        setSavingsGoals(sgRaw ? (JSON.parse(sgRaw) as SavingsGoal[]) : []);
+        setFinancialGoals(fgRaw ? (JSON.parse(fgRaw) as FinancialGoal[]) : []);
       } catch {
-        setTransactions(SEED_TRANSACTIONS);
-        setInvestments(SEED_INVESTMENTS);
-        setSavingsGoals(SEED_SAVINGS_GOALS);
-        setFinancialGoals(SEED_FINANCIAL_GOALS);
+        setTransactions([]);
+        setInvestments([]);
+        setSavingsGoals([]);
+        setFinancialGoals([]);
       } finally {
         setDataLoaded(true);
       }
