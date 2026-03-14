@@ -615,23 +615,6 @@ export default function SignIn() {
               paddingHorizontal: 24,
             }}
           >
-            {/* Green glow bloom */}
-            <View
-              style={{
-                position: "absolute",
-                top: 80,
-                width: 260,
-                height: 100,
-                borderRadius: 60,
-                backgroundColor: "#4ADE80",
-                opacity: 0.06,
-                shadowColor: "#4ADE80",
-                shadowOpacity: 1,
-                shadowRadius: 80,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            />
-
             {/* Wordmark */}
             <Text
               style={{
