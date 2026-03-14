@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, RefreshControl,
-  ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert, Share,
+  ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert, Share, Linking,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -123,6 +123,7 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [showShareModal, setShowShareModal] = useState(false);
   const myReaction = post.reactions?.[0];
   const isMyPost = post.author?.id === currentUserId;
   const isLiked = myReaction?.type === "like";
@@ -181,16 +182,44 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
   };
 
   const handleShare = async () => {
-    try {
-      const shareContent = post.content
-        ? `${post.content}${post.author?.name ? `\n\n— ${post.author.name}` : ""}`
-        : `Post by ${post.author?.name ?? "someone"} on Opturna`;
-      await Share.share({
-        message: shareContent,
-        title: "Compartir desde Opturna",
-      });
-    } catch {
-      // User cancelled or error — ignore
+    setShowShareModal(true);
+  };
+
+  const shareToNetwork = async (network: "twitter" | "instagram" | "tiktok" | "native") => {
+    const shareContent = post.content
+      ? `${post.content}${post.author?.name ? `\n\n— ${post.author.name}` : ""}`
+      : `Post de ${post.author?.name ?? "alguien"} en Opturna`;
+    const encodedText = encodeURIComponent(shareContent);
+
+    setShowShareModal(false);
+
+    if (network === "twitter") {
+      const url = `https://twitter.com/intent/tweet?text=${encodedText}`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) await Linking.openURL(url);
+      else await Linking.openURL(`https://x.com/intent/tweet?text=${encodedText}`);
+    } else if (network === "instagram") {
+      // Instagram doesn't support text deep links — copy to clipboard and open app
+      const canOpen = await Linking.canOpenURL("instagram://");
+      if (canOpen) {
+        Alert.alert("Compartir en Instagram", "Abre Instagram Stories y pega el texto copiado.", [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Abrir Instagram", onPress: () => Linking.openURL("instagram://") },
+        ]);
+      } else {
+        Alert.alert("Instagram no está instalado", "Instala Instagram para compartir allí.");
+      }
+    } else if (network === "tiktok") {
+      const canOpen = await Linking.canOpenURL("snssdk1233://");
+      if (canOpen) {
+        await Linking.openURL("snssdk1233://");
+      } else {
+        Alert.alert("TikTok no está instalado", "Instala TikTok para compartir allí.");
+      }
+    } else {
+      try {
+        await Share.share({ message: shareContent, title: "Compartir desde Opturna" });
+      } catch { /* ignore cancel */ }
     }
   };
 
@@ -553,6 +582,87 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
           ) : null}
         </View>
       </View>
+
+      {/* ── Share Modal ────────────────────────────────────── */}
+      <Modal
+        visible={showShareModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowShareModal(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+          onPress={() => setShowShareModal(false)}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={{
+              backgroundColor: themeColors.card,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingTop: 12,
+              paddingBottom: 40,
+              paddingHorizontal: 20,
+              borderWidth: 1,
+              borderColor: themeColors.border,
+            }}>
+              {/* Drag handle */}
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: themeColors.border, alignSelf: "center", marginBottom: 20 }} />
+
+              <Text style={{ color: themeColors.text, fontSize: 16, fontWeight: "800", marginBottom: 6, letterSpacing: -0.3 }}>
+                Compartir publicación
+              </Text>
+              <Text style={{ color: themeColors.text3, fontSize: 13, marginBottom: 20 }}>
+                Elige dónde quieres compartir
+              </Text>
+
+              {/* Share options */}
+              {[
+                { network: "twitter" as const, label: "X (Twitter)", color: "#000000", bg: "#111111", icon: "𝕏" },
+                { network: "instagram" as const, label: "Instagram", color: "#E1306C", bg: "#3A1020", icon: "📸" },
+                { network: "tiktok" as const, label: "TikTok", color: "#ffffff", bg: "#1A1A1A", icon: "♪" },
+                { network: "native" as const, label: "Más opciones", color: themeColors.text, bg: themeColors.bg3, icon: "···" },
+              ].map((opt) => (
+                <TouchableOpacity
+                  key={opt.network}
+                  onPress={() => shareToNetwork(opt.network)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    backgroundColor: opt.bg,
+                    borderRadius: 14,
+                    marginBottom: 10,
+                    borderWidth: 1,
+                    borderColor: themeColors.border,
+                  }}
+                >
+                  <View style={{
+                    width: 40, height: 40, borderRadius: 12,
+                    backgroundColor: `${opt.color}22`,
+                    alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Text style={{ fontSize: opt.network === "twitter" ? 16 : 20, color: opt.color, fontWeight: "800" }}>
+                      {opt.icon}
+                    </Text>
+                  </View>
+                  <Text style={{ color: opt.color, fontSize: 15, fontWeight: "700", flex: 1 }}>
+                    {opt.label}
+                  </Text>
+                  <View style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    backgroundColor: `${opt.color}18`,
+                    alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Text style={{ color: opt.color, fontSize: 14 }}>›</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Animated.View>
   );
 }

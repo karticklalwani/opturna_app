@@ -955,9 +955,15 @@ export default function SignIn() {
           >
             <SocialButton
               label="Continuar con Apple"
-              onPress={() => Alert.alert("Próximamente", `El inicio de sesión con Apple estará disponible muy pronto.`)}
+              onPress={() => Alert.alert("Próximamente", "El inicio de sesión con Apple estará disponible muy pronto.")}
               logo={<AppleLogo />}
               testID="apple-button"
+            />
+            <SocialButton
+              label="Continuar con Google"
+              onPress={() => Alert.alert("Próximamente", "El inicio de sesión con Google estará disponible muy pronto.")}
+              logo={<GoogleLogoColored />}
+              testID="google-button"
             />
           </Animated.View>
 
