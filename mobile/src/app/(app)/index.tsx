@@ -734,11 +734,28 @@ export default function FeedScreen() {
     enabled: !!selectedUser,
   });
 
-  const unreadCount = notifications?.filter(n => !n.isRead).length ?? 0;
-
   const markAllReadMutation = useMutation({
     mutationFn: () => api.patch("/api/notifications/read-all", {}),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+    },
+  });
+
+  const markOneReadMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/api/notifications/${id}/read`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+    },
+  });
+
+  const deleteNotifMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/notifications/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+    },
   });
 
   const followMutation = useMutation({
@@ -802,12 +819,13 @@ export default function FeedScreen() {
     }
   };
 
-  const { data: notifBadge } = useQuery({
-    queryKey: ["notifications-badge"],
-    queryFn: () => api.get<Notification[]>("/api/notifications"),
-    refetchInterval: 30000,
+  const { data: unreadData } = useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: () => api.get<{ count: number }>("/api/notifications/unread-count"),
+    refetchInterval: 15000,
   });
-  const hasUnread = (notifBadge || []).some(n => !n.isRead);
+  const hasUnread = (unreadData?.count ?? 0) > 0;
+  const unreadCount = unreadData?.count ?? 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="feed-screen">
@@ -848,23 +866,27 @@ export default function FeedScreen() {
                   borderWidth: 1,
                   borderColor: hasUnread ? accentBorder : colors.border,
                 }}
-                onPress={() => setShowNotifications(true)}
+                onPress={() => {
+                  setShowNotifications(true);
+                  queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
+                }}
                 testID="bell-button"
               >
                 <View>
                   <Bell size={17} color={hasUnread ? accentGreen : colors.text2} />
                   {hasUnread ? (
                     <View style={{
-                      position: "absolute",
-                      top: -3,
-                      right: -3,
-                      width: 7,
-                      height: 7,
-                      borderRadius: 4,
+                      position: "absolute", top: -2, right: -2,
                       backgroundColor: "#EF4444",
-                      borderWidth: 1.5,
-                      borderColor: colors.bg,
-                    }} />
+                      borderRadius: 8, minWidth: 16, height: 16,
+                      alignItems: "center", justifyContent: "center",
+                      paddingHorizontal: 3,
+                      borderWidth: 1.5, borderColor: colors.bg,
+                    }}>
+                      <Text style={{ color: "#fff", fontSize: 9, fontWeight: "800" }}>
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </Text>
+                    </View>
                   ) : null}
                 </View>
               </TouchableOpacity>
@@ -1050,39 +1072,73 @@ export default function FeedScreen() {
           <FlatList
             data={notifications || []}
             keyExtractor={(n) => n.id}
-            contentContainerStyle={{ padding: 16 }}
-            renderItem={({ item }) => (
-              <View
-                testID={`notification-${item.id}`}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "flex-start",
-                  padding: 14,
-                  borderRadius: 14,
-                  backgroundColor: item.isRead ? colors.card : accentSoft,
-                  marginBottom: 8,
-                  borderWidth: 1,
-                  borderColor: item.isRead ? colors.border : accentBorder,
-                }}
-              >
-                {!item.isRead ? (
+            contentContainerStyle={{ paddingBottom: 16 }}
+            renderItem={({ item: n }) => {
+              const isUnread = !n.isRead;
+              const iconMap: Record<string, { icon: React.ReactNode; color: string }> = {
+                follow: { icon: <UserPlus size={14} color="#4ADE80" />, color: "#4ADE8020" },
+                comment: { icon: <MessageCircle size={14} color="#60A5FA" />, color: "#60A5FA20" },
+                reaction: { icon: <Heart size={14} color="#F472B6" />, color: "#F472B620" },
+                message: { icon: <Send size={14} color="#A78BFA" />, color: "#A78BFA20" },
+              };
+              const iconData = iconMap[n.type] ?? { icon: <Bell size={14} color={accentGreen} />, color: accentGreen + "20" };
+              const diff = Date.now() - new Date(n.createdAt).getTime();
+              const mins = Math.floor(diff / 60000);
+              const timeAgo = mins < 1 ? "ahora" : mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.floor(mins / 60)}h` : `${Math.floor(mins / 1440)}d`;
+              return (
+                <Pressable
+                  key={n.id}
+                  testID={`notification-${n.id}`}
+                  onPress={() => {
+                    if (isUnread) markOneReadMutation.mutate(n.id);
+                  }}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    backgroundColor: isUnread
+                      ? (pressed ? colors.bg3 : colors.bg2)
+                      : (pressed ? colors.bg3 : "transparent"),
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                  })}
+                >
                   <View style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: 4,
-                    backgroundColor: accentGreen,
-                    marginTop: 5,
-                    marginRight: 10,
-                  }} />
-                ) : (
-                  <View style={{ width: 7, marginRight: 10 }} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.text, fontWeight: "600", fontSize: 14, marginBottom: 3 }}>{item.title}</Text>
-                  {item.body ? <Text style={{ color: colors.text3, fontSize: 13, lineHeight: 19 }}>{item.body}</Text> : null}
-                </View>
-              </View>
-            )}
+                    width: 36, height: 36, borderRadius: 10,
+                    backgroundColor: iconData.color,
+                    alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    {iconData.icon}
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                      <Text style={{ color: colors.text, fontSize: 13, fontWeight: isUnread ? "700" : "500", flex: 1, marginRight: 8 }} numberOfLines={1}>
+                        {n.title}
+                      </Text>
+                      <Text style={{ color: colors.text3, fontSize: 11 }}>{timeAgo}</Text>
+                    </View>
+                    {n.body ? (
+                      <Text style={{ color: colors.text2, fontSize: 12, lineHeight: 17 }} numberOfLines={2}>
+                        {n.body}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={{ alignItems: "center", gap: 8, flexShrink: 0 }}>
+                    {isUnread ? (
+                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: accentGreen }} />
+                    ) : null}
+                    <Pressable
+                      onPress={() => deleteNotifMutation.mutate(n.id)}
+                      hitSlop={8}
+                    >
+                      <X size={12} color={colors.text3} />
+                    </Pressable>
+                  </View>
+                </Pressable>
+              );
+            }}
             ListEmptyComponent={
               <View style={{ alignItems: "center", paddingTop: 60 }}>
                 <View style={{

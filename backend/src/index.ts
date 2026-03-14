@@ -574,6 +574,52 @@ app.patch("/api/notifications/read-all", async (c) => {
   return c.json({ data: { success: true } });
 });
 
+// Get unread count only (lightweight for badge polling)
+app.get("/api/notifications/unread-count", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: { message: "No autorizado" } }, 401);
+
+  const count = await prisma.notification.count({
+    where: { userId: session.user.id, isRead: false }
+  });
+  return c.json({ data: { count } });
+});
+
+// Mark single notification as read
+app.patch("/api/notifications/:id/read", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: { message: "No autorizado" } }, 401);
+
+  const notif = await prisma.notification.findUnique({
+    where: { id: c.req.param("id") },
+    select: { userId: true }
+  });
+  if (!notif) return c.json({ error: { message: "Notificación no encontrada" } }, 404);
+  if (notif.userId !== session.user.id) return c.json({ error: { message: "No autorizado" } }, 403);
+
+  await prisma.notification.update({
+    where: { id: c.req.param("id") },
+    data: { isRead: true }
+  });
+  return c.json({ data: { success: true } });
+});
+
+// Delete notification
+app.delete("/api/notifications/:id", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: { message: "No autorizado" } }, 401);
+
+  const notif = await prisma.notification.findUnique({
+    where: { id: c.req.param("id") },
+    select: { userId: true }
+  });
+  if (!notif) return c.json({ error: { message: "Notificación no encontrada" } }, 404);
+  if (notif.userId !== session.user.id) return c.json({ error: { message: "No autorizado" } }, 403);
+
+  await prisma.notification.delete({ where: { id: c.req.param("id") } });
+  return c.body(null, 204);
+});
+
 // ===== CHATS ROUTES =====
 app.get("/api/chats", async (c) => {
   const user = c.get("user");
