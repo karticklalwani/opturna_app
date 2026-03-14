@@ -1,0 +1,42 @@
+diff --git a/node_modules/@better-auth/expo/.bun-tag-f1d84ccb727124b0 b/.bun-tag-f1d84ccb727124b0
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/client.mjs b/dist/client.mjs
+index 8578c4f9120335f908a4ebd5e9af65853fb52fe4..610fd5ef21976e4eed620bd894cb6dcdd1969e72 100644
+--- a/dist/client.mjs
++++ b/dist/client.mjs
+@@ -4,6 +4,7 @@ import Constants from "expo-constants";
+ import * as Linking from "expo-linking";
+ import { AppState, Platform } from "react-native";
+ import { kFocusManager, kOnlineManager } from "better-auth/client";
++import * as ExpoNetwork from "expo-network";
+ 
+ //#region src/focus-manager.ts
+ var ExpoFocusManager = class {
+@@ -53,14 +54,19 @@ var ExpoOnlineManager = class {
+ 		this.listeners.forEach((listener) => listener(online));
+ 	}
+ 	setup() {
+-		import("expo-network").then(({ addNetworkStateListener }) => {
+-			const subscription = addNetworkStateListener((state) => {
+-				this.setOnline(!!state.isInternetReachable);
+-			});
+-			this.unsubscribe = () => subscription.remove();
+-		}).catch(() => {
++		try {
++			const addNetworkStateListener = ExpoNetwork.addNetworkStateListener;
++			if (typeof addNetworkStateListener === 'function') {
++				const subscription = addNetworkStateListener((state) => {
++					this.setOnline(!!state.isInternetReachable);
++				});
++				this.unsubscribe = () => subscription.remove();
++			} else {
++				this.setOnline(true);
++			}
++		} catch (e) {
+ 			this.setOnline(true);
+-		});
++		}
+ 		return () => {
+ 			this.unsubscribe?.();
+ 		};

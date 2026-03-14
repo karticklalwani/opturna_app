@@ -167,6 +167,7 @@
   "patchedDependencies": {
     "react-native@0.79.6": "patches/react-native@0.79.6.patch",
     "expo-asset@11.1.5": "patches/expo-asset@11.1.5.patch",
+    "@better-auth/expo@1.4.19": "patches/@better-auth%2Fexpo@1.4.19.patch",
   },
   "overrides": {
     "react-native-css-interop": "0.1.22",
