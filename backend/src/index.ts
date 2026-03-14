@@ -143,6 +143,19 @@ app.post("/api/users/:id/follow", async (c) => {
     return c.json({ data: { following: false } });
   }
   await prisma.follow.create({ data: { followerId: user.id, followingId } });
+  try {
+    await prisma.notification.create({
+      data: {
+        userId: followingId,
+        type: "follow",
+        title: "Nuevo seguidor",
+        body: `${user.name} ha empezado a seguirte`,
+        data: JSON.stringify({ followerId: user.id, followerName: user.name }),
+      }
+    });
+  } catch {
+    // Notification failure should not break the main action
+  }
   return c.json({ data: { following: true } });
 });
 
@@ -222,6 +235,22 @@ app.post("/api/posts/:id/react", async (c) => {
   } else {
     await prisma.reaction.create({ data: { postId, userId: user.id, type } });
   }
+  try {
+    const reactedPost = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
+    if (reactedPost && reactedPost.authorId !== user.id) {
+      await prisma.notification.create({
+        data: {
+          userId: reactedPost.authorId,
+          type: "reaction",
+          title: "Nueva reacción",
+          body: `${user.name} reaccionó a tu publicación`,
+          data: JSON.stringify({ postId, reactorId: user.id, reactorName: user.name, type }),
+        }
+      });
+    }
+  } catch {
+    // Notification failure should not break the main action
+  }
   return c.json({ data: { reacted: true, type } });
 });
 
@@ -248,6 +277,22 @@ app.post("/api/posts/:id/comments", async (c) => {
     data: { postId: c.req.param("id"), authorId: user.id, content, parentId },
     include: { author: { select: { id: true, name: true, image: true, username: true } } }
   });
+  try {
+    const commentedPost = await prisma.post.findUnique({ where: { id: c.req.param("id") }, select: { authorId: true } });
+    if (commentedPost && commentedPost.authorId !== user.id) {
+      await prisma.notification.create({
+        data: {
+          userId: commentedPost.authorId,
+          type: "comment",
+          title: "Nuevo comentario",
+          body: `${user.name} comentó en tu publicación`,
+          data: JSON.stringify({ postId: c.req.param("id"), commenterId: user.id, commenterName: user.name }),
+        }
+      });
+    }
+  } catch {
+    // Notification failure should not break the main action
+  }
   return c.json({ data: comment }, 201);
 });
 
@@ -526,6 +571,26 @@ app.post("/api/chats/:id/messages", async (c) => {
     include: { sender: { select: { id: true, name: true, image: true, username: true } } }
   });
   await prisma.chat.update({ where: { id: chatId }, data: { updatedAt: new Date() } });
+
+  try {
+    const chatMembers = await prisma.chatMember.findMany({
+      where: { chatId, userId: { not: user.id } },
+      select: { userId: true }
+    });
+    for (const member of chatMembers) {
+      await prisma.notification.create({
+        data: {
+          userId: member.userId,
+          type: "message",
+          title: "Nuevo mensaje",
+          body: `${user.name}: ${typeof body.content === 'string' ? body.content.substring(0, 60) : 'Te envió un archivo'}`,
+          data: JSON.stringify({ chatId, senderId: user.id, senderName: user.name }),
+        }
+      });
+    }
+  } catch {
+    // Notification failure should not break the main action
+  }
 
   // Broadcast to all WebSocket clients in the chat room
   broadcastNewMessage(chatId, {

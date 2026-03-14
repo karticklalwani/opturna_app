@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Linking,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -34,20 +36,34 @@ import {
   Trash2,
   KeyRound,
   Download,
-  Github,
-  Linkedin,
   Twitter,
+  Music,
 } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
 import { useSession, useInvalidateSession } from "@/lib/auth/use-session";
 import { authClient } from "@/lib/auth/auth-client";
+import { api } from "@/lib/api/api";
+import { useQueryClient } from "@tanstack/react-query";
+
+type SocialPlatform = "instagram" | "twitter" | "tiktok";
+
+interface ExternalLink {
+  label: string;
+  url: string;
+}
+
+interface UserProfile {
+  externalLinks?: string | ExternalLink[] | null;
+}
 
 export default function SettingsScreen() {
   const { mode, colors, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
   const { data: session } = useSession();
   const invalidateSession = useInvalidateSession();
+  const queryClient = useQueryClient();
 
   // Profile settings
   const [profilePublic, setProfilePublic] = useState<boolean>(true);
@@ -73,12 +89,162 @@ export default function SettingsScreen() {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [changingPassword, setChangingPassword] = useState<boolean>(false);
 
+  // Social links
+  const [socialLinks, setSocialLinks] = useState<{
+    instagram: string;
+    twitter: string;
+    tiktok: string;
+  }>({ instagram: "", twitter: "", tiktok: "" });
+  const [showSocialModal, setShowSocialModal] = useState<boolean>(false);
+  const [editingSocial, setEditingSocial] = useState<SocialPlatform | null>(null);
+  const [socialInput, setSocialInput] = useState<string>("");
+  const [savingSocial, setSavingSocial] = useState<boolean>(false);
+
   const accentSoft = `${colors.accent}1F`;
   const accentBorder = `${colors.accent}4D`;
   const errorSoft = `${colors.error}1A`;
   const errorBorder = `${colors.error}47`;
 
   const userEmail = session?.user?.email ?? "";
+
+  // Load existing social links from profile
+  useEffect(() => {
+    if (session?.user) {
+      api.get<UserProfile>("/api/me").then((profile) => {
+        if (profile?.externalLinks) {
+          try {
+            const linksArr: ExternalLink[] =
+              typeof profile.externalLinks === "string"
+                ? JSON.parse(profile.externalLinks)
+                : profile.externalLinks;
+            const ig = linksArr.find((l) => l.url.includes("instagram.com"));
+            const tw = linksArr.find(
+              (l) => l.url.includes("twitter.com") || l.url.includes("x.com")
+            );
+            const tk = linksArr.find((l) => l.url.includes("tiktok.com"));
+            setSocialLinks({
+              instagram: ig
+                ? ig.url
+                    .replace("https://instagram.com/", "")
+                    .replace("https://www.instagram.com/", "")
+                : "",
+              twitter: tw
+                ? tw.url
+                    .replace("https://twitter.com/", "")
+                    .replace("https://x.com/", "")
+                : "",
+              tiktok: tk
+                ? tk.url
+                    .replace("https://tiktok.com/@", "")
+                    .replace("https://www.tiktok.com/@", "")
+                : "",
+            });
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [session?.user?.id]);
+
+  const handleSaveSocialLink = async () => {
+    if (!editingSocial) return;
+    setSavingSocial(true);
+    try {
+      const username = socialInput.replace("@", "").trim();
+      const updated = { ...socialLinks, [editingSocial]: username };
+      setSocialLinks(updated);
+
+      // Build updated social ExternalLink entries
+      const socialEntries: ExternalLink[] = [];
+      if (updated.instagram) {
+        socialEntries.push({
+          label: "Instagram",
+          url: `https://instagram.com/${updated.instagram}`,
+        });
+      }
+      if (updated.twitter) {
+        socialEntries.push({
+          label: "Twitter",
+          url: `https://twitter.com/${updated.twitter}`,
+        });
+      }
+      if (updated.tiktok) {
+        socialEntries.push({
+          label: "TikTok",
+          url: `https://tiktok.com/@${updated.tiktok}`,
+        });
+      }
+
+      // Fetch existing profile links, keep non-social ones
+      const profile = await api.get<UserProfile>("/api/me");
+      const existingLinks: ExternalLink[] = profile?.externalLinks
+        ? typeof profile.externalLinks === "string"
+          ? JSON.parse(profile.externalLinks)
+          : profile.externalLinks
+        : [];
+
+      const otherLinks = existingLinks.filter(
+        (l) =>
+          !l.url.includes("instagram.com") &&
+          !l.url.includes("twitter.com") &&
+          !l.url.includes("x.com") &&
+          !l.url.includes("tiktok.com")
+      );
+
+      await api.patch("/api/me", {
+        externalLinks: [...otherLinks, ...socialEntries],
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setShowSocialModal(false);
+      setEditingSocial(null);
+      setSocialInput("");
+      Alert.alert(
+        "Guardado",
+        `Tu cuenta de ${editingSocial} ha sido vinculada.`
+      );
+    } catch {
+      Alert.alert("Error", "No se pudo guardar. Inténtalo de nuevo.");
+    } finally {
+      setSavingSocial(false);
+    }
+  };
+
+  const handleOpenSocial = async (platform: SocialPlatform) => {
+    const username = socialLinks[platform];
+    if (!username) {
+      setEditingSocial(platform);
+      setSocialInput("");
+      setShowSocialModal(true);
+      return;
+    }
+
+    let appUrl = "";
+    let webUrl = "";
+
+    if (platform === "instagram") {
+      appUrl = `instagram://user?username=${username}`;
+      webUrl = `https://instagram.com/${username}`;
+    } else if (platform === "twitter") {
+      appUrl = `twitter://user?screen_name=${username}`;
+      webUrl = `https://x.com/${username}`;
+    } else if (platform === "tiktok") {
+      appUrl = `snssdk1233://user/profile/${username}`;
+      webUrl = `https://tiktok.com/@${username}`;
+    }
+
+    try {
+      const canOpen = await Linking.canOpenURL(appUrl);
+      if (canOpen) {
+        await Linking.openURL(appUrl);
+      } else {
+        await Linking.openURL(webUrl);
+      }
+    } catch {
+      await Linking.openURL(webUrl);
+    }
+  };
 
   const handleSignOut = async () => {
     Alert.alert(t("signOut"), t("signOutMsg"), [
@@ -103,10 +269,6 @@ export default function SettingsScreen() {
         { text: "Eliminar", style: "destructive", onPress: () => {} },
       ]
     );
-  };
-
-  const handleComingSoon = (feature: string) => {
-    Alert.alert(feature, "Próximamente disponible");
   };
 
   const handleChangePassword = async () => {
@@ -142,10 +304,6 @@ export default function SettingsScreen() {
       "Exportar datos",
       "Tus datos se han exportado y serán enviados a tu email en los próximos minutos."
     );
-  };
-
-  const handleConnectAccount = (platform: string) => {
-    Alert.alert(`Conectar ${platform}`, "Esta función estará disponible próximamente.");
   };
 
   // ---------- Sub-components ----------
@@ -410,38 +568,121 @@ export default function SettingsScreen() {
   const ConnectedAccountRow = ({
     icon,
     platform,
+    platformKey,
     testId,
   }: {
     icon: React.ReactNode;
     platform: string;
+    platformKey: SocialPlatform;
     testId: string;
-  }) => (
+  }) => {
+    const username = socialLinks[platformKey];
+    const isConnected = !!username;
+    return (
+      <TouchableOpacity
+        onPress={() => handleOpenSocial(platformKey)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          gap: 12,
+        }}
+        testID={testId}
+      >
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            backgroundColor: accentSoft,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {icon}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{platform}</Text>
+          <Text
+            style={{
+              color: isConnected ? colors.accent : colors.text3,
+              fontSize: 12,
+              marginTop: 1,
+            }}
+          >
+            {isConnected ? `@${username}` : "No conectado"}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {isConnected ? (
+            <>
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: colors.accent,
+                }}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  setEditingSocial(platformKey);
+                  setSocialInput(username);
+                  setShowSocialModal(true);
+                }}
+                style={{ padding: 4 }}
+              >
+                <Text style={{ color: colors.text3, fontSize: 11 }}>Editar</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View
+              style={{
+                backgroundColor: accentSoft,
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderWidth: 1,
+                borderColor: accentBorder,
+              }}
+            >
+              <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "700" }}>
+                Conectar
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const InstagramIcon = () => (
     <View
       style={{
-        flexDirection: "row",
+        width: 15,
+        height: 15,
+        borderRadius: 4,
+        overflow: "hidden",
         alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
+        justifyContent: "center",
       }}
     >
+      <LinearGradient
+        colors={["#833AB4", "#FD1D1D", "#F77737"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 0 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
       <View
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          backgroundColor: accentSoft,
-          alignItems: "center",
-          justifyContent: "center",
+          width: 9,
+          height: 9,
+          borderRadius: 2.5,
+          borderWidth: 1.5,
+          borderColor: "#fff",
         }}
-      >
-        {icon}
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{platform}</Text>
-        <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>No conectado</Text>
-      </View>
-      <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "500" }}>Próximamente</Text>
+      />
     </View>
   );
 
@@ -585,6 +826,148 @@ export default function SettingsScreen() {
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* ── Social Account Modal ── */}
+      <Modal
+        visible={showSocialModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowSocialModal(false);
+          setEditingSocial(null);
+        }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: "#00000060", justifyContent: "flex-end" }}
+            onPress={() => {
+              setShowSocialModal(false);
+              setEditingSocial(null);
+            }}
+          >
+            <Pressable onPress={() => {}}>
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  padding: 24,
+                  gap: 16,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.border,
+                    alignSelf: "center",
+                  }}
+                />
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 17,
+                    fontWeight: "800",
+                    letterSpacing: -0.3,
+                  }}
+                >
+                  Vincular{" "}
+                  {editingSocial === "instagram"
+                    ? "Instagram"
+                    : editingSocial === "twitter"
+                    ? "Twitter / X"
+                    : "TikTok"}
+                </Text>
+                <Text style={{ color: colors.text3, fontSize: 13 }}>
+                  Introduce tu nombre de usuario (sin @)
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.bg,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.text3, fontSize: 15 }}>@</Text>
+                  <TextInput
+                    value={socialInput}
+                    onChangeText={setSocialInput}
+                    placeholder="tu_usuario"
+                    placeholderTextColor={colors.text3}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={{
+                      flex: 1,
+                      color: colors.text,
+                      fontSize: 15,
+                      paddingVertical: 14,
+                      paddingLeft: 4,
+                    }}
+                    onSubmitEditing={handleSaveSocialLink}
+                    returnKeyType="done"
+                    testID="social-username-input"
+                  />
+                </View>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowSocialModal(false);
+                      setEditingSocial(null);
+                      setSocialInput("");
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.bg,
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                    testID="cancel-social-link"
+                  >
+                    <Text style={{ color: colors.text3, fontSize: 15, fontWeight: "600" }}>
+                      Cancelar
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleSaveSocialLink}
+                    disabled={savingSocial || !socialInput.trim()}
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.accent,
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      opacity: savingSocial || !socialInput.trim() ? 0.5 : 1,
+                    }}
+                    testID="save-social-link"
+                  >
+                    {savingSocial ? (
+                      <ActivityIndicator color="#000" size="small" />
+                    ) : (
+                      <Text style={{ color: "#000", fontSize: 15, fontWeight: "800" }}>
+                        Guardar
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
+
       <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View
           style={{
@@ -784,21 +1167,24 @@ export default function SettingsScreen() {
           <SectionHeader label="Cuentas Conectadas" />
           <Card>
             <ConnectedAccountRow
-              icon={<Twitter size={15} color={colors.accent} />}
+              icon={<InstagramIcon />}
+              platform="Instagram"
+              platformKey="instagram"
+              testId="connect-instagram"
+            />
+            <Divider />
+            <ConnectedAccountRow
+              icon={<Twitter size={15} color="#1DA1F2" />}
               platform="Twitter / X"
+              platformKey="twitter"
               testId="connect-twitter"
             />
             <Divider />
             <ConnectedAccountRow
-              icon={<Linkedin size={15} color={colors.accent} />}
-              platform="LinkedIn"
-              testId="connect-linkedin"
-            />
-            <Divider />
-            <ConnectedAccountRow
-              icon={<Github size={15} color={colors.accent} />}
-              platform="GitHub"
-              testId="connect-github"
+              icon={<Music size={15} color={colors.text} />}
+              platform="TikTok"
+              platformKey="tiktok"
+              testId="connect-tiktok"
             />
           </Card>
         </Animated.View>
