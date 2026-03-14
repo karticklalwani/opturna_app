@@ -936,11 +936,11 @@ export default function LiveScreen() {
             onPress={() => router.push("/go-live" as never)}
             style={({ pressed }) => ({
               flexDirection: "row", alignItems: "center", gap: 8,
-              backgroundColor: LIVE_GREEN,
+              backgroundColor: "#4ADE80",
               paddingHorizontal: 24, paddingVertical: 16, borderRadius: 100,
-              shadowColor: LIVE_GREEN,
+              shadowColor: "#4ADE80",
               shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.35, shadowRadius: 16, elevation: 10,
+              shadowOpacity: 0.45, shadowRadius: 16, elevation: 10,
               opacity: pressed ? 0.9 : 1,
             })}
           >

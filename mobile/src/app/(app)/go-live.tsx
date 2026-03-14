@@ -10,6 +10,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ChevronLeft,
@@ -192,6 +193,14 @@ function BroadcastScreen({
   const [isEnding, setIsEnding] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const wsRef = useRef<WebSocket | null>(null);
+
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
+
+  useEffect(() => {
+    requestCameraPermission();
+    requestMicPermission();
+  }, []);
 
   const accentColor = CATEGORY_COLORS[stream.category] ?? "#4ADE80";
 

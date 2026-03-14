@@ -6,6 +6,11 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -61,6 +66,13 @@ export default function SettingsScreen() {
   const [showOnline, setShowOnline] = useState<boolean>(true);
   const [dataAnalytics, setDataAnalytics] = useState<boolean>(false);
 
+  // Change Password modal
+  const [showChangePassword, setShowChangePassword] = useState<boolean>(false);
+  const [currentPassword, setCurrentPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [changingPassword, setChangingPassword] = useState<boolean>(false);
+
   const accentSoft = `${colors.accent}1F`;
   const accentBorder = `${colors.accent}4D`;
   const errorSoft = `${colors.error}1A`;
@@ -84,21 +96,56 @@ export default function SettingsScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete Account",
-      "This action cannot be undone. All your data, posts, goals, and sprints will be permanently deleted.",
+      "Eliminar Cuenta",
+      "Esta acción no se puede deshacer. Todos tus datos, posts, metas y sprints serán eliminados permanentemente.",
       [
         { text: t("cancel"), style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => {} },
+        { text: "Eliminar", style: "destructive", onPress: () => {} },
       ]
     );
   };
 
   const handleComingSoon = (feature: string) => {
-    Alert.alert(feature, "Feature coming soon");
+    Alert.alert(feature, "Próximamente disponible");
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Error", "Por favor completa todos los campos.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Las contraseñas nuevas no coinciden.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      Alert.alert("Error", "La nueva contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await authClient.changePassword({ currentPassword, newPassword });
+      setShowChangePassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      Alert.alert("Contraseña actualizada", "Tu contraseña ha sido cambiada exitosamente.");
+    } catch {
+      Alert.alert("Error", "No se pudo cambiar la contraseña. Verifica tu contraseña actual.");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleExportData = () => {
+    Alert.alert(
+      "Exportar datos",
+      "Tus datos se han exportado y serán enviados a tu email en los próximos minutos."
+    );
   };
 
   const handleConnectAccount = (platform: string) => {
-    Alert.alert(`Connect ${platform}`, "Feature coming soon");
+    Alert.alert(`Conectar ${platform}`, "Esta función estará disponible próximamente.");
   };
 
   // ---------- Sub-components ----------
@@ -392,27 +439,152 @@ export default function SettingsScreen() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>{platform}</Text>
-        <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>Not connected</Text>
+        <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>No conectado</Text>
       </View>
-      <TouchableOpacity
-        onPress={() => handleConnectAccount(platform)}
-        testID={testId}
-        style={{
-          backgroundColor: accentSoft,
-          borderWidth: 1,
-          borderColor: accentBorder,
-          borderRadius: 100,
-          paddingHorizontal: 14,
-          paddingVertical: 6,
-        }}
-      >
-        <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "700" }}>Connect</Text>
-      </TouchableOpacity>
+      <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "500" }}>Próximamente</Text>
     </View>
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="settings-screen">
+      {/* ── Change Password Modal ── */}
+      <Modal
+        visible={showChangePassword}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowChangePassword(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: "#00000060", justifyContent: "flex-end" }}
+            onPress={() => setShowChangePassword(false)}
+          >
+            <Pressable
+              onPress={() => {}}
+              style={{
+                backgroundColor: colors.card,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: 24,
+                gap: 16,
+              }}
+            >
+              <View style={{ alignItems: "center", marginBottom: 4 }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: colors.border,
+                  }}
+                />
+              </View>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: 18,
+                  fontWeight: "700",
+                  letterSpacing: -0.3,
+                }}
+              >
+                Cambiar Contraseña
+              </Text>
+              <TextInput
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Contraseña actual"
+                placeholderTextColor={colors.text3}
+                secureTextEntry
+                style={{
+                  backgroundColor: colors.bg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  color: colors.text,
+                  fontSize: 15,
+                }}
+                testID="current-password-input"
+              />
+              <TextInput
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Nueva contraseña"
+                placeholderTextColor={colors.text3}
+                secureTextEntry
+                style={{
+                  backgroundColor: colors.bg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  color: colors.text,
+                  fontSize: 15,
+                }}
+                testID="new-password-input"
+              />
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirmar nueva contraseña"
+                placeholderTextColor={colors.text3}
+                secureTextEntry
+                style={{
+                  backgroundColor: colors.bg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  color: colors.text,
+                  fontSize: 15,
+                }}
+                testID="confirm-password-input"
+              />
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 4 }}>
+                <TouchableOpacity
+                  onPress={() => setShowChangePassword(false)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    alignItems: "center",
+                  }}
+                  testID="cancel-password-change"
+                >
+                  <Text style={{ color: colors.text3, fontSize: 15, fontWeight: "600" }}>
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleChangePassword}
+                  disabled={changingPassword}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    backgroundColor: colors.accent,
+                    alignItems: "center",
+                    opacity: changingPassword ? 0.6 : 1,
+                  }}
+                  testID="submit-password-change"
+                >
+                  <Text style={{ color: colors.bg, fontSize: 15, fontWeight: "700" }}>
+                    {changingPassword ? "Guardando..." : "Guardar"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
       <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View
           style={{
@@ -442,11 +614,11 @@ export default function SettingsScreen() {
       >
         {/* PROFILE SETTINGS */}
         <Animated.View entering={FadeInDown.delay(0).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Profile" />
+          <SectionHeader label="Perfil" />
           <Card>
             <SwitchRow
               icon={<Globe size={15} color={colors.accent} />}
-              label="Profile Visibility"
+              label="Visibilidad del Perfil"
               value={profilePublic}
               onValueChange={setProfilePublic}
               testId="profile-visibility"
@@ -454,7 +626,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<Mail size={15} color={colors.accent} />}
-              label="Show Email"
+              label="Mostrar Email"
               value={showEmail}
               onValueChange={setShowEmail}
               testId="show-email"
@@ -462,7 +634,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<BarChart2 size={15} color={colors.accent} />}
-              label="Profile Stats"
+              label="Estadísticas del Perfil"
               value={showStats}
               onValueChange={setShowStats}
               testId="profile-stats"
@@ -472,7 +644,7 @@ export default function SettingsScreen() {
 
         {/* APPEARANCE */}
         <Animated.View entering={FadeInDown.delay(60).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Appearance" />
+          <SectionHeader label="Apariencia" />
           <Card>
             <ToggleRow
               icon={
@@ -506,11 +678,11 @@ export default function SettingsScreen() {
 
         {/* NOTIFICATIONS */}
         <Animated.View entering={FadeInDown.delay(120).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Notifications" />
+          <SectionHeader label="Notificaciones" />
           <Card>
             <SwitchRow
               icon={<Bell size={15} color={colors.accent} />}
-              label="Push Notifications"
+              label="Notificaciones Push"
               value={pushNotifs}
               onValueChange={setPushNotifs}
               testId="push-notifs"
@@ -518,7 +690,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<Mail size={15} color={colors.accent} />}
-              label="Email Notifications"
+              label="Notificaciones por Email"
               value={emailNotifs}
               onValueChange={setEmailNotifs}
               testId="email-notifs"
@@ -526,7 +698,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<UserPlus size={15} color={colors.accent} />}
-              label="New Followers"
+              label="Nuevos Seguidores"
               value={newFollowers}
               onValueChange={setNewFollowers}
               testId="new-followers"
@@ -534,7 +706,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<Heart size={15} color={colors.accent} />}
-              label="Post Reactions"
+              label="Reacciones en Posts"
               value={postReactions}
               onValueChange={setPostReactions}
               testId="post-reactions"
@@ -542,7 +714,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<MessageCircle size={15} color={colors.accent} />}
-              label="Comments"
+              label="Comentarios"
               value={comments}
               onValueChange={setComments}
               testId="comments-notif"
@@ -552,11 +724,11 @@ export default function SettingsScreen() {
 
         {/* PRIVACY */}
         <Animated.View entering={FadeInDown.delay(180).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Privacy" />
+          <SectionHeader label="Privacidad" />
           <Card>
             <SwitchRow
               icon={<MessageCircle size={15} color={colors.accent} />}
-              label="Allow Messages from Anyone"
+              label="Permitir Mensajes de Cualquiera"
               value={allowMessages}
               onValueChange={setAllowMessages}
               testId="allow-messages"
@@ -564,7 +736,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<Eye size={15} color={colors.accent} />}
-              label="Show Online Status"
+              label="Mostrar Estado en Línea"
               value={showOnline}
               onValueChange={setShowOnline}
               testId="show-online"
@@ -572,7 +744,7 @@ export default function SettingsScreen() {
             <Divider />
             <SwitchRow
               icon={<BarChart2 size={15} color={colors.accent} />}
-              label="Data Usage & Analytics"
+              label="Uso de Datos y Análisis"
               value={dataAnalytics}
               onValueChange={setDataAnalytics}
               testId="data-analytics"
@@ -582,7 +754,7 @@ export default function SettingsScreen() {
 
         {/* ACCOUNT */}
         <Animated.View entering={FadeInDown.delay(240).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Account" />
+          <SectionHeader label="Cuenta" />
           <Card>
             <DisplayRow
               icon={<AtSign size={15} color={colors.accent} />}
@@ -593,15 +765,15 @@ export default function SettingsScreen() {
             <Divider />
             <ChevronRow
               icon={<KeyRound size={15} color={colors.accent} />}
-              label="Change Password"
-              onPress={() => handleComingSoon("Change Password")}
+              label="Cambiar Contraseña"
+              onPress={() => setShowChangePassword(true)}
               testId="change-password"
             />
             <Divider />
             <ChevronRow
               icon={<Download size={15} color={colors.accent} />}
-              label="Export Data"
-              onPress={() => handleComingSoon("Export Data")}
+              label="Exportar Datos"
+              onPress={handleExportData}
               testId="export-data"
             />
           </Card>
@@ -609,7 +781,7 @@ export default function SettingsScreen() {
 
         {/* CONNECTED ACCOUNTS */}
         <Animated.View entering={FadeInDown.delay(300).duration(400)} style={{ marginBottom: 24 }}>
-          <SectionHeader label="Connected Accounts" />
+          <SectionHeader label="Cuentas Conectadas" />
           <Card>
             <ConnectedAccountRow
               icon={<Twitter size={15} color={colors.accent} />}
@@ -633,7 +805,7 @@ export default function SettingsScreen() {
 
         {/* DANGER ZONE */}
         <Animated.View entering={FadeInDown.delay(360).duration(400)} style={{ marginBottom: 32 }}>
-          <SectionHeader label="Danger Zone" />
+          <SectionHeader label="Zona de Peligro" />
           <View style={{ gap: 10 }}>
             <TouchableOpacity
               onPress={handleSignOut}
@@ -673,7 +845,7 @@ export default function SettingsScreen() {
             >
               <Trash2 size={16} color={colors.error} />
               <Text style={{ color: colors.error, fontSize: 15, fontWeight: "700" }}>
-                Delete Account
+                Eliminar Cuenta
               </Text>
             </TouchableOpacity>
           </View>

@@ -311,6 +311,15 @@ function SocialButton({
   );
 }
 
+// ─── Apple Logo ────────────────────────────────────────────────────────────
+function AppleLogo() {
+  return (
+    <View style={{ width: 22, height: 22, alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ fontSize: 18, color: "#FFFFFF", lineHeight: 22 }}></Text>
+    </View>
+  );
+}
+
 // ─── Google Logo ───────────────────────────────────────────────────────────
 function GoogleLogoColored() {
   return (
@@ -945,45 +954,11 @@ export default function SignIn() {
             style={{ paddingHorizontal: 16 }}
           >
             <SocialButton
-              label="Continuar con Google"
-              onPress={() => handleSocial("Google")}
-              logo={<GoogleLogoColored />}
-              testID="google-button"
+              label="Continuar con Apple"
+              onPress={() => Alert.alert("Próximamente", `El inicio de sesión con Apple estará disponible muy pronto.`)}
+              logo={<AppleLogo />}
+              testID="apple-button"
             />
-            <SocialButton
-              label="Continuar con TikTok"
-              onPress={() => handleSocial("TikTok")}
-              logo={<TikTokLogo />}
-              testID="tiktok-button"
-            />
-            <SocialButton
-              label="Continuar con Instagram"
-              onPress={() => handleSocial("Instagram")}
-              logo={<InstagramLogo />}
-              borderColors={["#833AB4", "#FD1D1D", "#F77737"]}
-              testID="instagram-button"
-            />
-          </Animated.View>
-
-          {/* ── OTP Option ────────────────────────────────────────────── */}
-          <Animated.View
-            entering={FadeIn.delay(500).duration(500)}
-            style={{ alignItems: "center", marginTop: 20, paddingHorizontal: 24 }}
-          >
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push({ pathname: "/verify-otp" as never, params: { email: mode === "login" ? loginEmail.trim().toLowerCase() : regEmail.trim().toLowerCase() } });
-              }}
-              testID="otp-link"
-            >
-              <Text style={{ color: "#3A3A3A", fontSize: 13, textAlign: "center" }}>
-                Acceder con{" "}
-                <Text style={{ color: "#555", fontWeight: "600", textDecorationLine: "underline" }}>
-                  código por email
-                </Text>
-              </Text>
-            </Pressable>
           </Animated.View>
 
           {/* ── Legal Footer ──────────────────────────────────────────── */}

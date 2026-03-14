@@ -1350,7 +1350,7 @@ export default function ProfileScreen() {
             flexDirection: "row",
             marginHorizontal: 16,
             marginBottom: 16,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 20,
             borderWidth: 1,
             borderColor: colors.border,
@@ -1370,7 +1370,7 @@ export default function ProfileScreen() {
                 alignItems: "center",
                 paddingVertical: 16,
                 borderLeftWidth: idx > 0 ? 1 : 0,
-                borderLeftColor: "#1F1F1F",
+                borderLeftColor: colors.border,
               }}
             >
               <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
@@ -1534,7 +1534,7 @@ export default function ProfileScreen() {
                   >
                     <IconComp size={15} color={item.color} />
                   </View>
-                  <View>
+                  <View style={{ alignSelf: "stretch" }}>
                     <Text style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>{item.label}</Text>
                     <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>{item.subtitle}</Text>
                   </View>

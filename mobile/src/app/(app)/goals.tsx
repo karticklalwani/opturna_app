@@ -38,6 +38,7 @@ import {
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Goal } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 
@@ -72,10 +73,14 @@ function ProgressBar({
   progress,
   color,
   daysLeft,
+  trackColor,
+  labelColor,
 }: {
   progress: number;
   color: string;
   daysLeft: number | null;
+  trackColor?: string;
+  labelColor?: string;
 }) {
   const width = useSharedValue(0);
 
@@ -101,7 +106,7 @@ function ProgressBar({
         }}
       >
         <Text
-          style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "500" }}
+          style={{ color: labelColor ?? "#A3A3A3", fontSize: 11, fontWeight: "500" }}
         >
           {daysLeft !== null
             ? daysLeft > 0
@@ -122,7 +127,7 @@ function ProgressBar({
       <View
         style={{
           height: 7,
-          backgroundColor: "#1A1A1A",
+          backgroundColor: trackColor ?? "#1A1A1A",
           borderRadius: 100,
           overflow: "hidden",
         }}
@@ -154,12 +159,14 @@ function GoalCard({
   onComplete,
   onDelete,
   onUpdateProgress,
+  colors,
 }: {
   goal: Goal;
   index: number;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateProgress: (id: string, progress: number) => void;
+  colors: typeof DARK;
 }) {
   const catStyle = getCategoryStyle(goal.category);
   const daysLeft =
@@ -780,6 +787,7 @@ type TabFilter = "activos" | "completados";
 export default function GoalsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors } = useTheme();
   const [tab, setTab] = useState<TabFilter>("activos");
   const [showCreate, setShowCreate] = useState(false);
 
@@ -1089,6 +1097,7 @@ export default function GoalsScreen() {
               key={goal.id}
               goal={goal}
               index={i}
+              colors={colors}
               onComplete={(id) => completeGoal.mutate(id)}
               onDelete={(id) => deleteGoal.mutate(id)}
               onUpdateProgress={(id, progress) =>

@@ -3202,7 +3202,7 @@ function ObjetivosTab({
             }}
           >
             <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", letterSpacing: -0.2 }}>
-              Financial Goals
+              Objetivos Financieros
             </Text>
             <Pressable
               onPress={onAddBackendGoal}
