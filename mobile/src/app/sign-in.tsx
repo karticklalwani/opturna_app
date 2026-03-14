@@ -97,10 +97,10 @@ function InputField({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "#141414",
+          backgroundColor: "#111111",
           borderWidth: 1,
           borderColor,
-          borderRadius: 12,
+          borderRadius: 16,
           paddingHorizontal: 14,
         }}
       >
@@ -200,8 +200,8 @@ function PrimaryButton({
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={{
-          height: 52,
-          borderRadius: 12,
+          height: 56,
+          borderRadius: 16,
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "row",
@@ -252,9 +252,9 @@ function SocialButton({
   const inner = (
     <View
       style={{
-        height: 50,
-        borderRadius: 12,
-        backgroundColor: "#141414",
+        height: 52,
+        borderRadius: 14,
+        backgroundColor: "#111111",
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -604,103 +604,76 @@ export default function SignIn() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Hero Section ─────────────────────────────────────────── */}
+          {/* ── Hero: OPTURNA centered top half ──────────────────────── */}
           <Animated.View
             entering={FadeInDown.delay(0).duration(700).easing(Easing.out(Easing.exp))}
             style={{
               alignItems: "center",
-              paddingTop: 80,
-              paddingBottom: 40,
+              justifyContent: "center",
+              paddingTop: 100,
+              paddingBottom: 48,
               paddingHorizontal: 24,
             }}
           >
-            {/* Glow behind wordmark */}
+            {/* Green glow bloom */}
             <View
               style={{
                 position: "absolute",
-                top: 60,
-                width: 200,
-                height: 80,
-                borderRadius: 40,
+                top: 80,
+                width: 260,
+                height: 100,
+                borderRadius: 60,
                 backgroundColor: "#4ADE80",
-                opacity: 0.07,
+                opacity: 0.06,
                 shadowColor: "#4ADE80",
                 shadowOpacity: 1,
-                shadowRadius: 60,
+                shadowRadius: 80,
                 shadowOffset: { width: 0, height: 0 },
               }}
             />
 
             {/* Wordmark */}
-            <LinearGradient
-              colors={["#FFFFFF", "#A3A3A3"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{ marginBottom: 10 }}
+            <Text
+              style={{
+                fontSize: 58,
+                fontWeight: "900",
+                letterSpacing: -3,
+                color: "#FFFFFF",
+                marginBottom: 14,
+              }}
             >
-              <Text
-                style={{
-                  fontSize: 52,
-                  fontWeight: "900",
-                  letterSpacing: -2.5,
-                  color: "transparent",
-                  // LinearGradient wraps it, so it renders white→gray
-                }}
-              >
-                OPTURNA
-              </Text>
-            </LinearGradient>
+              OPTURNA
+            </Text>
 
-            {/* Accent dot + tagline */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <View
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: 2.5,
-                  backgroundColor: "#4ADE80",
-                  shadowColor: "#4ADE80",
-                  shadowOpacity: 0.8,
-                  shadowRadius: 6,
-                  shadowOffset: { width: 0, height: 0 },
-                }}
-              />
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: "#666",
-                  letterSpacing: 1.5,
-                  fontWeight: "500",
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("tagline")}
-              </Text>
-            </View>
+            {/* Tagline */}
+            <Text
+              style={{
+                fontSize: 15,
+                color: "#555",
+                letterSpacing: 0.3,
+                fontWeight: "400",
+              }}
+            >
+              {t("tagline")}
+            </Text>
           </Animated.View>
 
-          {/* ── Card Container ────────────────────────────────────────── */}
+          {/* ── Thin divider line ─────────────────────────────────────── */}
+          <View style={{ height: 1, backgroundColor: "#1A1A1A", marginHorizontal: 0 }} />
+
+          {/* ── Form area (no card, full width) ──────────────────────── */}
           <Animated.View
             entering={FadeInDown.delay(150).duration(700).easing(Easing.out(Easing.exp))}
-            style={{
-              marginHorizontal: 16,
-              backgroundColor: "#0E0E0E",
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: "#1C1C1C",
-              overflow: "hidden",
-              shadowColor: "#000",
-              shadowOpacity: 0.5,
-              shadowRadius: 20,
-              shadowOffset: { width: 0, height: 8 },
-            }}
+            style={{ flex: 1 }}
           >
             {/* Tab Switcher */}
             <View
               style={{
                 flexDirection: "row",
-                margin: 6,
-                backgroundColor: "#080808",
+                marginHorizontal: 24,
+                marginTop: 28,
+                marginBottom: 4,
+                backgroundColor: "#111111",
                 borderRadius: 14,
                 padding: 4,
               }}
@@ -752,7 +725,7 @@ export default function SignIn() {
             </View>
 
             {/* Form Content */}
-            <View style={{ padding: 20 }}>
+            <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
               {mode === "login" ? (
                 <Animated.View
                   key="login-form"
@@ -937,21 +910,21 @@ export default function SignIn() {
               flexDirection: "row",
               alignItems: "center",
               marginHorizontal: 24,
-              marginVertical: 24,
+              marginVertical: 20,
               gap: 12,
             }}
           >
-            <View style={{ flex: 1, height: 1, backgroundColor: "#1E1E1E" }} />
-            <Text style={{ color: "#3A3A3A", fontSize: 12, fontWeight: "600", letterSpacing: 1 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: "#1A1A1A" }} />
+            <Text style={{ color: "#333", fontSize: 11, fontWeight: "600", letterSpacing: 1.5 }}>
               O CONTINÚA CON
             </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#1E1E1E" }} />
+            <View style={{ flex: 1, height: 1, backgroundColor: "#1A1A1A" }} />
           </Animated.View>
 
           {/* ── Social Buttons ────────────────────────────────────────── */}
           <Animated.View
             entering={FadeInDown.delay(400).duration(600)}
-            style={{ paddingHorizontal: 16 }}
+            style={{ paddingHorizontal: 24 }}
           >
             <SocialButton
               label="Continuar con Apple"
