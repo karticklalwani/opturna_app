@@ -19,24 +19,75 @@ type Variables = {
 
 const app = new Hono<{ Variables: Variables }>();
 
+// ─── Rate Limiter ───────────────────────────────────────────────────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return true; // allowed
+  }
+  if (entry.count >= maxRequests) return false; // blocked
+  entry.count++;
+  return true;
+}
+
+// Clean up old entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 5 * 60 * 1000);
+
+// ─── Input Sanitization Helper ───────────────────────────────────────────────
+function sanitizeString(val: unknown, maxLen: number): string | undefined {
+  if (typeof val !== "string") return undefined;
+  return val.trim().slice(0, maxLen);
+}
+
 // CORS
 app.use("*", cors({
   origin: (origin) => {
     if (!origin) return origin;
     if (
-      origin.includes(".vibecode.run") ||
-      origin.includes(".vibecodeapp.com") ||
-      origin.includes(".vibecode.dev") ||
-      origin.startsWith("http://localhost") ||
-      origin.startsWith("http://127.0.0.1")
+      /^https:\/\/[a-zA-Z0-9-]+\.vibecode\.run$/.test(origin) ||
+      /^https:\/\/[a-zA-Z0-9-]+\.vibecodeapp\.com$/.test(origin) ||
+      /^https:\/\/[a-zA-Z0-9-]+\.vibecode\.dev$/.test(origin) ||
+      origin === "https://vibecode.dev" ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:")
     ) return origin;
-    return origin;
+    return null; // Block unknown origins
   },
-  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  exposeHeaders: ["Set-Cookie"],
   credentials: true,
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));
+
+// Rate limiting middleware
+app.use("*", async (c, next) => {
+  const ip = c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "unknown";
+  const path = c.req.path;
+
+  // Strict limit for auth endpoints (10 requests per minute)
+  if (path.startsWith("/api/auth/")) {
+    if (!rateLimit(`auth:${ip}`, 10, 60_000)) {
+      return c.json({ error: { message: "Demasiados intentos. Espera un minuto." } }, 429);
+    }
+  }
+
+  // General API limit (200 requests per minute)
+  if (path.startsWith("/api/")) {
+    if (!rateLimit(`api:${ip}`, 200, 60_000)) {
+      return c.json({ error: { message: "Demasiadas peticiones. Intenta más tarde." } }, 429);
+    }
+  }
+
+  await next();
+});
 
 // Auth middleware
 app.use("*", async (c, next) => {
@@ -82,14 +133,19 @@ app.patch("/api/me", async (c) => {
     currentGoals?: string; isPublic?: boolean; interests?: string[];
     externalLinks?: Array<{ label: string; url: string }>; image?: string; coverImage?: string;
   };
+  const name = sanitizeString(body.name, 100);
+  const bio = sanitizeString(body.bio, 500);
+  const username = sanitizeString(body.username, 50);
+  const mainAmbition = sanitizeString(body.mainAmbition, 300);
+  const currentGoals = sanitizeString(body.currentGoals, 500);
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
-      name: body.name,
-      bio: body.bio,
-      username: body.username,
-      mainAmbition: body.mainAmbition,
-      currentGoals: body.currentGoals,
+      name,
+      bio,
+      username,
+      mainAmbition,
+      currentGoals,
       isPublic: body.isPublic,
       interests: body.interests ? JSON.stringify(body.interests) : undefined,
       externalLinks: body.externalLinks ? JSON.stringify(body.externalLinks) : undefined,
@@ -101,7 +157,8 @@ app.patch("/api/me", async (c) => {
 });
 
 app.get("/api/users/search", async (c) => {
-  const q = c.req.query("q") || "";
+  const q = (c.req.query("q") ?? "").trim().slice(0, 100);
+  if (q.length < 2) return c.json({ data: [] });
   const users = await prisma.user.findMany({
     where: {
       OR: [
@@ -190,10 +247,15 @@ app.post("/api/posts", async (c) => {
     content?: string; type?: string; category?: string;
     mediaUrls?: string[]; pollData?: unknown; hashtags?: string[]; isPublic?: boolean;
   };
+  if (!body.content || typeof body.content !== "string") {
+    return c.json({ error: { message: "Contenido requerido" } }, 400);
+  }
+  const content = body.content.trim().slice(0, 5000);
+  if (!content) return c.json({ error: { message: "El contenido no puede estar vacío" } }, 400);
   const post = await prisma.post.create({
     data: {
       authorId: user.id,
-      content: body.content,
+      content,
       type: body.type || "text",
       category: body.category || "progress",
       mediaUrls: body.mediaUrls ? JSON.stringify(body.mediaUrls) : null,
@@ -211,8 +273,9 @@ app.post("/api/posts", async (c) => {
 app.delete("/api/posts/:id", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
-  const post = await prisma.post.findUnique({ where: { id: c.req.param("id") } });
-  if (!post || post.authorId !== user.id) return c.json({ error: { message: "Forbidden" } }, 403);
+  const post = await prisma.post.findUnique({ where: { id: c.req.param("id") }, select: { authorId: true } });
+  if (!post) return c.json({ error: { message: "Post no encontrado" } }, 404);
+  if (post.authorId !== user.id) return c.json({ error: { message: "No autorizado" } }, 403);
   await prisma.post.delete({ where: { id: c.req.param("id") } });
   return c.body(null, 204);
 });
@@ -272,9 +335,11 @@ app.get("/api/posts/:id/comments", async (c) => {
 app.post("/api/posts/:id/comments", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
-  const { content, parentId } = await c.req.json() as { content: string; parentId?: string };
+  const body = await c.req.json() as { content: string; parentId?: string };
+  const content = sanitizeString(body.content, 1000);
+  if (!content) return c.json({ error: { message: "Comentario requerido" } }, 400);
   const comment = await prisma.comment.create({
-    data: { postId: c.req.param("id"), authorId: user.id, content, parentId },
+    data: { postId: c.req.param("id"), authorId: user.id, content, parentId: body.parentId },
     include: { author: { select: { id: true, name: true, image: true, username: true } } }
   });
   try {
@@ -294,6 +359,22 @@ app.post("/api/posts/:id/comments", async (c) => {
     // Notification failure should not break the main action
   }
   return c.json({ data: comment }, 201);
+});
+
+app.delete("/api/posts/:id/comments/:commentId", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) return c.json({ error: { message: "No autorizado" } }, 401);
+
+  const comment = await prisma.comment.findUnique({
+    where: { id: c.req.param("commentId") },
+    select: { authorId: true, postId: true }
+  });
+  if (!comment) return c.json({ error: { message: "Comentario no encontrado" } }, 404);
+  if (comment.authorId !== session.user.id) return c.json({ error: { message: "No autorizado" } }, 403);
+  if (comment.postId !== c.req.param("id")) return c.json({ error: { message: "No encontrado" } }, 404);
+
+  await prisma.comment.delete({ where: { id: c.req.param("commentId") } });
+  return c.body(null, 204);
 });
 
 // Save post
@@ -346,12 +427,16 @@ app.post("/api/goals", async (c) => {
 app.patch("/api/goals/:id", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const goalId = c.req.param("id");
+  const existingGoal = await prisma.goal.findUnique({ where: { id: goalId }, select: { userId: true } });
+  if (!existingGoal) return c.json({ error: { message: "Meta no encontrada" } }, 404);
+  if (existingGoal.userId !== user.id) return c.json({ error: { message: "No autorizado" } }, 403);
   const body = await c.req.json() as {
     title?: string; description?: string; progress?: number;
     isCompleted?: boolean; milestones?: Array<{ title: string; done: boolean }>;
   };
   const goal = await prisma.goal.update({
-    where: { id: c.req.param("id") },
+    where: { id: goalId },
     data: {
       title: body.title,
       description: body.description,
@@ -366,6 +451,9 @@ app.patch("/api/goals/:id", async (c) => {
 app.delete("/api/goals/:id", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const existingGoal = await prisma.goal.findUnique({ where: { id: c.req.param("id") }, select: { userId: true } });
+  if (!existingGoal) return c.json({ error: { message: "Meta no encontrada" } }, 404);
+  if (existingGoal.userId !== user.id) return c.json({ error: { message: "No autorizado" } }, 403);
   await prisma.goal.delete({ where: { id: c.req.param("id") } });
   return c.body(null, 204);
 });
@@ -420,12 +508,15 @@ app.post("/api/sprints", async (c) => {
 app.post("/api/sprints/:id/checkin", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const sprintId = c.req.param("id");
+  const sprintMembership = await prisma.sprintMember.findFirst({ where: { sprintId, userId: user.id }, select: { id: true } });
+  if (!sprintMembership) return c.json({ error: { message: "Sprint no encontrado o no autorizado" } }, 404);
   const body = await c.req.json() as {
     content: string; evidence?: { url: string; type: string }; mood?: number;
   };
   const checkIn = await prisma.checkIn.create({
     data: {
-      sprintId: c.req.param("id"),
+      sprintId,
       userId: user.id,
       content: body.content,
       evidence: body.evidence ? JSON.stringify(body.evidence) : null,
@@ -434,7 +525,7 @@ app.post("/api/sprints/:id/checkin", async (c) => {
   });
   // Update streak
   await prisma.sprintMember.updateMany({
-    where: { sprintId: c.req.param("id"), userId: user.id },
+    where: { sprintId, userId: user.id },
     data: { streak: { increment: 1 } }
   });
   return c.json({ data: checkIn }, 201);
@@ -444,8 +535,9 @@ app.post("/api/sprints/:id/checkin", async (c) => {
 app.delete("/api/sprints/:id", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
-  const sprint = await prisma.sprint.findUnique({ where: { id: c.req.param("id") } });
-  if (!sprint || sprint.creatorId !== user.id) return c.json({ error: { message: "Forbidden" } }, 403);
+  const sprint = await prisma.sprint.findUnique({ where: { id: c.req.param("id") }, select: { creatorId: true } });
+  if (!sprint) return c.json({ error: { message: "Sprint no encontrado" } }, 404);
+  if (sprint.creatorId !== user.id) return c.json({ error: { message: "No autorizado" } }, 403);
   await prisma.sprint.delete({ where: { id: c.req.param("id") } });
   return c.body(null, 204);
 });
@@ -544,8 +636,11 @@ app.post("/api/chats", async (c) => {
 app.get("/api/chats/:id/messages", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
+  const chatId = c.req.param("id");
+  const membership = await prisma.chatMember.findFirst({ where: { chatId, userId: user.id } });
+  if (!membership) return c.json({ error: { message: "No autorizado" } }, 403);
   const messages = await prisma.message.findMany({
-    where: { chatId: c.req.param("id") },
+    where: { chatId },
     include: { sender: { select: { id: true, name: true, image: true, username: true } } },
     orderBy: { createdAt: "asc" },
     take: 100,
@@ -556,8 +651,10 @@ app.get("/api/chats/:id/messages", async (c) => {
 app.post("/api/chats/:id/messages", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
-  const body = await c.req.json() as { content?: string; type?: string; fileUrl?: string; fileName?: string; fileMimeType?: string };
   const chatId = c.req.param("id");
+  const membership = await prisma.chatMember.findFirst({ where: { chatId, userId: user.id } });
+  if (!membership) return c.json({ error: { message: "No autorizado" } }, 403);
+  const body = await c.req.json() as { content?: string; type?: string; fileUrl?: string; fileName?: string; fileMimeType?: string };
   const message = await prisma.message.create({
     data: {
       chatId,
@@ -618,6 +715,8 @@ app.patch("/api/chats/:id/messages/read", async (c) => {
   const user = c.get("user")!;
 
   const chatId = c.req.param("id");
+  const membership = await prisma.chatMember.findFirst({ where: { chatId, userId: user.id } });
+  if (!membership) return c.json({ error: { message: "No autorizado" } }, 403);
 
   // Get all messages in this chat not sent by the current user
   const messages = await prisma.message.findMany({
@@ -936,7 +1035,7 @@ console.log(`Opturna API running on port ${port}`);
 
 export default {
   port,
-  fetch(req: Request, server: import("bun").Server) {
+  async fetch(req: Request, server: import("bun").Server) {
     const url = new URL(req.url);
 
     // Live stream WebSocket
@@ -955,13 +1054,27 @@ export default {
 
     // Chat WebSocket
     if (url.pathname.startsWith("/ws/chat/")) {
+      // Verify user session from cookie header
+      const session = await auth.api.getSession({ headers: req.headers as unknown as Headers }).catch(() => null);
+      const verifiedUserId = session?.user?.id;
+      const verifiedUserName = session?.user?.name ?? "Usuario";
+
+      if (!verifiedUserId) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
       const chatId = url.pathname.split("/ws/chat/")[1] || "";
-      const userId = url.searchParams.get("userId") || "anonymous";
-      const userName = url.searchParams.get("userName") || "Usuario";
-      const userImage = url.searchParams.get("userImage") || undefined;
+      // Verify membership
+      const membership = await prisma.chatMember.findFirst({
+        where: { chatId, userId: verifiedUserId }
+      }).catch(() => null);
+
+      if (!membership) {
+        return new Response("Forbidden", { status: 403 });
+      }
 
       const success = server.upgrade(req, {
-        data: { type: "chat", chatId, userId, userName, userImage },
+        data: { type: "chat", chatId, userId: verifiedUserId, userName: verifiedUserName, userImage: session?.user?.image ?? "" },
       });
       if (success) return undefined as unknown as Response;
       return new Response("WebSocket upgrade failed", { status: 400 });
