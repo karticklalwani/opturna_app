@@ -865,8 +865,10 @@ export default function AiAssistantScreen() {
             }
             try {
               const event = JSON.parse(data);
-              if (event.type === "response.output_text.delta" && event.delta) {
-                accumulatedText += event.delta;
+              // Handle chat completions streaming format
+              const delta = event.choices?.[0]?.delta?.content;
+              if (delta) {
+                accumulatedText += delta;
                 setStreamingText(accumulatedText);
               }
             } catch {
