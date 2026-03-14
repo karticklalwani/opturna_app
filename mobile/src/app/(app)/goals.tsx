@@ -82,6 +82,7 @@ function ProgressBar({
   trackColor?: string;
   labelColor?: string;
 }) {
+  const { colors } = useTheme();
   const width = useSharedValue(0);
 
   useEffect(() => {
@@ -106,7 +107,7 @@ function ProgressBar({
         }}
       >
         <Text
-          style={{ color: labelColor ?? "#A3A3A3", fontSize: 11, fontWeight: "500" }}
+          style={{ color: labelColor ?? colors.text3, fontSize: 11, fontWeight: "500" }}
         >
           {daysLeft !== null
             ? daysLeft > 0
@@ -127,7 +128,7 @@ function ProgressBar({
       <View
         style={{
           height: 7,
-          backgroundColor: trackColor ?? "#1A1A1A",
+          backgroundColor: trackColor ?? colors.bg4,
           borderRadius: 100,
           overflow: "hidden",
         }}
@@ -168,6 +169,7 @@ function GoalCard({
   onUpdateProgress: (id: string, progress: number) => void;
   colors: typeof DARK;
 }) {
+  const { colors: themeColors } = useTheme();
   const catStyle = getCategoryStyle(goal.category);
   const daysLeft =
     goal.dueDate
@@ -184,10 +186,10 @@ function GoalCard({
       <View
         testID="goal-card"
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: themeColors.card,
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: themeColors.border,
           borderLeftWidth: 3,
           borderLeftColor: accentColor,
           padding: 18,
@@ -227,7 +229,7 @@ function GoalCard({
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: goal.isCompleted ? "#737373" : "#F5F5F5",
+                color: goal.isCompleted ? themeColors.text3 : themeColors.text,
                 fontSize: 15,
                 fontWeight: "700",
                 letterSpacing: 0.1,
@@ -240,7 +242,7 @@ function GoalCard({
             {goal.description ? (
               <Text
                 style={{
-                  color: "#737373",
+                  color: themeColors.text3,
                   fontSize: 12,
                   lineHeight: 18,
                   marginBottom: 4,
@@ -322,19 +324,19 @@ function GoalCard({
                   backgroundColor:
                     goal.progress >= val
                       ? `${catStyle.color}1F`
-                      : "#1A1A1A",
+                      : themeColors.bg4,
                   alignItems: "center",
                   borderWidth: 1,
                   borderColor:
                     goal.progress >= val
                       ? `${catStyle.color}4D`
-                      : "#2A2A2A",
+                      : themeColors.border,
                 }}
               >
                 <Text
                   style={{
                     color:
-                      goal.progress >= val ? catStyle.color : "#404040",
+                      goal.progress >= val ? catStyle.color : themeColors.text4,
                     fontSize: 11,
                     fontWeight: "600",
                   }}
@@ -428,6 +430,7 @@ function CreateGoalModal({
     category: "",
     targetDate: "",
   });
+  const { colors } = useTheme();
 
   const reset = () => {
     setForm({ title: "", description: "", category: "", targetDate: "" });
@@ -455,13 +458,13 @@ function CreateGoalModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -486,18 +489,18 @@ function CreateGoalModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -514,7 +517,7 @@ function CreateGoalModal({
             {/* Title */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 12,
                 fontWeight: "600",
                 marginBottom: 8,
@@ -530,12 +533,12 @@ function CreateGoalModal({
               placeholderTextColor="#404040"
               testID="goal-title-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 15,
                 marginBottom: 20,
               }}
@@ -544,7 +547,7 @@ function CreateGoalModal({
             {/* Description */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 12,
                 fontWeight: "600",
                 marginBottom: 8,
@@ -561,12 +564,12 @@ function CreateGoalModal({
               multiline
               testID="goal-description-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 lineHeight: 21,
                 minHeight: 90,
@@ -578,7 +581,7 @@ function CreateGoalModal({
             {/* Category */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 12,
                 fontWeight: "600",
                 marginBottom: 12,
@@ -611,14 +614,14 @@ function CreateGoalModal({
                       paddingHorizontal: 14,
                       paddingVertical: 8,
                       borderRadius: 100,
-                      backgroundColor: active ? cat.bg : "#0F0F0F",
+                      backgroundColor: active ? cat.bg : colors.card,
                       borderWidth: 1.5,
-                      borderColor: active ? cat.color : "#1F1F1F",
+                      borderColor: active ? cat.color : colors.border,
                     }}
                   >
                     <Text
                       style={{
-                        color: active ? cat.color : "#737373",
+                        color: active ? cat.color : colors.text3,
                         fontSize: 13,
                         fontWeight: active ? "600" : "400",
                       }}
@@ -633,7 +636,7 @@ function CreateGoalModal({
             {/* Target date */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 12,
                 fontWeight: "600",
                 marginBottom: 8,
@@ -649,12 +652,12 @@ function CreateGoalModal({
               placeholderTextColor="#404040"
               testID="goal-date-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 marginBottom: 32,
               }}
@@ -701,6 +704,7 @@ function CreateGoalModal({
 // ─── Stats Card ───────────────────────────────────────────────────────────────
 
 function StatsRow({ goals }: { goals: Goal[] }) {
+  const { colors } = useTheme();
   const active = goals.filter((g) => !g.isCompleted);
   const completed = goals.filter((g) => g.isCompleted);
   const avgProgress =
@@ -744,10 +748,10 @@ function StatsRow({ goals }: { goals: Goal[] }) {
           key={i}
           style={{
             flex: 1,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 18,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 14,
             alignItems: "center",
             gap: 6,
@@ -766,7 +770,7 @@ function StatsRow({ goals }: { goals: Goal[] }) {
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 10,
               fontWeight: "500",
               textAlign: "center",
@@ -846,7 +850,7 @@ export default function GoalsScreen() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="goals-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="goals-screen">
       <SafeAreaView edges={["top"]}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
           {/* Header */}
@@ -863,14 +867,14 @@ export default function GoalsScreen() {
                 style={{
                   fontSize: 28,
                   fontWeight: "800",
-                  color: "#F5F5F5",
+                  color: colors.text,
                   letterSpacing: -0.8,
                 }}
               >
                 Objetivos
               </Text>
               <Text
-                style={{ color: "#737373", fontSize: 13, marginTop: 2 }}
+                style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}
               >
                 {allGoals.length === 0
                   ? "Sin objetivos aún"
@@ -884,13 +888,13 @@ export default function GoalsScreen() {
                 height: 40,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
               }}
             >
-              <Calendar size={17} color="#737373" />
+              <Calendar size={17} color={colors.text3} />
             </Pressable>
           </View>
 
@@ -898,9 +902,9 @@ export default function GoalsScreen() {
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderRadius: 100,
               padding: 4,
               gap: 4,
@@ -923,7 +927,7 @@ export default function GoalsScreen() {
               >
                 <Text
                   style={{
-                    color: tab === tabKey ? "#080808" : "#737373",
+                    color: tab === tabKey ? colors.bg : colors.text3,
                     fontSize: 13,
                     fontWeight: "700",
                   }}
@@ -1001,7 +1005,7 @@ export default function GoalsScreen() {
           >
             <ActivityIndicator color="#4ADE80" />
             <Text
-              style={{ color: "#737373", fontSize: 13, marginTop: 12 }}
+              style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}
             >
               Cargando objetivos...
             </Text>
@@ -1012,10 +1016,10 @@ export default function GoalsScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 56,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -1037,7 +1041,7 @@ export default function GoalsScreen() {
             </View>
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
                 marginBottom: 8,
@@ -1049,7 +1053,7 @@ export default function GoalsScreen() {
             </Text>
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 13,
                 textAlign: "center",
                 paddingHorizontal: 28,

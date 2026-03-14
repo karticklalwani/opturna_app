@@ -112,12 +112,14 @@ function Avatar({ uri, name, size = 38, radius = 50, colors }: { uri?: string | 
 }
 
 function Divider({ colors }: { colors: any }) {
-  return <View style={{ height: 1, backgroundColor: "#1F1F1F", marginVertical: 12 }} />;
+  const { colors: themeColors } = useTheme();
+  return <View style={{ height: 1, backgroundColor: themeColors.border, marginVertical: 12 }} />;
 }
 
 function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; currentUserId: string; colors: any; onFollowUser?: (userId: string) => void }) {
   const queryClient = useQueryClient();
   const { t } = useI18n();
+  const { colors: themeColors } = useTheme();
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -213,13 +215,13 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
     <Animated.View entering={FadeInDown.duration(280).springify()}>
       <View
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: themeColors.card,
           borderRadius: 16,
           marginHorizontal: 16,
           marginBottom: 10,
           overflow: "hidden",
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: themeColors.border,
         }}
         testID="post-card"
       >
@@ -238,7 +240,7 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
                 <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: catColor }} />
-                <Text style={{ color: "#737373", fontSize: 12, fontWeight: "500" }}>{catLabel}</Text>
+                <Text style={{ color: themeColors.text3, fontSize: 12, fontWeight: "500" }}>{catLabel}</Text>
               </View>
             </View>
 
@@ -272,7 +274,7 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
 
             {isMyPost ? (
               <TouchableOpacity onPress={handleMorePress} testID="more-options-button" style={{ padding: 6 }}>
-                <MoreHorizontal size={17} color="#737373" />
+                <MoreHorizontal size={17} color={themeColors.text3} />
               </TouchableOpacity>
             ) : (
               <View style={{ width: 29 }} />
@@ -281,7 +283,7 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
 
           {/* Content */}
           {post.content ? (
-            <Text style={{ color: "#A3A3A3", fontSize: 15, lineHeight: 23, marginBottom: 12 }}>
+            <Text style={{ color: themeColors.text2, fontSize: 15, lineHeight: 23, marginBottom: 12 }}>
               {post.content}
             </Text>
           ) : null}
@@ -376,18 +378,18 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                 paddingVertical: 7,
                 paddingHorizontal: 12,
                 borderRadius: 100,
-                backgroundColor: isLiked ? accentRedSoft : "#141414",
+                backgroundColor: isLiked ? accentRedSoft : themeColors.bg3,
                 borderWidth: 1,
-                borderColor: isLiked ? accentRedBorder : "#1F1F1F",
+                borderColor: isLiked ? accentRedBorder : themeColors.border,
               }}
               testID="like-button"
             >
               <Heart
                 size={14}
-                color={isLiked ? accentRed : "#737373"}
+                color={isLiked ? accentRed : themeColors.text3}
                 fill={isLiked ? accentRed : "transparent"}
               />
-              <Text style={{ color: isLiked ? accentRed : "#737373", fontSize: 13, fontWeight: "500" }}>
+              <Text style={{ color: isLiked ? accentRed : themeColors.text3, fontSize: 13, fontWeight: "500" }}>
                 {post._count?.reactions || 0}
               </Text>
             </TouchableOpacity>
@@ -402,9 +404,9 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                 paddingVertical: 7,
                 paddingHorizontal: 12,
                 borderRadius: 100,
-                backgroundColor: (myReaction && myReaction.type !== "like") ? accentMid : "#141414",
+                backgroundColor: (myReaction && myReaction.type !== "like") ? accentMid : themeColors.bg3,
                 borderWidth: 1,
-                borderColor: (myReaction && myReaction.type !== "like") ? accentBorder : "#1F1F1F",
+                borderColor: (myReaction && myReaction.type !== "like") ? accentBorder : themeColors.border,
               }}
               testID="react-button"
             >
@@ -425,14 +427,14 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                 paddingVertical: 7,
                 paddingHorizontal: 12,
                 borderRadius: 100,
-                backgroundColor: showComments ? accentMid : "#141414",
+                backgroundColor: showComments ? accentMid : themeColors.bg3,
                 borderWidth: 1,
-                borderColor: showComments ? accentBorder : "#1F1F1F",
+                borderColor: showComments ? accentBorder : themeColors.border,
               }}
               testID="comment-button"
             >
-              <MessageCircle size={14} color={showComments ? accentGreen : "#737373"} />
-              <Text style={{ color: showComments ? accentGreen : "#737373", fontSize: 13, fontWeight: "500" }}>
+              <MessageCircle size={14} color={showComments ? accentGreen : themeColors.text3} />
+              <Text style={{ color: showComments ? accentGreen : themeColors.text3, fontSize: 13, fontWeight: "500" }}>
                 {post._count?.comments || 0}
               </Text>
             </TouchableOpacity>
@@ -448,13 +450,13 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                 borderRadius: 17,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: themeColors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: themeColors.border,
               }}
               testID="share-button"
             >
-              <Share2 size={14} color="#737373" />
+              <Share2 size={14} color={themeColors.text3} />
             </TouchableOpacity>
 
             {/* Save button */}
@@ -466,13 +468,13 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                 borderRadius: 17,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: themeColors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: themeColors.border,
               }}
               testID="save-button"
             >
-              <Bookmark size={14} color="#737373" />
+              <Bookmark size={14} color={themeColors.text3} />
             </TouchableOpacity>
           </View>
 
@@ -489,9 +491,9 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                     borderRadius: 100,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: myReaction?.type === r.id ? accentMid : "#141414",
+                    backgroundColor: myReaction?.type === r.id ? accentMid : themeColors.bg3,
                     borderWidth: 1,
-                    borderColor: myReaction?.type === r.id ? accentBorder : "#1F1F1F",
+                    borderColor: myReaction?.type === r.id ? accentBorder : themeColors.border,
                   }}
                 >
                   <Text style={{ fontSize: 18 }}>{r.emoji}</Text>
@@ -506,9 +508,9 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
               {(comments || []).map((c: any) => (
                 <View key={c.id} style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
                   <Avatar uri={c.author?.image} name={c.author?.name} size={28} radius={50} colors={colors} />
-                  <View style={{ flex: 1, backgroundColor: "#141414", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#1F1F1F" }}>
-                    <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 3 }}>{c.author?.name}</Text>
-                    <Text style={{ color: "#A3A3A3", fontSize: 13, lineHeight: 18 }}>{c.content}</Text>
+                  <View style={{ flex: 1, backgroundColor: themeColors.bg3, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: themeColors.border }}>
+                    <Text style={{ color: themeColors.text2, fontSize: 12, fontWeight: "600", marginBottom: 3 }}>{c.author?.name}</Text>
+                    <Text style={{ color: themeColors.text2, fontSize: 13, lineHeight: 18 }}>{c.content}</Text>
                   </View>
                 </View>
               ))}
@@ -520,14 +522,14 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                   placeholderTextColor="#737373"
                   style={{
                     flex: 1,
-                    backgroundColor: "#141414",
+                    backgroundColor: themeColors.bg3,
                     borderRadius: 20,
                     paddingHorizontal: 14,
                     paddingVertical: 9,
                     color: colors.text,
                     fontSize: 13,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: themeColors.border,
                   }}
                 />
                 <TouchableOpacity
@@ -537,14 +539,14 @@ function PostCard({ post, currentUserId, colors, onFollowUser }: { post: Post; c
                     width: 36,
                     height: 36,
                     borderRadius: 100,
-                    backgroundColor: commentText.trim() ? accentGreen : "#141414",
+                    backgroundColor: commentText.trim() ? accentGreen : themeColors.bg3,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 1,
-                    borderColor: commentText.trim() ? accentGreen : "#1F1F1F",
+                    borderColor: commentText.trim() ? accentGreen : themeColors.border,
                   }}
                 >
-                  <Send size={14} color={commentText.trim() ? "#080808" : "#737373"} />
+                  <Send size={14} color={commentText.trim() ? "#080808" : themeColors.text3} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -698,8 +700,8 @@ export default function FeedScreen() {
   const hasUnread = (notifBadge || []).some(n => !n.isRead);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="feed-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="feed-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
@@ -718,12 +720,12 @@ export default function FeedScreen() {
                   borderRadius: 10,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               >
-                <Search size={17} color="#A3A3A3" />
+                <Search size={17} color={colors.text2} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={{
@@ -732,15 +734,15 @@ export default function FeedScreen() {
                   borderRadius: 10,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: hasUnread ? accentSoft : "#141414",
+                  backgroundColor: hasUnread ? accentSoft : colors.bg3,
                   borderWidth: 1,
-                  borderColor: hasUnread ? accentBorder : "#1F1F1F",
+                  borderColor: hasUnread ? accentBorder : colors.border,
                 }}
                 onPress={() => setShowNotifications(true)}
                 testID="bell-button"
               >
                 <View>
-                  <Bell size={17} color={hasUnread ? accentGreen : "#A3A3A3"} />
+                  <Bell size={17} color={hasUnread ? accentGreen : colors.text2} />
                   {hasUnread ? (
                     <View style={{
                       position: "absolute",
@@ -751,7 +753,7 @@ export default function FeedScreen() {
                       borderRadius: 4,
                       backgroundColor: "#EF4444",
                       borderWidth: 1.5,
-                      borderColor: "#080808",
+                      borderColor: colors.bg,
                     }} />
                   ) : null}
                 </View>
@@ -765,12 +767,12 @@ export default function FeedScreen() {
                   borderRadius: 10,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               >
-                <MessageCircle size={17} color="#A3A3A3" />
+                <MessageCircle size={17} color={colors.text2} />
               </TouchableOpacity>
             </View>
           </View>
@@ -799,14 +801,14 @@ export default function FeedScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 7,
                   borderRadius: 100,
-                  backgroundColor: isActive ? "#4ADE8015" : "#141414",
+                  backgroundColor: isActive ? "#4ADE8015" : colors.bg3,
                   borderWidth: 1,
-                  borderColor: isActive ? "#4ADE8040" : "#1F1F1F",
+                  borderColor: isActive ? "#4ADE8040" : colors.border,
                 }}
               >
-                <Icon size={13} color={isActive ? accentGreen : "#737373"} />
+                <Icon size={13} color={isActive ? accentGreen : colors.text3} />
                 <Text style={{
-                  color: isActive ? accentGreen : "#737373",
+                  color: isActive ? accentGreen : colors.text3,
                   fontSize: 13,
                   fontWeight: isActive ? "600" : "400",
                 }}>
@@ -821,7 +823,7 @@ export default function FeedScreen() {
       {isLoading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} testID="loading-indicator">
           <ActivityIndicator color={accentGreen} size="large" />
-          <Text style={{ color: "#737373", fontSize: 13, marginTop: 14, fontWeight: "400" }}>
+          <Text style={{ color: colors.text3, fontSize: 13, marginTop: 14, fontWeight: "400" }}>
             {t("loadingFeed")}
           </Text>
         </View>
@@ -846,19 +848,19 @@ export default function FeedScreen() {
                 width: 64,
                 height: 64,
                 borderRadius: 18,
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 20,
               }}>
-                <Sparkles size={28} color="#737373" />
+                <Sparkles size={28} color={colors.text3} />
               </View>
               <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", marginBottom: 8, textAlign: "center" }}>
                 {t("noFeed")}
               </Text>
-              <Text style={{ color: "#737373", fontSize: 14, textAlign: "center", lineHeight: 22 }}>
+              <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 22 }}>
                 {t("noFeedDesc")}
               </Text>
             </View>
@@ -892,7 +894,7 @@ export default function FeedScreen() {
 
       {/* Notifications Modal */}
       <Modal visible={showNotifications} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <View style={{
             flexDirection: "row",
             alignItems: "center",
@@ -900,7 +902,7 @@ export default function FeedScreen() {
             paddingTop: 20,
             paddingBottom: 16,
             borderBottomWidth: 1,
-            borderBottomColor: "#1F1F1F",
+            borderBottomColor: colors.border,
           }}>
             <Text style={{ flex: 1, color: colors.text, fontSize: 20, fontWeight: "700" }}>{t("notifications")}</Text>
             <TouchableOpacity
@@ -910,9 +912,9 @@ export default function FeedScreen() {
                 paddingHorizontal: 12,
                 paddingVertical: 7,
                 borderRadius: 100,
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 marginRight: 10,
               }}
               testID="mark-all-read-button"
@@ -927,12 +929,12 @@ export default function FeedScreen() {
                 borderRadius: 100,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -947,10 +949,10 @@ export default function FeedScreen() {
                   alignItems: "flex-start",
                   padding: 14,
                   borderRadius: 14,
-                  backgroundColor: item.isRead ? "#0F0F0F" : accentSoft,
+                  backgroundColor: item.isRead ? colors.card : accentSoft,
                   marginBottom: 8,
                   borderWidth: 1,
-                  borderColor: item.isRead ? "#1F1F1F" : accentBorder,
+                  borderColor: item.isRead ? colors.border : accentBorder,
                 }}
               >
                 {!item.isRead ? (
@@ -967,7 +969,7 @@ export default function FeedScreen() {
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: colors.text, fontWeight: "600", fontSize: 14, marginBottom: 3 }}>{item.title}</Text>
-                  {item.body ? <Text style={{ color: "#737373", fontSize: 13, lineHeight: 19 }}>{item.body}</Text> : null}
+                  {item.body ? <Text style={{ color: colors.text3, fontSize: 13, lineHeight: 19 }}>{item.body}</Text> : null}
                 </View>
               </View>
             )}
@@ -977,17 +979,17 @@ export default function FeedScreen() {
                   width: 56,
                   height: 56,
                   borderRadius: 16,
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 14,
                 }}>
-                  <Bell size={26} color="#737373" />
+                  <Bell size={26} color={colors.text3} />
                 </View>
-                <Text style={{ color: "#A3A3A3", fontSize: 16, fontWeight: "600", marginBottom: 6 }}>{t("allCaughtUp")}</Text>
-                <Text style={{ color: "#737373", fontSize: 13 }}>{t("noNewNotifs")}</Text>
+                <Text style={{ color: colors.text2, fontSize: 16, fontWeight: "600", marginBottom: 6 }}>{t("allCaughtUp")}</Text>
+                <Text style={{ color: colors.text3, fontSize: 13 }}>{t("noNewNotifs")}</Text>
               </View>
             }
           />
@@ -996,20 +998,20 @@ export default function FeedScreen() {
 
       {/* Search Modal */}
       <Modal visible={showSearch} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: "#080808", padding: 16 }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg, padding: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20, marginTop: 8 }}>
             <View style={{
               flex: 1,
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 12,
               paddingHorizontal: 12,
               gap: 8,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
             }}>
-              <Search size={15} color="#737373" />
+              <Search size={15} color={colors.text3} />
               <TextInput
                 value={searchQ}
                 onChangeText={setSearchQ}
@@ -1027,17 +1029,17 @@ export default function FeedScreen() {
                 borderRadius: 100,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </TouchableOpacity>
           </View>
           {searchQ.length < 2 ? (
             <View style={{ alignItems: "center", paddingTop: 60 }}>
-              <Text style={{ color: "#737373", fontSize: 14 }}>{t("startTyping")}</Text>
+              <Text style={{ color: colors.text3, fontSize: 14 }}>{t("startTyping")}</Text>
             </View>
           ) : null}
           <FlatList
@@ -1052,17 +1054,17 @@ export default function FeedScreen() {
                   alignItems: "center",
                   padding: 12,
                   borderRadius: 14,
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   marginBottom: 8,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               >
                 <Avatar uri={item.image} name={item.name} size={44} radius={50} colors={colors} />
                 <View style={{ marginLeft: 12 }}>
                   <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{item.name}</Text>
                   {item.username ? (
-                    <Text style={{ color: "#737373", fontSize: 13, marginTop: 1 }}>@{item.username}</Text>
+                    <Text style={{ color: colors.text3, fontSize: 13, marginTop: 1 }}>@{item.username}</Text>
                   ) : null}
                 </View>
               </Pressable>
@@ -1073,7 +1075,7 @@ export default function FeedScreen() {
 
       {/* User Profile Modal */}
       <Modal visible={!!selectedUser} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <View style={{
             flexDirection: "row",
             alignItems: "center",
@@ -1081,7 +1083,7 @@ export default function FeedScreen() {
             paddingTop: 20,
             paddingBottom: 16,
             borderBottomWidth: 1,
-            borderBottomColor: "#1F1F1F",
+            borderBottomColor: colors.border,
           }}>
             <Text style={{ flex: 1, color: colors.text, fontSize: 20, fontWeight: "700" }}>{t("profileTitle")}</Text>
             <TouchableOpacity
@@ -1092,12 +1094,12 @@ export default function FeedScreen() {
                 borderRadius: 100,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ padding: 24 }}>
@@ -1118,10 +1120,10 @@ export default function FeedScreen() {
                     ) : null}
                   </View>
                   {selectedUserProfile.username ? (
-                    <Text style={{ color: "#737373", fontSize: 14, marginBottom: 10 }}>@{selectedUserProfile.username}</Text>
+                    <Text style={{ color: colors.text3, fontSize: 14, marginBottom: 10 }}>@{selectedUserProfile.username}</Text>
                   ) : null}
                   {selectedUserProfile.bio ? (
-                    <Text style={{ color: "#A3A3A3", fontSize: 14, lineHeight: 21, textAlign: "center", marginBottom: 20 }}>
+                    <Text style={{ color: colors.text2, fontSize: 14, lineHeight: 21, textAlign: "center", marginBottom: 20 }}>
                       {selectedUserProfile.bio}
                     </Text>
                   ) : null}
@@ -1131,9 +1133,9 @@ export default function FeedScreen() {
                     flexDirection: "row",
                     borderRadius: 14,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: colors.border,
                     overflow: "hidden",
-                    backgroundColor: "#0F0F0F",
+                    backgroundColor: colors.card,
                     marginBottom: 24,
                     width: "100%",
                   }}>
@@ -1149,11 +1151,11 @@ export default function FeedScreen() {
                           alignItems: "center",
                           paddingVertical: 14,
                           borderRightWidth: i < 2 ? 1 : 0,
-                          borderRightColor: "#1F1F1F",
+                          borderRightColor: colors.border,
                         }}
                       >
                         <Text style={{ color: accentGreen, fontWeight: "800", fontSize: 20 }}>{stat.value}</Text>
-                        <Text style={{ color: "#737373", fontSize: 11, marginTop: 2, fontWeight: "500" }}>{t(stat.labelKey as any)}</Text>
+                        <Text style={{ color: colors.text3, fontSize: 11, marginTop: 2, fontWeight: "500" }}>{t(stat.labelKey as any)}</Text>
                       </View>
                     ))}
                   </View>
@@ -1190,7 +1192,7 @@ export default function FeedScreen() {
             ) : (
               <View style={{ alignItems: "center", paddingTop: 40 }}>
                 <ActivityIndicator color={accentGreen} />
-                <Text style={{ color: "#737373", fontSize: 13, marginTop: 12 }}>{t("loadingProfile")}</Text>
+                <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>{t("loadingProfile")}</Text>
               </View>
             )}
           </ScrollView>
@@ -1199,7 +1201,7 @@ export default function FeedScreen() {
 
       {/* Compose Modal */}
       <Modal visible={showCompose} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <View style={{
             flexDirection: "row",
             alignItems: "center",
@@ -1207,7 +1209,7 @@ export default function FeedScreen() {
             paddingTop: 16,
             paddingBottom: 14,
             borderBottomWidth: 1,
-            borderBottomColor: "#1F1F1F",
+            borderBottomColor: colors.border,
           }}>
             <TouchableOpacity
               onPress={() => { setShowCompose(false); setPickedMedia(null); }}
@@ -1217,13 +1219,13 @@ export default function FeedScreen() {
                 borderRadius: 100,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 marginRight: 14,
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </TouchableOpacity>
             <Text style={{ flex: 1, color: colors.text, fontSize: 17, fontWeight: "700" }}>{t("newPost")}</Text>
             <TouchableOpacity
@@ -1231,7 +1233,7 @@ export default function FeedScreen() {
               disabled={!newPost.content.trim() || createPost.isPending || uploadingMedia}
               testID="submit-post-button"
               style={{
-                backgroundColor: !newPost.content.trim() || createPost.isPending ? "#141414" : accentGreen,
+                backgroundColor: !newPost.content.trim() || createPost.isPending ? colors.bg3 : accentGreen,
                 paddingHorizontal: 18,
                 paddingVertical: 9,
                 borderRadius: 100,
@@ -1258,7 +1260,7 @@ export default function FeedScreen() {
               <Avatar uri={null} name={session?.user?.name} size={42} radius={50} colors={colors} />
               <View>
                 <Text style={{ color: colors.text, fontWeight: "600", fontSize: 15 }}>{session?.user?.name}</Text>
-                <Text style={{ color: "#737373", fontSize: 12, marginTop: 1 }}>{t("sharingWith")}</Text>
+                <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>{t("sharingWith")}</Text>
               </View>
             </View>
 
@@ -1279,7 +1281,7 @@ export default function FeedScreen() {
               autoFocus
             />
 
-            <View style={{ height: 1, backgroundColor: "#1F1F1F", marginVertical: 12 }} />
+            <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 12 }} />
 
             {/* Media */}
             <View style={{ marginVertical: 16 }}>
@@ -1287,7 +1289,7 @@ export default function FeedScreen() {
                 <View style={{ borderRadius: 14, overflow: "hidden", marginBottom: 12, position: "relative" }}>
                   {isDocumentMedia ? (
                     <View style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.card,
                       borderRadius: 14,
                       padding: 16,
                       flexDirection: "row",
@@ -1308,7 +1310,7 @@ export default function FeedScreen() {
                       }}>
                         <FileText size={22} color={accentGreen} />
                       </View>
-                      <Text style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "500", flex: 1 }} numberOfLines={2}>
+                      <Text style={{ color: colors.text2, fontSize: 13, fontWeight: "500", flex: 1 }} numberOfLines={2}>
                         {pickedMedia.fileName}
                       </Text>
                       <TouchableOpacity
@@ -1331,7 +1333,7 @@ export default function FeedScreen() {
                         <View style={{
                           width: "100%",
                           height: 200,
-                          backgroundColor: "#0F0F0F",
+                          backgroundColor: colors.card,
                           borderRadius: 14,
                           alignItems: "center",
                           justifyContent: "center",
@@ -1351,7 +1353,7 @@ export default function FeedScreen() {
                           }}>
                             <Play size={22} color={accentGreen} fill={accentGreen} />
                           </View>
-                          <Text style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "500" }} numberOfLines={1}>
+                          <Text style={{ color: colors.text2, fontSize: 13, fontWeight: "500" }} numberOfLines={1}>
                             {pickedMedia.fileName}
                           </Text>
                         </View>
@@ -1390,13 +1392,13 @@ export default function FeedScreen() {
                     paddingHorizontal: 14,
                     paddingVertical: 9,
                     borderRadius: 100,
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: colors.border,
                   }}
                 >
-                  <ImageIcon size={14} color="#737373" />
-                  <Text style={{ color: "#737373", fontSize: 13, fontWeight: "500" }}>
+                  <ImageIcon size={14} color={colors.text3} />
+                  <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
                     {pickedMedia && !isDocumentMedia ? t("changeMedia") : t("addMedia")}
                   </Text>
                 </TouchableOpacity>
@@ -1411,20 +1413,20 @@ export default function FeedScreen() {
                     paddingHorizontal: 14,
                     paddingVertical: 9,
                     borderRadius: 100,
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: colors.border,
                   }}
                 >
-                  <FileText size={14} color="#737373" />
-                  <Text style={{ color: "#737373", fontSize: 13, fontWeight: "500" }}>
+                  <FileText size={14} color={colors.text3} />
+                  <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
                     {t("pickPdf")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            <Text style={{ color: "#737373", fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
               {t("category")}
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
@@ -1436,13 +1438,13 @@ export default function FeedScreen() {
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderRadius: 100,
-                    backgroundColor: newPost.category === cat.id ? accentMid : "#141414",
+                    backgroundColor: newPost.category === cat.id ? accentMid : colors.bg3,
                     borderWidth: 1,
-                    borderColor: newPost.category === cat.id ? accentBorder : "#1F1F1F",
+                    borderColor: newPost.category === cat.id ? accentBorder : colors.border,
                   }}
                 >
                   <Text style={{
-                    color: newPost.category === cat.id ? accentGreen : "#737373",
+                    color: newPost.category === cat.id ? accentGreen : colors.text3,
                     fontSize: 13,
                     fontWeight: newPost.category === cat.id ? "600" : "400",
                   }}>
@@ -1452,7 +1454,7 @@ export default function FeedScreen() {
               ))}
             </View>
 
-            <Text style={{ color: "#737373", fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+            <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
               {t("hashtags")}
             </Text>
             <TextInput
@@ -1462,14 +1464,14 @@ export default function FeedScreen() {
               placeholderTextColor="#737373"
               testID="hashtags-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 12,
                 paddingHorizontal: 14,
                 paddingVertical: 12,
                 color: colors.text,
                 fontSize: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             />
           </ScrollView>

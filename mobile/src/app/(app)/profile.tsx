@@ -1516,25 +1516,25 @@ export default function ProfileScreen() {
                     borderRadius: 18,
                     borderWidth: 1,
                     borderColor: `${item.color}30`,
-                    paddingVertical: 12,
-                    paddingHorizontal: 10,
-                    alignItems: "flex-start",
-                    gap: 8,
+                    padding: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
                   })}
                 >
                   <View
                     style={{
-                      width: 34,
-                      height: 34,
+                      width: 32,
+                      height: 32,
                       borderRadius: 10,
                       backgroundColor: `${item.color}20`,
                       alignItems: "center",
                       justifyContent: "center",
+                      marginRight: 10,
                     }}
                   >
-                    <IconComp size={15} color={item.color} />
+                    <IconComp size={16} color={item.color} />
                   </View>
-                  <View style={{ alignSelf: "stretch" }}>
+                  <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>{item.label}</Text>
                     <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>{item.subtitle}</Text>
                   </View>

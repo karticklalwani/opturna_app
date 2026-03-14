@@ -298,12 +298,20 @@ function BroadcastScreen({
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
-      {/* Background gradient */}
+      {/* Camera feed - fills entire background */}
+      {cameraPermission?.granted === true && (
+        <CameraView
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          facing="front"
+        />
+      )}
+
+      {/* Overlay gradient so UI remains readable */}
       <LinearGradient
-        colors={["#050E08", "#020505", "#000000"]}
+        colors={["rgba(5,14,8,0.6)", "transparent", "rgba(0,0,0,0.7)"]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.55 }}
       />
 
       {/* Subtle grid pattern overlay */}
@@ -728,7 +736,7 @@ export default function GoLiveScreen() {
                 })}
               >
                 <LinearGradient
-                  colors={canStart ? ["#4ADE80", "#22C55E"] : ["#1A1A1A", "#141414"]}
+                  colors={canStart ? ["#4ADE80", "#22C55E"] : ["#1F2A22", "#1A2A1A"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
@@ -740,9 +748,9 @@ export default function GoLiveScreen() {
                     <ActivityIndicator color="#000" size="small" testID="start-loading" />
                   ) : (
                     <>
-                      <Radio size={20} color={canStart ? "#000" : "#404040"} />
+                      <Radio size={20} color={canStart ? "#000" : "#555555"} />
                       <Text style={{
-                        color: canStart ? "#000" : "#404040",
+                        color: canStart ? "#000" : "#555555",
                         fontSize: 16, fontWeight: "900", letterSpacing: 0.5,
                       }}>
                         COMENZAR DIRECTO
