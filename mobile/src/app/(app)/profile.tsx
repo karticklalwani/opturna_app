@@ -1544,7 +1544,8 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* ---- About / Ambition / Projects (shown below tabs) ---- */}        {(profile?.mainAmbition || profile?.currentGoals) ? (
+        {/* ---- About / Ambition / Projects (shown below tabs) ---- */}
+        {(profile?.mainAmbition || profile?.currentGoals) ? (
           <Animated.View
             entering={FadeInDown.duration(320).delay(80)}
             style={{
@@ -1627,7 +1628,7 @@ export default function ProfileScreen() {
               {skills.length > 0 ? (
                 <View style={{ marginBottom: projects.length > 0 ? 16 : 0 }}>
                   <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
-                    Habilidades &amp; Especialidades
+                    Habilidades & Especialidades
                   </Text>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
                     {skills.map((skill, idx) => {
