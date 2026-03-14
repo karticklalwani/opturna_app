@@ -4,6 +4,7 @@ import {
   ActivityIndicator, TextInput, Image, Modal, ScrollView, Pressable, Alert, Share,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import { Post, Notification, User } from "@/types";
@@ -575,6 +576,7 @@ export default function FeedScreen() {
   const { data: session } = useSession();
   const { colors } = useTheme();
   const { t } = useI18n();
+  const router = useRouter();
   const [feedTab, setFeedTab] = useState<FeedTabId>("all");
   const [showCompose, setShowCompose] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -752,6 +754,22 @@ export default function FeedScreen() {
                     }} />
                   ) : null}
                 </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push('/messages')}
+                testID="messages-button"
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#141414",
+                  borderWidth: 1,
+                  borderColor: "#1F1F1F",
+                }}
+              >
+                <MessageCircle size={17} color="#A3A3A3" />
               </TouchableOpacity>
             </View>
           </View>

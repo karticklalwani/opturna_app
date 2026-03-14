@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { WebView } from "react-native-webview";
 import {
   View,
   Text,
@@ -2450,8 +2451,85 @@ function InversionesTab({
     number
   ][];
 
+  const tradingViewHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body { margin: 0; padding: 0; background: #0F0F0F; }
+      .tradingview-widget-container { height: 100%; width: 100%; }
+      .tradingview-widget-container__widget { height: calc(100% - 32px); width: 100%; }
+    </style>
+  </head>
+  <body>
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {
+          "allow_symbol_change": true,
+          "calendar": false,
+          "details": false,
+          "hide_side_toolbar": true,
+          "hide_top_toolbar": false,
+          "hide_legend": false,
+          "hide_volume": false,
+          "hotlist": false,
+          "interval": "D",
+          "locale": "es",
+          "save_image": true,
+          "style": "1",
+          "symbol": "NASDAQ:AAPL",
+          "theme": "dark",
+          "timezone": "Etc/UTC",
+          "backgroundColor": "#0F0F0F",
+          "gridColor": "rgba(242, 242, 242, 0.06)",
+          "watchlist": [],
+          "withdateranges": false,
+          "compareSymbols": [],
+          "studies": [],
+          "autosize": true
+        }
+      </script>
+    </div>
+  </body>
+</html>`;
+
   return (
     <View>
+      {/* TradingView chart */}
+      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: 15,
+            fontWeight: "700",
+            marginBottom: 12,
+            letterSpacing: -0.2,
+          }}
+        >
+          Gráfico de Mercado
+        </Text>
+        <Animated.View
+          entering={FadeInDown.duration(300).springify()}
+          style={{
+            borderRadius: 20,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <WebView
+            source={{ html: tradingViewHtml }}
+            style={{ height: 350, borderRadius: 16, overflow: "hidden" }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            mixedContentMode="always"
+            originWhitelist={["*"]}
+          />
+        </Animated.View>
+      </View>
+
       {/* Portfolio overview */}
       <Animated.View
         entering={FadeInDown.duration(300).springify()}
