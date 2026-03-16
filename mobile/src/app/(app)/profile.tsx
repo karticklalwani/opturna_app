@@ -1452,96 +1452,60 @@ export default function ProfileScreen() {
             <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>Mi productividad</Text>
           </View>
 
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {[
-              {
-                label: "Tareas",
-                subtitle: "Gestiona tus pendientes",
-                icon: CheckSquare,
-                color: colors.accent,
-                route: "/(app)/tasks",
-                testId: "nav-tasks-button",
-              },
-              {
-                label: "Hábitos",
-                subtitle: "Rutinas diarias",
-                icon: Repeat2,
-                color: "#818CF8",
-                route: "/(app)/habits",
-                testId: "nav-habits-button",
-              },
-              {
-                label: "Proyectos",
-                subtitle: "Tus iniciativas",
-                icon: Briefcase,
-                color: "#F59E0B",
-                route: "/(app)/projects",
-                testId: "nav-projects-button",
-              },
-              {
-                label: "Progreso",
-                subtitle: "Tus métricas",
-                icon: TrendingUp,
-                color: "#4ADE80",
-                route: "/(app)/progress",
-                testId: "nav-progress-button",
-              },
-              {
-                label: "Metas",
-                subtitle: "Metas de vida",
-                icon: Star,
-                color: "#818CF8",
-                route: "/(app)/life-goals",
-                testId: "nav-life-goals-button",
-              },
-              {
-                label: "Diario",
-                subtitle: "Reflexiones diarias",
-                icon: BookOpen,
-                color: "#F472B6",
-                route: "/(app)/journal",
-                testId: "nav-journal-button",
-              },
-            ].map((item) => {
-              const IconComp = item.icon;
-              return (
-                <Pressable
-                  key={item.route}
-                  onPress={() => router.push(item.route as any)}
-                  testID={item.testId}
-                  style={({ pressed }) => ({
-                    width: "30%",
-                    flexGrow: 1,
-                    backgroundColor: pressed ? `${item.color}18` : colors.card,
-                    borderRadius: 18,
-                    borderWidth: 1,
-                    borderColor: `${item.color}30`,
-                    padding: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                  })}
-                >
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 10,
-                      backgroundColor: `${item.color}20`,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 10,
-                    }}
-                  >
-                    <IconComp size={16} color={item.color} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>{item.label}</Text>
-                    <Text style={{ color: colors.text3, fontSize: 10, marginTop: 2 }}>{item.subtitle}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
+          {(() => {
+            const navItems = [
+              { label: "Tareas", subtitle: "Pendientes", icon: CheckSquare, color: colors.accent, route: "/(app)/tasks", testId: "nav-tasks-button" },
+              { label: "Hábitos", subtitle: "Rutinas", icon: Repeat2, color: "#818CF8", route: "/(app)/habits", testId: "nav-habits-button" },
+              { label: "Proyectos", subtitle: "Iniciativas", icon: Briefcase, color: "#F59E0B", route: "/(app)/projects", testId: "nav-projects-button" },
+              { label: "Progreso", subtitle: "Métricas", icon: TrendingUp, color: "#4ADE80", route: "/(app)/progress", testId: "nav-progress-button" },
+              { label: "Metas", subtitle: "Vida", icon: Star, color: "#818CF8", route: "/(app)/life-goals", testId: "nav-life-goals-button" },
+              { label: "Diario", subtitle: "Reflexiones", icon: BookOpen, color: "#F472B6", route: "/(app)/journal", testId: "nav-journal-button" },
+            ];
+            const rows: (typeof navItems)[] = [];
+            for (let i = 0; i < navItems.length; i += 3) rows.push(navItems.slice(i, i + 3));
+            return rows.map((row, ri) => (
+              <View key={ri} style={{ flexDirection: "row", gap: 8, marginBottom: ri < rows.length - 1 ? 8 : 0 }}>
+                {row.map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <Pressable
+                      key={item.route}
+                      onPress={() => router.push(item.route as any)}
+                      testID={item.testId}
+                      style={({ pressed }) => ({
+                        flex: 1,
+                        backgroundColor: pressed ? `${item.color}18` : colors.card,
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        borderColor: `${item.color}30`,
+                        paddingVertical: 14,
+                        paddingHorizontal: 10,
+                        alignItems: "center",
+                        gap: 8,
+                      })}
+                    >
+                      <View
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 11,
+                          backgroundColor: `${item.color}20`,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <IconComp size={17} color={item.color} />
+                      </View>
+                      <View style={{ alignItems: "center" }}>
+                        <Text style={{ color: colors.text, fontSize: 12, fontWeight: "700", textAlign: "center" }}>{item.label}</Text>
+                        <Text style={{ color: colors.text3, fontSize: 10, marginTop: 1, textAlign: "center" }}>{item.subtitle}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ));
+          })()}
         </Animated.View>
 
         {/* ---- About / Ambition / Projects (shown below tabs) ---- */}
