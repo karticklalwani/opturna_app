@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import {
@@ -23,9 +24,13 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { JournalEntry } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
+
+type Colors = typeof DARK;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -98,7 +103,7 @@ function parseTags(tagsJson?: string | null): string[] {
 
 // ─── Tag Chips ────────────────────────────────────────────────────────────────
 
-function TagChips({ tags }: { tags: string[] }) {
+function TagChips({ tags, colors }: { tags: string[]; colors: Colors }) {
   if (tags.length === 0) return null;
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
@@ -109,16 +114,16 @@ function TagChips({ tags }: { tags: string[] }) {
             flexDirection: "row",
             alignItems: "center",
             gap: 3,
-            backgroundColor: "#1A1A1A",
+            backgroundColor: colors.bg4,
             borderRadius: 100,
             paddingHorizontal: 10,
             paddingVertical: 4,
             borderWidth: 1,
-            borderColor: "#2A2A2A",
+            borderColor: colors.border,
           }}
         >
-          <Tag size={9} color="#737373" />
-          <Text style={{ color: "#737373", fontSize: 10, fontWeight: "500" }}>
+          <Tag size={9} color={colors.text3} />
+          <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "500" }}>
             {tag}
           </Text>
         </View>
@@ -134,11 +139,13 @@ function EntryCard({
   index,
   onEdit,
   onDelete,
+  colors,
 }: {
   entry: JournalEntry;
   index: number;
   onEdit: (entry: JournalEntry) => void;
   onDelete: (id: string) => void;
+  colors: Colors;
 }) {
   const [expanded, setExpanded] = useState(false);
   const moodColor = getMoodColor(entry.mood);
@@ -155,10 +162,10 @@ function EntryCard({
         testID={`journal-entry-${entry.id}`}
         onPress={() => isLong && setExpanded((v) => !v)}
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.card,
           borderRadius: 18,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           borderLeftWidth: 3,
           borderLeftColor: moodColor,
           padding: 16,
@@ -186,7 +193,7 @@ function EntryCard({
             </View>
             <Text
               style={{
-                color: "#D4D4D4",
+                color: colors.text2,
                 fontSize: 14,
                 lineHeight: 22,
                 letterSpacing: 0.1,
@@ -201,16 +208,16 @@ function EntryCard({
                 testID={`expand-entry-${entry.id}`}
               >
                 {expanded ? (
-                  <ChevronUp size={12} color="#737373" />
+                  <ChevronUp size={12} color={colors.text3} />
                 ) : (
-                  <ChevronDown size={12} color="#737373" />
+                  <ChevronDown size={12} color={colors.text3} />
                 )}
-                <Text style={{ color: "#737373", fontSize: 11 }}>
+                <Text style={{ color: colors.text3, fontSize: 11 }}>
                   {expanded ? "Mostrar menos" : "Leer más"}
                 </Text>
               </Pressable>
             ) : null}
-            <TagChips tags={tags} />
+            <TagChips tags={tags} colors={colors} />
           </View>
 
           {/* Actions */}
@@ -222,14 +229,14 @@ function EntryCard({
                 width: 30,
                 height: 30,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Pencil size={12} color="#A3A3A3" />
+              <Pencil size={12} color={colors.text2} />
             </Pressable>
             <Pressable
               testID={`delete-entry-${entry.id}`}
@@ -269,12 +276,14 @@ function EntryModal({
   onSubmit,
   isPending,
   initial,
+  colors,
 }: {
   visible: boolean;
   onClose: () => void;
   onSubmit: (form: EntryForm) => void;
   isPending: boolean;
   initial?: EntryForm;
+  colors: Colors;
 }) {
   const [form, setForm] = useState<EntryForm>(
     initial ?? { content: "", mood: "", tagsInput: "", date: getTodayDate() }
@@ -302,13 +311,13 @@ function EntryModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#0A0907" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -333,18 +342,18 @@ function EntryModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -356,18 +365,18 @@ function EntryModal({
               disabled={!form.content.trim() || isPending}
               testID="submit-entry-button"
               style={{
-                backgroundColor: form.content.trim() ? "#4ADE80" : "#1A1A1A",
+                backgroundColor: form.content.trim() ? "#4ADE80" : colors.bg4,
                 borderRadius: 100,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
               }}
             >
               {isPending ? (
-                <ActivityIndicator size="small" color="#080808" />
+                <ActivityIndicator size="small" color={colors.bg} />
               ) : (
                 <Text
                   style={{
-                    color: form.content.trim() ? "#080808" : "#404040",
+                    color: form.content.trim() ? colors.bg : colors.text4,
                     fontSize: 13,
                     fontWeight: "700",
                   }}
@@ -386,7 +395,7 @@ function EntryModal({
             {/* Date */}
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -399,15 +408,15 @@ function EntryModal({
               value={form.date}
               onChangeText={(v) => setForm((p) => ({ ...p, date: v }))}
               placeholder="AAAA-MM-DD"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="entry-date-input"
               style={{
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 borderRadius: 12,
                 padding: 12,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 marginBottom: 20,
               }}
@@ -416,7 +425,7 @@ function EntryModal({
             {/* Mood selector */}
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -447,15 +456,15 @@ function EntryModal({
                       gap: 4,
                       paddingVertical: 10,
                       borderRadius: 14,
-                      backgroundColor: active ? `${m.color}1A` : "#141414",
+                      backgroundColor: active ? `${m.color}1A` : colors.bg3,
                       borderWidth: 1.5,
-                      borderColor: active ? m.color : "#2A2A2A",
+                      borderColor: active ? m.color : colors.border,
                     }}
                   >
                     <Text style={{ fontSize: 20 }}>{m.emoji}</Text>
                     <Text
                       style={{
-                        color: active ? m.color : "#404040",
+                        color: active ? m.color : colors.text4,
                         fontSize: 9,
                         fontWeight: "600",
                       }}
@@ -470,7 +479,7 @@ function EntryModal({
             {/* Content */}
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -483,16 +492,16 @@ function EntryModal({
               value={form.content}
               onChangeText={(v) => setForm((p) => ({ ...p, content: v }))}
               placeholder="¿Qué tienes en mente hoy?..."
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="entry-content-input"
               style={{
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 16,
-                color: "#E5E5E5",
+                color: colors.text,
                 fontSize: 15,
                 lineHeight: 24,
                 minHeight: 160,
@@ -505,7 +514,7 @@ function EntryModal({
             {/* Tags */}
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -518,15 +527,15 @@ function EntryModal({
               value={form.tagsInput}
               onChangeText={(v) => setForm((p) => ({ ...p, tagsInput: v }))}
               placeholder="gratitud, trabajo, familia..."
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="entry-tags-input"
               style={{
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 borderRadius: 12,
                 padding: 12,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 marginBottom: 32,
               }}
@@ -545,11 +554,13 @@ function DeleteModal({
   onCancel,
   onConfirm,
   isPending,
+  colors,
 }: {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   isPending: boolean;
+  colors: Colors;
 }) {
   return (
     <Modal
@@ -569,17 +580,17 @@ function DeleteModal({
       >
         <View
           style={{
-            backgroundColor: "#141414",
+            backgroundColor: colors.bg3,
             borderRadius: 24,
             borderWidth: 1,
-            borderColor: "#2A2A2A",
+            borderColor: colors.border,
             padding: 28,
             width: "100%",
           }}
         >
           <Text
             style={{
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 18,
               fontWeight: "700",
               textAlign: "center",
@@ -590,7 +601,7 @@ function DeleteModal({
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 14,
               textAlign: "center",
               lineHeight: 21,
@@ -607,13 +618,13 @@ function DeleteModal({
                 flex: 1,
                 paddingVertical: 14,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: "#A3A3A3", fontSize: 14, fontWeight: "600" }}>
+              <Text style={{ color: colors.text2, fontSize: 14, fontWeight: "600" }}>
                 Cancelar
               </Text>
             </Pressable>
@@ -663,6 +674,8 @@ function groupByDate(entries: JournalEntry[]): { date: string; items: JournalEnt
 
 export default function JournalScreen() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { colors } = useTheme();
 
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
@@ -748,7 +761,7 @@ export default function JournalScreen() {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: "#090806" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       testID="journal-screen"
     >
       <SafeAreaView edges={["top"]}>
@@ -762,36 +775,53 @@ export default function JournalScreen() {
               marginBottom: 6,
             }}
           >
-            <View>
-              <Text
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Pressable
+                onPress={() => router.back()}
                 style={{
-                  fontSize: 28,
-                  fontWeight: "800",
-                  color: "#F0EDE8",
-                  letterSpacing: -0.8,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                Mi Diario
-              </Text>
-              <Text style={{ color: "#7A6F63", fontSize: 13, marginTop: 2 }}>
-                {allEntries.length === 0
-                  ? "Escribe tu primera entrada"
-                  : `${allEntries.length} entrada${allEntries.length !== 1 ? "s" : ""}`}
-              </Text>
+                <ChevronLeft size={18} color={colors.text} />
+              </Pressable>
+              <View>
+                <Text
+                  style={{
+                    fontSize: 28,
+                    fontWeight: "800",
+                    color: colors.text,
+                    letterSpacing: -0.8,
+                  }}
+                >
+                  Mi Diario
+                </Text>
+                <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
+                  {allEntries.length === 0
+                    ? "Escribe tu primera entrada"
+                    : `${allEntries.length} entrada${allEntries.length !== 1 ? "s" : ""}`}
+                </Text>
+              </View>
             </View>
             <View
               style={{
                 width: 44,
                 height: 44,
                 borderRadius: 100,
-                backgroundColor: "#141210",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#2A2520",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <BookOpen size={18} color="#9C8E7F" />
+              <BookOpen size={18} color={colors.text3} />
             </View>
           </View>
         </View>
@@ -808,7 +838,7 @@ export default function JournalScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#9C8E7F"
+            tintColor={colors.text3}
           />
         }
       >
@@ -818,8 +848,8 @@ export default function JournalScreen() {
             style={{ alignItems: "center", paddingVertical: 48 }}
             testID="loading-indicator"
           >
-            <ActivityIndicator color="#9C8E7F" />
-            <Text style={{ color: "#7A6F63", fontSize: 13, marginTop: 12 }}>
+            <ActivityIndicator color={colors.text3} />
+            <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>
               Cargando entradas...
             </Text>
           </View>
@@ -829,10 +859,10 @@ export default function JournalScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 64,
-              backgroundColor: "#0F0C0A",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#2A2520",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -840,7 +870,7 @@ export default function JournalScreen() {
             <Text style={{ fontSize: 48, marginBottom: 16 }}>📖</Text>
             <Text
               style={{
-                color: "#F0EDE8",
+                color: colors.text,
                 fontSize: 18,
                 fontWeight: "700",
                 marginBottom: 8,
@@ -850,7 +880,7 @@ export default function JournalScreen() {
             </Text>
             <Text
               style={{
-                color: "#7A6F63",
+                color: colors.text3,
                 fontSize: 13,
                 textAlign: "center",
                 paddingHorizontal: 32,
@@ -875,7 +905,7 @@ export default function JournalScreen() {
               >
                 <Text
                   style={{
-                    color: "#9C8E7F",
+                    color: colors.text3,
                     fontSize: 12,
                     fontWeight: "700",
                     letterSpacing: 0.5,
@@ -888,7 +918,7 @@ export default function JournalScreen() {
                   style={{
                     flex: 1,
                     height: 1,
-                    backgroundColor: "#2A2520",
+                    backgroundColor: colors.border,
                   }}
                 />
               </View>
@@ -900,6 +930,7 @@ export default function JournalScreen() {
                   index={gi * 10 + i}
                   onEdit={handleEdit}
                   onDelete={(id) => setDeleteId(id)}
+                  colors={colors}
                 />
               ))}
             </View>
@@ -928,7 +959,7 @@ export default function JournalScreen() {
           elevation: 8,
         }}
       >
-        <Plus size={24} color="#0A0806" strokeWidth={2.5} />
+        <Plus size={24} color={colors.bg} strokeWidth={2.5} />
       </Pressable>
 
       {/* Create modal */}
@@ -937,6 +968,7 @@ export default function JournalScreen() {
         onClose={() => setShowForm(false)}
         onSubmit={(form) => createEntry.mutate(form)}
         isPending={createEntry.isPending}
+        colors={colors}
       />
 
       {/* Edit modal */}
@@ -948,6 +980,7 @@ export default function JournalScreen() {
         }}
         isPending={updateEntry.isPending}
         initial={editingEntry ? getEditForm(editingEntry) : undefined}
+        colors={colors}
       />
 
       {/* Delete confirm modal */}
@@ -958,6 +991,7 @@ export default function JournalScreen() {
           if (deleteId) deleteEntry.mutate(deleteId);
         }}
         isPending={deleteEntry.isPending}
+        colors={colors}
       />
     </View>
   );

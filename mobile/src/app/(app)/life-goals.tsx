@@ -13,6 +13,7 @@ import {
   Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Animated, {
   FadeInDown,
@@ -31,9 +32,13 @@ import {
   CircleCheckBig,
   Globe,
   Lock,
+  ChevronLeft,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { LifeGoal } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
+
+type Colors = typeof DARK;
 
 // ─── Category config ──────────────────────────────────────────────────────────
 
@@ -81,9 +86,11 @@ const EMOJI_SUGGESTIONS = [
 function GoalProgressBar({
   progress,
   color,
+  colors,
 }: {
   progress: number;
   color: string;
+  colors: Colors;
 }) {
   const width = useSharedValue(0);
 
@@ -108,7 +115,7 @@ function GoalProgressBar({
           marginBottom: 6,
         }}
       >
-        <Text style={{ color: "#737373", fontSize: 11, fontWeight: "500" }}>
+        <Text style={{ color: colors.text3, fontSize: 11, fontWeight: "500" }}>
           Progreso
         </Text>
         <Text
@@ -124,7 +131,7 @@ function GoalProgressBar({
       <View
         style={{
           height: 6,
-          backgroundColor: "#1A1A1A",
+          backgroundColor: colors.bg4,
           borderRadius: 100,
           overflow: "hidden",
         }}
@@ -157,6 +164,7 @@ function LifeGoalCard({
   onDelete,
   onUpdateProgress,
   onComplete,
+  colors,
 }: {
   goal: LifeGoal;
   index: number;
@@ -164,6 +172,7 @@ function LifeGoalCard({
   onDelete: (id: string) => void;
   onUpdateProgress: (id: string, progress: number) => void;
   onComplete: (id: string) => void;
+  colors: Colors;
 }) {
   const catStyle = getCatStyle(goal.category);
   const accentColor = goal.isCompleted ? "#4ADE80" : catStyle.color;
@@ -180,10 +189,10 @@ function LifeGoalCard({
       <View
         testID={`life-goal-card-${goal.id}`}
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.card,
           borderRadius: 24,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           padding: 20,
           marginBottom: 14,
           overflow: "hidden",
@@ -235,7 +244,7 @@ function LifeGoalCard({
           <View style={{ flex: 1, paddingTop: 2 }}>
             <Text
               style={{
-                color: goal.isCompleted ? "#737373" : "#F5F5F5",
+                color: goal.isCompleted ? colors.text3 : colors.text,
                 fontSize: 16,
                 fontWeight: "800",
                 letterSpacing: -0.2,
@@ -276,18 +285,18 @@ function LifeGoalCard({
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 3,
-                  backgroundColor: "#1A1A1A",
+                  backgroundColor: colors.bg4,
                   borderRadius: 100,
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                 }}
               >
                 {goal.isPublic ? (
-                  <Globe size={9} color="#737373" />
+                  <Globe size={9} color={colors.text3} />
                 ) : (
-                  <Lock size={9} color="#737373" />
+                  <Lock size={9} color={colors.text3} />
                 )}
-                <Text style={{ color: "#737373", fontSize: 10 }}>
+                <Text style={{ color: colors.text3, fontSize: 10 }}>
                   {goal.isPublic ? "Público" : "Privado"}
                 </Text>
               </View>
@@ -303,14 +312,14 @@ function LifeGoalCard({
                 width: 30,
                 height: 30,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Pencil size={12} color="#A3A3A3" />
+              <Pencil size={12} color={colors.text2} />
             </Pressable>
             <Pressable
               testID={`delete-life-goal-${goal.id}`}
@@ -335,7 +344,7 @@ function LifeGoalCard({
         {goal.description ? (
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 13,
               lineHeight: 19,
               marginTop: 12,
@@ -356,8 +365,8 @@ function LifeGoalCard({
               marginTop: 10,
             }}
           >
-            <Calendar size={11} color="#737373" />
-            <Text style={{ color: "#737373", fontSize: 11 }}>
+            <Calendar size={11} color={colors.text3} />
+            <Text style={{ color: colors.text3, fontSize: 11 }}>
               {daysLeft > 0
                 ? `${daysLeft} días restantes`
                 : daysLeft === 0
@@ -369,7 +378,7 @@ function LifeGoalCard({
 
         {/* Progress bar */}
         {!goal.isCompleted ? (
-          <GoalProgressBar progress={goal.progress} color={catStyle.color} />
+          <GoalProgressBar progress={goal.progress} color={catStyle.color} colors={colors} />
         ) : null}
 
         {/* Progress buttons or completed badge */}
@@ -389,19 +398,19 @@ function LifeGoalCard({
                     backgroundColor:
                       goal.progress >= val
                         ? `${catStyle.color}1F`
-                        : "#1A1A1A",
+                        : colors.bg4,
                     alignItems: "center",
                     borderWidth: 1,
                     borderColor:
                       goal.progress >= val
                         ? `${catStyle.color}4D`
-                        : "#2A2A2A",
+                        : colors.border,
                   }}
                 >
                   <Text
                     style={{
                       color:
-                        goal.progress >= val ? catStyle.color : "#404040",
+                        goal.progress >= val ? catStyle.color : colors.text4,
                       fontSize: 11,
                       fontWeight: "600",
                     }}
@@ -481,6 +490,7 @@ function GoalFormModal({
   isPending,
   initial,
   isEdit,
+  colors,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -488,6 +498,7 @@ function GoalFormModal({
   isPending: boolean;
   initial?: GoalForm;
   isEdit?: boolean;
+  colors: Colors;
 }) {
   const [form, setForm] = useState<GoalForm>(
     initial ?? {
@@ -531,13 +542,13 @@ function GoalFormModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -562,18 +573,18 @@ function GoalFormModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -591,7 +602,7 @@ function GoalFormModal({
             {/* Emoji picker */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -608,7 +619,7 @@ function GoalFormModal({
                   width: 64,
                   height: 64,
                   borderRadius: 20,
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderWidth: 2,
                   borderColor: "#4ADE80",
                   alignItems: "center",
@@ -642,10 +653,10 @@ function GoalFormModal({
                     height: 44,
                     borderRadius: 14,
                     backgroundColor:
-                      form.emoji === emoji ? "#4ADE801A" : "#141414",
+                      form.emoji === emoji ? "#4ADE801A" : colors.bg3,
                     borderWidth: 1.5,
                     borderColor:
-                      form.emoji === emoji ? "#4ADE80" : "#1F1F1F",
+                      form.emoji === emoji ? "#4ADE80" : colors.border,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
@@ -658,7 +669,7 @@ function GoalFormModal({
             {/* Title */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -671,15 +682,15 @@ function GoalFormModal({
               value={form.title}
               onChangeText={(v) => setForm((p) => ({ ...p, title: v }))}
               placeholder="Ej. Alcanzar la independencia financiera"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="life-goal-title-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 15,
                 marginBottom: 20,
               }}
@@ -688,7 +699,7 @@ function GoalFormModal({
             {/* Description */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -701,16 +712,16 @@ function GoalFormModal({
               value={form.description}
               onChangeText={(v) => setForm((p) => ({ ...p, description: v }))}
               placeholder="¿Qué significa esta meta para ti?"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="life-goal-description-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 lineHeight: 21,
                 minHeight: 80,
@@ -722,7 +733,7 @@ function GoalFormModal({
             {/* Category */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -755,14 +766,14 @@ function GoalFormModal({
                       paddingHorizontal: 14,
                       paddingVertical: 8,
                       borderRadius: 100,
-                      backgroundColor: active ? cat.bg : "#0F0F0F",
+                      backgroundColor: active ? cat.bg : colors.card,
                       borderWidth: 1.5,
-                      borderColor: active ? cat.color : "#1F1F1F",
+                      borderColor: active ? cat.color : colors.border,
                     }}
                   >
                     <Text
                       style={{
-                        color: active ? cat.color : "#737373",
+                        color: active ? cat.color : colors.text3,
                         fontSize: 13,
                         fontWeight: active ? "700" : "400",
                       }}
@@ -777,7 +788,7 @@ function GoalFormModal({
             {/* Target date */}
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "600",
                 letterSpacing: 0.4,
@@ -790,15 +801,15 @@ function GoalFormModal({
               value={form.targetDate}
               onChangeText={(v) => setForm((p) => ({ ...p, targetDate: v }))}
               placeholder="AAAA-MM-DD (ej. 2030-01-01)"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="life-goal-date-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 marginBottom: 20,
               }}
@@ -810,9 +821,9 @@ function GoalFormModal({
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 16,
                 marginBottom: 32,
@@ -820,15 +831,15 @@ function GoalFormModal({
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                 {form.isPublic ? (
-                  <Globe size={16} color="#737373" />
+                  <Globe size={16} color={colors.text3} />
                 ) : (
-                  <Lock size={16} color="#737373" />
+                  <Lock size={16} color={colors.text3} />
                 )}
                 <View>
-                  <Text style={{ color: "#F5F5F5", fontSize: 14, fontWeight: "600" }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
                     {form.isPublic ? "Pública" : "Privada"}
                   </Text>
-                  <Text style={{ color: "#737373", fontSize: 11, marginTop: 1 }}>
+                  <Text style={{ color: colors.text3, fontSize: 11, marginTop: 1 }}>
                     {form.isPublic
                       ? "Otros pueden verla"
                       : "Solo tú puedes verla"}
@@ -838,8 +849,8 @@ function GoalFormModal({
               <Switch
                 value={form.isPublic}
                 onValueChange={(v) => setForm((p) => ({ ...p, isPublic: v }))}
-                trackColor={{ false: "#1A1A1A", true: "#4ADE8040" }}
-                thumbColor={form.isPublic ? "#4ADE80" : "#404040"}
+                trackColor={{ false: colors.bg4, true: "#4ADE8040" }}
+                thumbColor={form.isPublic ? "#4ADE80" : colors.text4}
                 testID="visibility-toggle"
               />
             </View>
@@ -862,11 +873,11 @@ function GoalFormModal({
               }}
             >
               {isPending ? (
-                <ActivityIndicator color="#080808" />
+                <ActivityIndicator color={colors.bg} />
               ) : (
                 <Text
                   style={{
-                    color: "#080808",
+                    color: colors.bg,
                     fontSize: 15,
                     fontWeight: "700",
                   }}
@@ -889,11 +900,13 @@ function DeleteConfirmModal({
   onCancel,
   onConfirm,
   isPending,
+  colors,
 }: {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   isPending: boolean;
+  colors: Colors;
 }) {
   return (
     <Modal
@@ -913,17 +926,17 @@ function DeleteConfirmModal({
       >
         <View
           style={{
-            backgroundColor: "#141414",
+            backgroundColor: colors.bg3,
             borderRadius: 24,
             borderWidth: 1,
-            borderColor: "#2A2A2A",
+            borderColor: colors.border,
             padding: 28,
             width: "100%",
           }}
         >
           <Text
             style={{
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 18,
               fontWeight: "700",
               textAlign: "center",
@@ -934,7 +947,7 @@ function DeleteConfirmModal({
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 14,
               textAlign: "center",
               lineHeight: 21,
@@ -951,13 +964,13 @@ function DeleteConfirmModal({
                 flex: 1,
                 paddingVertical: 14,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: "#A3A3A3", fontSize: 14, fontWeight: "600" }}>
+              <Text style={{ color: colors.text2, fontSize: 14, fontWeight: "600" }}>
                 Cancelar
               </Text>
             </Pressable>
@@ -992,7 +1005,7 @@ function DeleteConfirmModal({
 
 // ─── Stats Row ────────────────────────────────────────────────────────────────
 
-function StatsRow({ goals }: { goals: LifeGoal[] }) {
+function StatsRow({ goals, colors }: { goals: LifeGoal[]; colors: Colors }) {
   const active = goals.filter((g) => !g.isCompleted);
   const completed = goals.filter((g) => g.isCompleted);
   const avgProgress =
@@ -1013,10 +1026,10 @@ function StatsRow({ goals }: { goals: LifeGoal[] }) {
           key={i}
           style={{
             flex: 1,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 18,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 14,
             alignItems: "center",
             gap: 5,
@@ -1034,7 +1047,7 @@ function StatsRow({ goals }: { goals: LifeGoal[] }) {
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 10,
               fontWeight: "500",
               textAlign: "center",
@@ -1053,6 +1066,8 @@ function StatsRow({ goals }: { goals: LifeGoal[] }) {
 type TabFilter = "activas" | "completadas";
 
 export default function LifeGoalsScreen() {
+  const router = useRouter();
+  const colors = useTheme((s) => s.colors);
   const queryClient = useQueryClient();
 
   const [tab, setTab] = useState<TabFilter>("activas");
@@ -1149,7 +1164,7 @@ export default function LifeGoalsScreen() {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: "#080808" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       testID="life-goals-screen"
     >
       <SafeAreaView edges={["top"]}>
@@ -1163,18 +1178,26 @@ export default function LifeGoalsScreen() {
               marginBottom: 20,
             }}
           >
-            <View>
+            {/* Back button */}
+            <Pressable
+              onPress={() => router.back()}
+              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginRight: 12 }}
+            >
+              <ChevronLeft size={18} color={colors.text} />
+            </Pressable>
+
+            <View style={{ flex: 1 }}>
               <Text
                 style={{
                   fontSize: 28,
                   fontWeight: "800",
-                  color: "#F5F5F5",
+                  color: colors.text,
                   letterSpacing: -0.8,
                 }}
               >
                 Metas de Vida
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
                 {allGoals.length === 0
                   ? "Tu visión a largo plazo"
                   : `${allGoals.length} meta${allGoals.length !== 1 ? "s" : ""} en total`}
@@ -1197,15 +1220,15 @@ export default function LifeGoalsScreen() {
           </View>
 
           {/* Stats */}
-          {allGoals.length > 0 ? <StatsRow goals={allGoals} /> : null}
+          {allGoals.length > 0 ? <StatsRow goals={allGoals} colors={colors} /> : null}
 
           {/* Tab switcher */}
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderRadius: 100,
               padding: 4,
               gap: 4,
@@ -1227,7 +1250,7 @@ export default function LifeGoalsScreen() {
               >
                 <Text
                   style={{
-                    color: tab === tabKey ? "#080808" : "#737373",
+                    color: tab === tabKey ? colors.bg : colors.text3,
                     fontSize: 13,
                     fontWeight: "700",
                   }}
@@ -1262,7 +1285,7 @@ export default function LifeGoalsScreen() {
             testID="loading-indicator"
           >
             <ActivityIndicator color="#4ADE80" />
-            <Text style={{ color: "#737373", fontSize: 13, marginTop: 12 }}>
+            <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>
               Cargando metas...
             </Text>
           </View>
@@ -1271,10 +1294,10 @@ export default function LifeGoalsScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 64,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -1282,7 +1305,7 @@ export default function LifeGoalsScreen() {
             <Text style={{ fontSize: 52, marginBottom: 16 }}>🌟</Text>
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 18,
                 fontWeight: "700",
                 marginBottom: 8,
@@ -1294,7 +1317,7 @@ export default function LifeGoalsScreen() {
             </Text>
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 13,
                 textAlign: "center",
                 paddingHorizontal: 32,
@@ -1347,6 +1370,7 @@ export default function LifeGoalsScreen() {
                 updateProgress.mutate({ id, progress })
               }
               onComplete={(id) => completeGoal.mutate(id)}
+              colors={colors}
             />
           ))
         )}
@@ -1373,7 +1397,7 @@ export default function LifeGoalsScreen() {
           elevation: 8,
         }}
       >
-        <Plus size={24} color="#080808" strokeWidth={2.5} />
+        <Plus size={24} color={colors.bg} strokeWidth={2.5} />
       </Pressable>
 
       {/* Create modal */}
@@ -1382,6 +1406,7 @@ export default function LifeGoalsScreen() {
         onClose={() => setShowCreate(false)}
         onSubmit={(form) => createGoal.mutate(form)}
         isPending={createGoal.isPending}
+        colors={colors}
       />
 
       {/* Edit modal */}
@@ -1394,6 +1419,7 @@ export default function LifeGoalsScreen() {
         isPending={updateGoal.isPending}
         initial={editingGoal ? getEditForm(editingGoal) : undefined}
         isEdit
+        colors={colors}
       />
 
       {/* Delete confirm */}
@@ -1404,6 +1430,7 @@ export default function LifeGoalsScreen() {
           if (deleteId) deleteGoal.mutate(deleteId);
         }}
         isPending={deleteGoal.isPending}
+        colors={colors}
       />
     </View>
   );

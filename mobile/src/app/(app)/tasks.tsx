@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import {
@@ -27,9 +28,13 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  ChevronLeft,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Task, Goal } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
+
+type Colors = typeof DARK;
 
 // ─── Priority config ───────────────────────────────────────────────────────────
 
@@ -52,11 +57,13 @@ function TaskCard({
   index,
   onToggle,
   onDelete,
+  colors,
 }: {
   task: Task;
   index: number;
   onToggle: (id: string, isCompleted: boolean) => void;
   onDelete: (id: string) => void;
+  colors: Colors;
 }) {
   const priorityStyle = getPriorityStyle(task.priority);
   const daysLeft = task.dueDate
@@ -69,12 +76,12 @@ function TaskCard({
       <View
         testID="task-card"
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.card,
           borderRadius: 18,
           borderWidth: 1,
-          borderColor: task.isCompleted ? "#1A1A1A" : "#1F1F1F",
+          borderColor: task.isCompleted ? colors.bg4 : colors.border,
           borderLeftWidth: 3,
-          borderLeftColor: task.isCompleted ? "#2A2A2A" : priorityStyle.color,
+          borderLeftColor: task.isCompleted ? colors.border : priorityStyle.color,
           padding: 16,
           marginBottom: 10,
           opacity: task.isCompleted ? 0.65 : 1,
@@ -105,7 +112,7 @@ function TaskCard({
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: task.isCompleted ? "#737373" : "#F5F5F5",
+                color: task.isCompleted ? colors.text3 : colors.text,
                 fontSize: 15,
                 fontWeight: "600",
                 letterSpacing: 0.1,
@@ -118,7 +125,7 @@ function TaskCard({
             {task.description ? (
               <Text
                 style={{
-                  color: "#737373",
+                  color: colors.text3,
                   fontSize: 12,
                   lineHeight: 18,
                   marginBottom: 6,
@@ -178,8 +185,8 @@ function TaskCard({
                     gap: 4,
                   }}
                 >
-                  <Calendar size={9} color={isOverdue ? "#EF4444" : "#737373"} />
-                  <Text style={{ color: isOverdue ? "#EF4444" : "#737373", fontSize: 10 }}>
+                  <Calendar size={9} color={isOverdue ? "#EF4444" : colors.text3} />
+                  <Text style={{ color: isOverdue ? "#EF4444" : colors.text3, fontSize: 10 }}>
                     {isOverdue
                       ? `${Math.abs(daysLeft!)}d pasado`
                       : daysLeft === 0
@@ -223,12 +230,14 @@ function SectionHeader({
   color,
   expanded,
   onToggle,
+  colors,
 }: {
   title: string;
   count: number;
   color: string;
   expanded: boolean;
   onToggle: () => void;
+  colors: Colors;
 }) {
   return (
     <Pressable
@@ -250,7 +259,7 @@ function SectionHeader({
             backgroundColor: color,
           }}
         />
-        <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "700", letterSpacing: 0.5 }}>
+        <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "700", letterSpacing: 0.5 }}>
           {title.toUpperCase()}
         </Text>
         <View
@@ -266,7 +275,7 @@ function SectionHeader({
           <Text style={{ color, fontSize: 11, fontWeight: "700" }}>{count}</Text>
         </View>
       </View>
-      {expanded ? <ChevronUp size={14} color="#404040" /> : <ChevronDown size={14} color="#404040" />}
+      {expanded ? <ChevronUp size={14} color={colors.text4} /> : <ChevronDown size={14} color={colors.text4} />}
     </Pressable>
   );
 }
@@ -287,12 +296,14 @@ function CreateTaskModal({
   onSubmit,
   isPending,
   goals,
+  colors,
 }: {
   visible: boolean;
   onClose: () => void;
   onSubmit: (form: NewTaskForm) => void;
   isPending: boolean;
   goals: Goal[];
+  colors: Colors;
 }) {
   const [form, setForm] = useState<NewTaskForm>({
     title: "",
@@ -332,13 +343,13 @@ function CreateTaskModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -363,18 +374,18 @@ function CreateTaskModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -390,45 +401,45 @@ function CreateTaskModal({
             keyboardShouldPersistTaps="handled"
           >
             {/* Title */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               TÍTULO *
             </Text>
             <TextInput
               value={form.title}
               onChangeText={(v) => setForm((p) => ({ ...p, title: v }))}
               placeholder="¿Qué necesitas hacer?"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="task-title-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 15,
                 marginBottom: 20,
               }}
             />
 
             {/* Description */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               DESCRIPCIÓN
             </Text>
             <TextInput
               value={form.description}
               onChangeText={(v) => setForm((p) => ({ ...p, description: v }))}
               placeholder="Detalles adicionales..."
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="task-description-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 lineHeight: 21,
                 minHeight: 80,
@@ -438,7 +449,7 @@ function CreateTaskModal({
             />
 
             {/* Priority */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
               PRIORIDAD
             </Text>
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
@@ -453,15 +464,15 @@ function CreateTaskModal({
                       flex: 1,
                       paddingVertical: 10,
                       borderRadius: 12,
-                      backgroundColor: active ? p.bg : "#0F0F0F",
+                      backgroundColor: active ? p.bg : colors.card,
                       borderWidth: 1.5,
-                      borderColor: active ? p.color : "#1F1F1F",
+                      borderColor: active ? p.color : colors.border,
                       alignItems: "center",
                       gap: 4,
                     }}
                   >
-                    <Flag size={14} color={active ? p.color : "#404040"} />
-                    <Text style={{ color: active ? p.color : "#737373", fontSize: 12, fontWeight: "600" }}>
+                    <Flag size={14} color={active ? p.color : colors.text4} />
+                    <Text style={{ color: active ? p.color : colors.text3, fontSize: 12, fontWeight: "600" }}>
                       {p.label}
                     </Text>
                   </Pressable>
@@ -470,16 +481,16 @@ function CreateTaskModal({
             </View>
 
             {/* Goal (optional) */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               OBJETIVO (OPCIONAL)
             </Text>
             <Pressable
               onPress={() => setShowGoalPicker(!showGoalPicker)}
               testID="goal-picker-toggle"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: showGoalPicker ? "#4ADE8060" : "#1F1F1F",
+                borderColor: showGoalPicker ? "#4ADE8060" : colors.border,
                 borderRadius: 14,
                 padding: 14,
                 flexDirection: "row",
@@ -489,19 +500,19 @@ function CreateTaskModal({
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Target size={14} color={selectedGoal ? "#4ADE80" : "#404040"} />
-                <Text style={{ color: selectedGoal ? "#F5F5F5" : "#404040", fontSize: 14 }}>
+                <Target size={14} color={selectedGoal ? "#4ADE80" : colors.text4} />
+                <Text style={{ color: selectedGoal ? colors.text : colors.text4, fontSize: 14 }}>
                   {selectedGoal ? selectedGoal.title : "Sin objetivo asignado"}
                 </Text>
               </View>
-              {showGoalPicker ? <ChevronUp size={14} color="#404040" /> : <ChevronDown size={14} color="#404040" />}
+              {showGoalPicker ? <ChevronUp size={14} color={colors.text4} /> : <ChevronDown size={14} color={colors.text4} />}
             </Pressable>
             {showGoalPicker ? (
               <View
                 style={{
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   borderRadius: 14,
                   marginBottom: 20,
                   overflow: "hidden",
@@ -512,14 +523,14 @@ function CreateTaskModal({
                   style={{
                     padding: 14,
                     borderBottomWidth: 1,
-                    borderBottomColor: "#1A1A1A",
+                    borderBottomColor: colors.bg4,
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 8,
                   }}
                 >
-                  <Circle size={14} color="#737373" />
-                  <Text style={{ color: "#737373", fontSize: 14 }}>Sin objetivo</Text>
+                  <Circle size={14} color={colors.text3} />
+                  <Text style={{ color: colors.text3, fontSize: 14 }}>Sin objetivo</Text>
                 </Pressable>
                 {goals.filter((g) => !g.isCompleted).map((goal) => (
                   <Pressable
@@ -528,7 +539,7 @@ function CreateTaskModal({
                     style={{
                       padding: 14,
                       borderBottomWidth: 1,
-                      borderBottomColor: "#1A1A1A",
+                      borderBottomColor: colors.bg4,
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 8,
@@ -536,7 +547,7 @@ function CreateTaskModal({
                     }}
                   >
                     <Target size={14} color="#4ADE80" />
-                    <Text style={{ color: form.goalId === goal.id ? "#4ADE80" : "#F5F5F5", fontSize: 14, flex: 1 }} numberOfLines={1}>
+                    <Text style={{ color: form.goalId === goal.id ? "#4ADE80" : colors.text, fontSize: 14, flex: 1 }} numberOfLines={1}>
                       {goal.title}
                     </Text>
                     {form.goalId === goal.id ? <Check size={14} color="#4ADE80" /> : null}
@@ -546,22 +557,22 @@ function CreateTaskModal({
             ) : null}
 
             {/* Due Date */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               FECHA LÍMITE
             </Text>
             <TextInput
               value={form.dueDate}
               onChangeText={(v) => setForm((p) => ({ ...p, dueDate: v }))}
               placeholder="AAAA-MM-DD (ej. 2026-04-15)"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="task-date-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 marginBottom: 32,
               }}
@@ -585,9 +596,9 @@ function CreateTaskModal({
               }}
             >
               {isPending ? (
-                <ActivityIndicator color="#080808" />
+                <ActivityIndicator color={colors.bg} />
               ) : (
-                <Text style={{ color: "#080808", fontSize: 15, fontWeight: "700" }}>
+                <Text style={{ color: colors.bg, fontSize: 15, fontWeight: "700" }}>
                   Crear Tarea
                 </Text>
               )}
@@ -601,7 +612,13 @@ function CreateTaskModal({
 
 // ─── Stats Row ─────────────────────────────────────────────────────────────────
 
-function TaskStatsRow({ tasks }: { tasks: Task[] }) {
+function TaskStatsRow({
+  tasks,
+  colors,
+}: {
+  tasks: Task[];
+  colors: Colors;
+}) {
   const pending = tasks.filter((t) => !t.isCompleted).length;
   const completed = tasks.filter((t) => t.isCompleted).length;
   const highPriority = tasks.filter((t) => t.priority === "high" && !t.isCompleted).length;
@@ -617,10 +634,10 @@ function TaskStatsRow({ tasks }: { tasks: Task[] }) {
           key={i}
           style={{
             flex: 1,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 12,
             alignItems: "center",
             gap: 4,
@@ -629,7 +646,7 @@ function TaskStatsRow({ tasks }: { tasks: Task[] }) {
           <Text style={{ color: stat.color, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
             {stat.value}
           </Text>
-          <Text style={{ color: "#737373", fontSize: 10, fontWeight: "500", textAlign: "center" }}>
+          <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "500", textAlign: "center" }}>
             {stat.label}
           </Text>
         </View>
@@ -642,6 +659,8 @@ function TaskStatsRow({ tasks }: { tasks: Task[] }) {
 
 export default function TasksScreen() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { colors } = useTheme();
   const [showCreate, setShowCreate] = useState(false);
   const [pendingExpanded, setPendingExpanded] = useState(true);
   const [completedExpanded, setCompletedExpanded] = useState(false);
@@ -688,46 +707,41 @@ export default function TasksScreen() {
   const allGoals: Goal[] = goals ?? [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="tasks-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="tasks-screen">
       <SafeAreaView edges={["top"]}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
-          {/* Header */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 4,
-            }}
-          >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>
+              <ChevronLeft size={18} color={colors.text} />
+            </Pressable>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: "#F5F5F5", letterSpacing: -0.8 }}>
+              <Text style={{ fontSize: 22, fontWeight: "800", color: colors.text, letterSpacing: -0.6 }}>
                 Tareas
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
                 {allTasks.length === 0
                   ? "Sin tareas aún"
                   : `${pendingTasks.length} pendiente${pendingTasks.length !== 1 ? "s" : ""}`}
               </Text>
             </View>
-            <View
-              style={{
-                backgroundColor: "#0F0F0F",
-                borderWidth: 1,
-                borderColor: "#1F1F1F",
-                borderRadius: 14,
-                paddingHorizontal: 14,
-                paddingVertical: 6,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <CheckSquare size={14} color="#4ADE80" />
-              <Text style={{ color: "#4ADE80", fontSize: 13, fontWeight: "700" }}>
-                {allTasks.length}
-              </Text>
-            </View>
+          </View>
+          <View
+            style={{
+              backgroundColor: colors.card,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 14,
+              paddingHorizontal: 14,
+              paddingVertical: 6,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <CheckSquare size={14} color="#4ADE80" />
+            <Text style={{ color: "#4ADE80", fontSize: 13, fontWeight: "700" }}>
+              {allTasks.length}
+            </Text>
           </View>
         </View>
       </SafeAreaView>
@@ -740,13 +754,13 @@ export default function TasksScreen() {
         }
       >
         {/* Stats */}
-        {allTasks.length > 0 ? <TaskStatsRow tasks={allTasks} /> : null}
+        {allTasks.length > 0 ? <TaskStatsRow tasks={allTasks} colors={colors} /> : null}
 
         {/* Loading */}
         {isLoading ? (
           <View style={{ alignItems: "center", paddingVertical: 48 }} testID="loading-indicator">
             <ActivityIndicator color="#4ADE80" />
-            <Text style={{ color: "#737373", fontSize: 13, marginTop: 12 }}>Cargando tareas...</Text>
+            <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>Cargando tareas...</Text>
           </View>
         ) : allTasks.length === 0 ? (
           /* Empty state */
@@ -754,10 +768,10 @@ export default function TasksScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 56,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -777,11 +791,11 @@ export default function TasksScreen() {
             >
               <ClipboardList size={28} color="#FBBF24" />
             </View>
-            <Text style={{ color: "#F5F5F5", fontSize: 17, fontWeight: "700", marginBottom: 8 }}>
+            <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 8 }}>
               Sin tareas pendientes
             </Text>
             <Text
-              style={{ color: "#737373", fontSize: 13, textAlign: "center", paddingHorizontal: 28, lineHeight: 20 }}
+              style={{ color: colors.text3, fontSize: 13, textAlign: "center", paddingHorizontal: 28, lineHeight: 20 }}
             >
               Organiza tu día creando tu primera tarea. Puedes vincularla a un objetivo.
             </Text>
@@ -818,6 +832,7 @@ export default function TasksScreen() {
                   color="#FBBF24"
                   expanded={pendingExpanded}
                   onToggle={() => setPendingExpanded(!pendingExpanded)}
+                  colors={colors}
                 />
                 {pendingExpanded
                   ? pendingTasks.map((task, i) => (
@@ -827,6 +842,7 @@ export default function TasksScreen() {
                         index={i}
                         onToggle={(id, val) => toggleTask.mutate({ id, isCompleted: val })}
                         onDelete={(id) => deleteTask.mutate(id)}
+                        colors={colors}
                       />
                     ))
                   : null}
@@ -842,6 +858,7 @@ export default function TasksScreen() {
                   color="#4ADE80"
                   expanded={completedExpanded}
                   onToggle={() => setCompletedExpanded(!completedExpanded)}
+                  colors={colors}
                 />
                 {completedExpanded
                   ? completedTasks.map((task, i) => (
@@ -851,6 +868,7 @@ export default function TasksScreen() {
                         index={i}
                         onToggle={(id, val) => toggleTask.mutate({ id, isCompleted: val })}
                         onDelete={(id) => deleteTask.mutate(id)}
+                        colors={colors}
                       />
                     ))
                   : null}
@@ -881,7 +899,7 @@ export default function TasksScreen() {
           elevation: 8,
         }}
       >
-        <Plus size={24} color="#080808" strokeWidth={2.5} />
+        <Plus size={24} color={colors.bg} strokeWidth={2.5} />
       </Pressable>
 
       <CreateTaskModal
@@ -890,6 +908,7 @@ export default function TasksScreen() {
         onSubmit={(form) => createTask.mutate(form)}
         isPending={createTask.isPending}
         goals={allGoals}
+        colors={colors}
       />
     </View>
   );

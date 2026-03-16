@@ -34,10 +34,12 @@ import {
   Briefcase,
   Lightbulb,
   Star,
+  FileText,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
+import { useRouter } from "expo-router";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -56,6 +58,9 @@ interface Post {
   content: string | null;
   category: string;
   createdAt: string;
+  imageUrl?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
   author: {
     id: string;
     name: string;
@@ -231,9 +236,11 @@ function SectionHeader({
 export default function DiscoverScreen() {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
   const [optimisticFollowed, setOptimisticFollowed] = useState<Set<string>>(new Set());
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<TextInput>(null);
 
   const isSearching = searchQuery.length > 1;
@@ -282,6 +289,18 @@ export default function DiscoverScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users-suggested"] });
+    },
+  });
+
+  const likeMutation = useMutation({
+    mutationFn: (postId: string) => api.post(`/api/posts/${postId}/react`, { type: "like" }),
+    onMutate: (postId: string) => {
+      setLikedPosts((prev) => {
+        const next = new Set(prev);
+        if (next.has(postId)) next.delete(postId);
+        else next.add(postId);
+        return next;
+      });
     },
   });
 
@@ -677,6 +696,7 @@ export default function DiscoverScreen() {
                       >
                         <Pressable
                           testID={`post-card-${post.id}`}
+                          onPress={() => router.push(`/post-detail?postId=${post.id}` as any)}
                           style={{
                             backgroundColor: colors.card,
                             borderRadius: 20,
@@ -787,26 +807,74 @@ export default function DiscoverScreen() {
                             {post.content}
                           </Text>
 
+                          {/* image */}
+                          {post.imageUrl ? (
+                            <Image
+                              source={{ uri: post.imageUrl }}
+                              style={{
+                                width: "100%",
+                                height: 180,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                              }}
+                              resizeMode="cover"
+                            />
+                          ) : null}
+                          {post.fileUrl && !post.imageUrl ? (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                                backgroundColor: `${colors.accent}12`,
+                                borderRadius: 10,
+                                padding: 10,
+                                marginBottom: 12,
+                              }}
+                            >
+                              <FileText size={14} color={colors.accent} />
+                              <Text
+                                style={{
+                                  color: colors.accent,
+                                  fontSize: 12,
+                                  fontWeight: "500",
+                                  flex: 1,
+                                }}
+                                numberOfLines={1}
+                              >
+                                {post.fileName ?? "Archivo adjunto"}
+                              </Text>
+                            </View>
+                          ) : null}
+
                           {/* stats */}
                           <View
                             style={{ flexDirection: "row", alignItems: "center", gap: 18 }}
                           >
-                            <View
+                            <Pressable
+                              onPress={() => likeMutation.mutate(post.id)}
                               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+                              testID={`like-button-${post.id}`}
                             >
-                              <Heart size={13} color={colors.text3} />
+                              <Heart
+                                size={13}
+                                color={likedPosts.has(post.id) ? "#EF4444" : colors.text3}
+                                fill={likedPosts.has(post.id) ? "#EF4444" : "none"}
+                              />
                               <Text
                                 style={{
-                                  color: colors.text3,
+                                  color: likedPosts.has(post.id) ? "#EF4444" : colors.text3,
                                   fontSize: 12,
                                   fontWeight: "500",
                                 }}
                               >
-                                {formatCount(reactionCount)}
+                                {formatCount(reactionCount + (likedPosts.has(post.id) ? 1 : 0))}
                               </Text>
-                            </View>
-                            <View
+                            </Pressable>
+                            <Pressable
+                              onPress={() => router.push(`/post-detail?postId=${post.id}`)}
                               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+                              testID={`comment-button-${post.id}`}
                             >
                               <MessageCircle size={13} color={colors.text3} />
                               <Text
@@ -818,7 +886,7 @@ export default function DiscoverScreen() {
                               >
                                 {formatCount(commentCount)}
                               </Text>
-                            </View>
+                            </Pressable>
                             {reactionCount > 20 ? (
                               <View
                                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}

@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Animated, {
   FadeInDown,
@@ -33,9 +34,13 @@ import {
   DollarSign,
   Heart,
   User,
+  ChevronLeft,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Habit } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
+
+type Colors = typeof DARK;
 
 // ─── Category config ───────────────────────────────────────────────────────────
 
@@ -90,7 +95,7 @@ function getCategoryStyle(category: string | null | undefined) {
 
 // ─── Calendar Grid (28 days) ───────────────────────────────────────────────────
 
-function HabitCalendarGrid({ checkIns }: { checkIns: string[] }) {
+function HabitCalendarGrid({ checkIns, colors }: { checkIns: string[]; colors: Colors }) {
   const today = new Date();
   const days: { date: string; isChecked: boolean; isToday: boolean }[] = [];
 
@@ -114,7 +119,7 @@ function HabitCalendarGrid({ checkIns }: { checkIns: string[] }) {
       <View style={{ flexDirection: "row", gap: 4, marginBottom: 4 }}>
         {dayLabels.map((d, i) => (
           <View key={i} style={{ flex: 1, alignItems: "center" }}>
-            <Text style={{ color: "#404040", fontSize: 9, fontWeight: "600" }}>{d}</Text>
+            <Text style={{ color: colors.text4, fontSize: 9, fontWeight: "600" }}>{d}</Text>
           </View>
         ))}
       </View>
@@ -132,8 +137,8 @@ function HabitCalendarGrid({ checkIns }: { checkIns: string[] }) {
                 backgroundColor: day.isChecked
                   ? "#4ADE80"
                   : day.isToday
-                  ? "#1F1F1F"
-                  : "#141414",
+                  ? colors.border
+                  : colors.bg3,
                 borderWidth: day.isToday ? 1.5 : 0,
                 borderColor: day.isToday ? "#4ADE8060" : "transparent",
                 opacity: day.isChecked ? 1 : 0.6,
@@ -153,11 +158,13 @@ function CheckInButton({
   color,
   onPress,
   isLoading,
+  colors,
 }: {
   isChecked: boolean;
   color: string;
   onPress: () => void;
   isLoading: boolean;
+  colors: Colors;
 }) {
   const scale = useSharedValue(1);
 
@@ -194,9 +201,9 @@ function CheckInButton({
         }}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color={isChecked ? "#080808" : color} />
+          <ActivityIndicator size="small" color={isChecked ? colors.bg : color} />
         ) : (
-          <Check size={20} color={isChecked ? "#080808" : color} strokeWidth={2.5} />
+          <Check size={20} color={isChecked ? colors.bg : color} strokeWidth={2.5} />
         )}
       </Pressable>
     </Animated.View>
@@ -211,12 +218,14 @@ function HabitCard({
   onCheckIn,
   onDelete,
   isCheckingIn,
+  colors,
 }: {
   habit: Habit;
   index: number;
   onCheckIn: (id: string) => void;
   onDelete: (id: string) => void;
   isCheckingIn: boolean;
+  colors: Colors;
 }) {
   const [expanded, setExpanded] = useState(false);
   const catStyle = getCategoryStyle(habit.category);
@@ -230,10 +239,10 @@ function HabitCard({
       <View
         testID="habit-card"
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.card,
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           marginBottom: 12,
           overflow: "hidden",
         }}
@@ -266,7 +275,7 @@ function HabitCard({
 
             {/* Info */}
             <View style={{ flex: 1 }}>
-              <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "700", letterSpacing: 0.1 }}>
+              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", letterSpacing: 0.1 }}>
                 {habit.title}
               </Text>
               {habit.category ? (
@@ -284,7 +293,7 @@ function HabitCard({
                   {habit.streak}
                 </Text>
               </View>
-              <Text style={{ color: "#737373", fontSize: 9, fontWeight: "500" }}>racha</Text>
+              <Text style={{ color: colors.text3, fontSize: 9, fontWeight: "500" }}>racha</Text>
             </View>
 
             {/* Check-in button */}
@@ -293,6 +302,7 @@ function HabitCard({
               color={color}
               onPress={() => onCheckIn(habit.id)}
               isLoading={isCheckingIn}
+              colors={colors}
             />
           </View>
 
@@ -306,19 +316,19 @@ function HabitCard({
               marginTop: 12,
               paddingTop: 10,
               borderTopWidth: 1,
-              borderTopColor: "#1A1A1A",
+              borderTopColor: colors.bg4,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Star size={11} color="#FBBF24" />
-                <Text style={{ color: "#737373", fontSize: 11 }}>
+                <Text style={{ color: colors.text3, fontSize: 11 }}>
                   Mejor racha: <Text style={{ color: "#FBBF24", fontWeight: "700" }}>{habit.bestStreak}</Text>
                 </Text>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Activity size={11} color="#737373" />
-                <Text style={{ color: "#737373", fontSize: 11 }}>
+                <Activity size={11} color={colors.text3} />
+                <Text style={{ color: colors.text3, fontSize: 11 }}>
                   {checkInDates.length} días completados
                 </Text>
               </View>
@@ -340,12 +350,12 @@ function HabitCard({
               >
                 <Trash2 size={11} color="#EF4444" />
               </Pressable>
-              <Text style={{ color: "#404040", fontSize: 11 }}>{expanded ? "Ocultar" : "Historial"}</Text>
+              <Text style={{ color: colors.text4, fontSize: 11 }}>{expanded ? "Ocultar" : "Historial"}</Text>
             </View>
           </Pressable>
 
           {/* Calendar grid */}
-          {expanded ? <HabitCalendarGrid checkIns={checkInDates} /> : null}
+          {expanded ? <HabitCalendarGrid checkIns={checkInDates} colors={colors} /> : null}
         </View>
       </View>
     </Animated.View>
@@ -366,11 +376,13 @@ function CreateHabitModal({
   onClose,
   onSubmit,
   isPending,
+  colors,
 }: {
   visible: boolean;
   onClose: () => void;
   onSubmit: (form: NewHabitForm) => void;
   isPending: boolean;
+  colors: Colors;
 }) {
   const [form, setForm] = useState<NewHabitForm>({
     title: "",
@@ -405,13 +417,13 @@ function CreateHabitModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -436,18 +448,18 @@ function CreateHabitModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -463,45 +475,45 @@ function CreateHabitModal({
             keyboardShouldPersistTaps="handled"
           >
             {/* Title */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               TÍTULO *
             </Text>
             <TextInput
               value={form.title}
               onChangeText={(v) => setForm((p) => ({ ...p, title: v }))}
               placeholder="Ej. Meditar 10 minutos"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="habit-title-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 15,
                 marginBottom: 20,
               }}
             />
 
             {/* Description */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 8, letterSpacing: 0.3 }}>
               DESCRIPCIÓN
             </Text>
             <TextInput
               value={form.description}
               onChangeText={(v) => setForm((p) => ({ ...p, description: v }))}
               placeholder="¿Por qué es importante este hábito?"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="habit-description-input"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 14,
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 14,
                 lineHeight: 21,
                 minHeight: 80,
@@ -511,7 +523,7 @@ function CreateHabitModal({
             />
 
             {/* Category */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
               CATEGORÍA
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
@@ -529,13 +541,13 @@ function CreateHabitModal({
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 100,
-                      backgroundColor: active ? cat.bg : "#0F0F0F",
+                      backgroundColor: active ? cat.bg : colors.card,
                       borderWidth: 1.5,
-                      borderColor: active ? cat.color : "#1F1F1F",
+                      borderColor: active ? cat.color : colors.border,
                     }}
                   >
-                    <cat.Icon size={12} color={active ? cat.color : "#737373"} />
-                    <Text style={{ color: active ? cat.color : "#737373", fontSize: 12, fontWeight: active ? "600" : "400" }}>
+                    <cat.Icon size={12} color={active ? cat.color : colors.text3} />
+                    <Text style={{ color: active ? cat.color : colors.text3, fontSize: 12, fontWeight: active ? "600" : "400" }}>
                       {cat.label}
                     </Text>
                   </Pressable>
@@ -544,7 +556,7 @@ function CreateHabitModal({
             </View>
 
             {/* Color */}
-            <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 12, letterSpacing: 0.3 }}>
               COLOR
             </Text>
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
@@ -559,7 +571,7 @@ function CreateHabitModal({
                     borderRadius: 100,
                     backgroundColor: c,
                     borderWidth: form.color === c ? 3 : 0,
-                    borderColor: "#F5F5F5",
+                    borderColor: colors.text,
                     shadowColor: c,
                     shadowOpacity: form.color === c ? 0.6 : 0,
                     shadowRadius: 8,
@@ -568,7 +580,7 @@ function CreateHabitModal({
                     justifyContent: "center",
                   }}
                 >
-                  {form.color === c ? <Check size={16} color="#080808" strokeWidth={3} /> : null}
+                  {form.color === c ? <Check size={16} color={colors.bg} strokeWidth={3} /> : null}
                 </Pressable>
               ))}
             </View>
@@ -591,9 +603,9 @@ function CreateHabitModal({
               }}
             >
               {isPending ? (
-                <ActivityIndicator color="#080808" />
+                <ActivityIndicator color={colors.bg} />
               ) : (
-                <Text style={{ color: "#080808", fontSize: 15, fontWeight: "700" }}>
+                <Text style={{ color: colors.bg, fontSize: 15, fontWeight: "700" }}>
                   Crear Hábito
                 </Text>
               )}
@@ -607,7 +619,7 @@ function CreateHabitModal({
 
 // ─── Stats Row ─────────────────────────────────────────────────────────────────
 
-function HabitStatsRow({ habits }: { habits: Habit[] }) {
+function HabitStatsRow({ habits, colors }: { habits: Habit[]; colors: Colors }) {
   const today = new Date().toISOString().slice(0, 10);
   const checkedToday = habits.filter((h) => h.checkIns?.some((c) => c.date === today)).length;
   const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
@@ -624,10 +636,10 @@ function HabitStatsRow({ habits }: { habits: Habit[] }) {
           key={i}
           style={{
             flex: 1,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 12,
             alignItems: "center",
             gap: 4,
@@ -636,7 +648,7 @@ function HabitStatsRow({ habits }: { habits: Habit[] }) {
           <Text style={{ color: s.color, fontSize: 20, fontWeight: "800", letterSpacing: -0.5 }}>
             {s.value}
           </Text>
-          <Text style={{ color: "#737373", fontSize: 10, fontWeight: "500", textAlign: "center" }}>
+          <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "500", textAlign: "center" }}>
             {s.label}
           </Text>
         </View>
@@ -649,6 +661,8 @@ function HabitStatsRow({ habits }: { habits: Habit[] }) {
 
 export default function HabitsScreen() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { colors } = useTheme();
   const [showCreate, setShowCreate] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
 
@@ -688,37 +702,32 @@ export default function HabitsScreen() {
   const checkedTodayCount = allHabits.filter((h) => h.checkIns?.some((c) => c.date === today)).length;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="habits-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="habits-screen">
       <SafeAreaView edges={["top"]}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
-          {/* Header */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 4,
-            }}
-          >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>
+              <ChevronLeft size={18} color={colors.text} />
+            </Pressable>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: "#F5F5F5", letterSpacing: -0.8 }}>
+              <Text style={{ fontSize: 22, fontWeight: "800", color: colors.text, letterSpacing: -0.6 }}>
                 Hábitos
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
                 {allHabits.length === 0
                   ? "Construye tu rutina diaria"
                   : `${checkedTodayCount}/${allHabits.length} completados hoy`}
               </Text>
             </View>
-            <View style={{ alignItems: "center" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Flame size={18} color="#F97316" />
-                <Text style={{ color: "#F97316", fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
-                  {allHabits.reduce((max, h) => Math.max(max, h.streak), 0)}
-                </Text>
-              </View>
-              <Text style={{ color: "#737373", fontSize: 10 }}>mejor racha</Text>
+          </View>
+          <View style={{ alignItems: "center" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Flame size={18} color="#F97316" />
+              <Text style={{ color: "#F97316", fontSize: 22, fontWeight: "800", letterSpacing: -0.5 }}>
+                {allHabits.reduce((max, h) => Math.max(max, h.streak), 0)}
+              </Text>
             </View>
+            <Text style={{ color: colors.text3, fontSize: 10 }}>mejor racha</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -731,13 +740,13 @@ export default function HabitsScreen() {
         }
       >
         {/* Stats */}
-        {allHabits.length > 0 ? <HabitStatsRow habits={allHabits} /> : null}
+        {allHabits.length > 0 ? <HabitStatsRow habits={allHabits} colors={colors} /> : null}
 
         {/* Loading */}
         {isLoading ? (
           <View style={{ alignItems: "center", paddingVertical: 48 }} testID="loading-indicator">
             <ActivityIndicator color="#4ADE80" />
-            <Text style={{ color: "#737373", fontSize: 13, marginTop: 12 }}>Cargando hábitos...</Text>
+            <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>Cargando hábitos...</Text>
           </View>
         ) : allHabits.length === 0 ? (
           /* Empty state */
@@ -745,10 +754,10 @@ export default function HabitsScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 56,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -768,12 +777,12 @@ export default function HabitsScreen() {
             >
               <Flame size={32} color="#F97316" />
             </View>
-            <Text style={{ color: "#F5F5F5", fontSize: 17, fontWeight: "700", marginBottom: 8 }}>
+            <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 8 }}>
               Sin hábitos activos
             </Text>
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 13,
                 textAlign: "center",
                 paddingHorizontal: 32,
@@ -813,6 +822,7 @@ export default function HabitsScreen() {
               onCheckIn={(id) => checkIn.mutate(id)}
               onDelete={(id) => deleteHabit.mutate(id)}
               isCheckingIn={checkingInId === habit.id}
+              colors={colors}
             />
           ))
         )}
@@ -847,6 +857,7 @@ export default function HabitsScreen() {
         onClose={() => setShowCreate(false)}
         onSubmit={(form) => createHabit.mutate(form)}
         isPending={createHabit.isPending}
+        colors={colors}
       />
     </View>
   );

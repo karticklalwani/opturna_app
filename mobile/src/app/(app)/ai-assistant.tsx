@@ -95,8 +95,8 @@ const CATEGORIES = [
   "Trading",
   "Personal",
   "Plan",
-  "Taxation",
-  "Strategy",
+  "Impuestos",
+  "Estrategia",
 ];
 
 const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
@@ -250,55 +250,55 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
     text: "¿Cómo establecer metas que realmente logre?",
     category: "Personal",
   },
-  // Taxation (existing)
+  // Impuestos
   {
     id: "t1",
     icon: Globe,
-    text: "What's the corporate tax rate in UAE?",
-    category: "Taxation",
+    text: "¿Cuál es el impuesto corporativo en los EAU?",
+    category: "Impuestos",
   },
   {
     id: "t2",
     icon: DollarSign,
-    text: "How does the US capital gains tax work?",
-    category: "Taxation",
+    text: "¿Cómo funciona el impuesto sobre ganancias de capital en EE.UU.?",
+    category: "Impuestos",
   },
   {
     id: "t3",
     icon: Landmark,
-    text: "Explain OECD Pillar Two global minimum tax",
-    category: "Taxation",
+    text: "Explícame el impuesto mínimo global OCDE Pilar Dos",
+    category: "Impuestos",
   },
   {
     id: "t4",
     icon: FileText,
-    text: "What's the difference between ISR and IVA in Mexico?",
-    category: "Taxation",
+    text: "¿Cuál es la diferencia entre ISR e IVA en México?",
+    category: "Impuestos",
   },
-  // Strategy (existing)
+  // Estrategia
   {
     id: "s1",
     icon: Zap,
-    text: "Create a growth strategy for my startup",
-    category: "Strategy",
+    text: "Crea una estrategia de crecimiento para mi startup",
+    category: "Estrategia",
   },
   {
     id: "s2",
     icon: Target,
-    text: "How to use OKRs effectively for a small team?",
-    category: "Strategy",
+    text: "¿Cómo usar OKRs de forma efectiva en un equipo pequeño?",
+    category: "Estrategia",
   },
   {
     id: "s3",
     icon: TrendingUp,
-    text: "Blue ocean vs red ocean strategy explained",
-    category: "Strategy",
+    text: "Explícame la estrategia océano azul vs océano rojo",
+    category: "Estrategia",
   },
   {
     id: "s4",
     icon: BarChart2,
-    text: "How to do a SWOT analysis for my business?",
-    category: "Strategy",
+    text: "¿Cómo hacer un análisis FODA para mi negocio?",
+    category: "Estrategia",
   },
   // Plan / Organización
   {
@@ -358,7 +358,7 @@ function formatTime(timestamp: number): string {
   if (diffDays === 0) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } else if (diffDays === 1) {
-    return "Yesterday";
+    return "Ayer";
   } else if (diffDays < 7) {
     return date.toLocaleDateString([], { weekday: "short" });
   } else {
@@ -373,9 +373,9 @@ function formatSessionDate(timestamp: number): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return `Today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    return `Hoy a las ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   } else if (diffDays === 1) {
-    return `Yesterday at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    return `Ayer a las ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   } else {
     return date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
   }
@@ -900,7 +900,7 @@ export default function AiAssistantScreen() {
           id: `msg-${Date.now()}-error`,
           role: "assistant",
           content:
-            "Sorry, I encountered an error. Please check your connection and try again.",
+            "Lo siento, ocurrió un error. Por favor verifica tu conexión e intenta de nuevo.",
           timestamp: Date.now(),
         };
         const finalMessages = [...updatedMessages, errorMessage];
@@ -1066,7 +1066,7 @@ export default function AiAssistantScreen() {
                   marginTop: 1,
                 }}
               >
-                Expert in business, finance & global taxation
+                Experto en impuestos, finanzas y estrategia de negocios
               </Text>
             </View>
 
@@ -1154,7 +1154,7 @@ export default function AiAssistantScreen() {
                 textAlign: "center",
               }}
             >
-              Ask me anything
+              Pregúntame lo que quieras
             </Text>
             <Text
               style={{
@@ -1166,7 +1166,7 @@ export default function AiAssistantScreen() {
                 maxWidth: 280,
               }}
             >
-              Expert in global taxation, finance, and business strategy
+              Experto en impuestos, finanzas y estrategia de negocios
             </Text>
           </Animated.View>
         ) : null}

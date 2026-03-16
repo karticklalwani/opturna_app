@@ -135,6 +135,7 @@ export default function AppLayout() {
       />
 
       {/* Hidden screens — still reachable as routes */}
+      <Tabs.Screen name="post-detail" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
       <Tabs.Screen name="sprints" options={{ href: null }} />

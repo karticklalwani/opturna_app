@@ -32,9 +32,13 @@ import {
   Award,
   Zap,
   ChevronRight,
+  ChevronLeft,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Goal, Task, Habit, Project } from "@/types";
+import { useTheme, DARK } from "@/lib/theme";
+
+type Colors = typeof DARK;
 
 // ─── Local types ──────────────────────────────────────────────────────────────
 
@@ -94,11 +98,13 @@ function SkeletonBlock({
   height,
   borderRadius = 10,
   style,
+  colors,
 }: {
   width?: number | string;
   height: number;
   borderRadius?: number;
   style?: object;
+  colors: Colors;
 }) {
   const opacity = useSharedValue(0.4);
 
@@ -122,7 +128,7 @@ function SkeletonBlock({
           width: width ?? "100%",
           height,
           borderRadius,
-          backgroundColor: "#1A1A1A",
+          backgroundColor: colors.bg4,
         },
         animStyle,
         style,
@@ -131,19 +137,19 @@ function SkeletonBlock({
   );
 }
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ colors }: { colors: Colors }) {
   return (
     <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
-      <SkeletonBlock height={28} width="60%" borderRadius={8} />
-      <SkeletonBlock height={16} width="40%" borderRadius={6} />
+      <SkeletonBlock height={28} width="60%" borderRadius={8} colors={colors} />
+      <SkeletonBlock height={16} width="40%" borderRadius={6} colors={colors} />
       <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
         {[0, 1, 2, 3, 4].map((i) => (
-          <SkeletonBlock key={i} width={90} height={100} borderRadius={16} />
+          <SkeletonBlock key={i} width={90} height={100} borderRadius={16} colors={colors} />
         ))}
       </View>
-      <SkeletonBlock height={180} borderRadius={24} style={{ marginTop: 8 }} />
-      <SkeletonBlock height={120} borderRadius={20} />
-      <SkeletonBlock height={120} borderRadius={20} />
+      <SkeletonBlock height={180} borderRadius={24} style={{ marginTop: 8 }} colors={colors} />
+      <SkeletonBlock height={120} borderRadius={20} colors={colors} />
+      <SkeletonBlock height={120} borderRadius={20} colors={colors} />
     </View>
   );
 }
@@ -154,10 +160,12 @@ function AnimatedBar({
   progress,
   color,
   height = 6,
+  colors,
 }: {
   progress: number;
   color: string;
   height?: number;
+  colors: Colors;
 }) {
   const w = useSharedValue(0);
 
@@ -176,7 +184,7 @@ function AnimatedBar({
     <View
       style={{
         height,
-        backgroundColor: "#1A1A1A",
+        backgroundColor: colors.bg4,
         borderRadius: 100,
         overflow: "hidden",
       }}
@@ -209,16 +217,16 @@ interface StatCardData {
   bg: string;
 }
 
-function StatCard({ card, index }: { card: StatCardData; index: number }) {
+function StatCard({ card, index, colors }: { card: StatCardData; index: number; colors: Colors }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 70).duration(400)}
       style={{
         width: 92,
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         padding: 14,
         alignItems: "center",
         gap: 8,
@@ -253,7 +261,7 @@ function StatCard({ card, index }: { card: StatCardData; index: number }) {
       </Text>
       <Text
         style={{
-          color: "#737373",
+          color: colors.text3,
           fontSize: 10,
           fontWeight: "500",
           textAlign: "center",
@@ -274,12 +282,14 @@ function WeeklyRing({
   habitsToday,
   habitsTotal,
   overallPct,
+  colors,
 }: {
   tasksCompleted: number;
   tasksTotal: number;
   habitsToday: number;
   habitsTotal: number;
   overallPct: number;
+  colors: Colors;
 }) {
   const size = 140;
   const strokeW = 12;
@@ -300,10 +310,10 @@ function WeeklyRing({
     <Animated.View
       entering={FadeInDown.delay(200).duration(500)}
       style={{
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 24,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         padding: 20,
         flexDirection: "row",
         alignItems: "center",
@@ -324,7 +334,7 @@ function WeeklyRing({
             height: size,
             borderRadius: size / 2,
             borderWidth: strokeW,
-            borderColor: "#1A1A1A",
+            borderColor: colors.bg4,
           }}
         />
         {/* Outer ring fill - tasks */}
@@ -351,7 +361,7 @@ function WeeklyRing({
             height: size - strokeW * 3,
             borderRadius: (size - strokeW * 3) / 2,
             borderWidth: strokeW,
-            borderColor: "#1A1A1A",
+            borderColor: colors.bg4,
           }}
         />
         {/* Inner ring fill - habits */}
@@ -383,7 +393,7 @@ function WeeklyRing({
           >
             {overallPct}%
           </Text>
-          <Text style={{ color: "#737373", fontSize: 10, fontWeight: "500" }}>
+          <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "500" }}>
             semana
           </Text>
         </View>
@@ -403,13 +413,13 @@ function WeeklyRing({
                 backgroundColor: "#4ADE80",
               }}
             />
-            <Text style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "500" }}>
+            <Text style={{ color: colors.text2, fontSize: 11, fontWeight: "500" }}>
               Tareas esta semana
             </Text>
           </View>
-          <Text style={{ color: "#F5F5F5", fontSize: 18, fontWeight: "700", letterSpacing: -0.5 }}>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", letterSpacing: -0.5 }}>
             {tasksCompleted}
-            <Text style={{ color: "#737373", fontSize: 13, fontWeight: "500" }}>
+            <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
               /{tasksTotal}
             </Text>
           </Text>
@@ -418,7 +428,7 @@ function WeeklyRing({
         <View
           style={{
             height: 1,
-            backgroundColor: "#1F1F1F",
+            backgroundColor: colors.border,
           }}
         />
 
@@ -434,13 +444,13 @@ function WeeklyRing({
                 backgroundColor: "#F97316",
               }}
             />
-            <Text style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "500" }}>
+            <Text style={{ color: colors.text2, fontSize: 11, fontWeight: "500" }}>
               Hábitos hoy
             </Text>
           </View>
-          <Text style={{ color: "#F5F5F5", fontSize: 18, fontWeight: "700", letterSpacing: -0.5 }}>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", letterSpacing: -0.5 }}>
             {habitsToday}
-            <Text style={{ color: "#737373", fontSize: 13, fontWeight: "500" }}>
+            <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>
               /{habitsTotal}
             </Text>
           </Text>
@@ -458,12 +468,14 @@ function SectionHeader({
   count,
   color,
   delay,
+  colors,
 }: {
   icon: React.ReactNode;
   title: string;
   count?: number;
   color: string;
   delay?: number;
+  colors: Colors;
 }) {
   return (
     <Animated.View
@@ -492,7 +504,7 @@ function SectionHeader({
       </View>
       <Text
         style={{
-          color: "#F5F5F5",
+          color: colors.text,
           fontSize: 17,
           fontWeight: "700",
           letterSpacing: -0.3,
@@ -524,24 +536,26 @@ function SectionHeader({
 function EmptySection({
   message,
   color,
+  colors,
 }: {
   message: string;
   color: string;
+  colors: Colors;
 }) {
   return (
     <View
       style={{
-        backgroundColor: "#0A0A0A",
+        backgroundColor: colors.bg,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#1A1A1A",
+        borderColor: colors.bg4,
         borderStyle: "dashed",
         paddingVertical: 24,
         alignItems: "center",
         marginBottom: 8,
       }}
     >
-      <Text style={{ color: "#404040", fontSize: 13, fontWeight: "500" }}>
+      <Text style={{ color: colors.text4, fontSize: 13, fontWeight: "500" }}>
         {message}
       </Text>
     </View>
@@ -550,7 +564,7 @@ function EmptySection({
 
 // ─── Goal Mini Card ───────────────────────────────────────────────────────────
 
-function GoalMiniCard({ goal, index }: { goal: Goal; index: number }) {
+function GoalMiniCard({ goal, index, colors }: { goal: Goal; index: number; colors: Colors }) {
   const catColorMap: Record<string, string> = {
     finanzas: "#4ADE80",
     fitness: "#F97316",
@@ -566,10 +580,10 @@ function GoalMiniCard({ goal, index }: { goal: Goal; index: number }) {
     <Animated.View
       entering={FadeInDown.delay(300 + index * 60).duration(350)}
       style={{
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         borderLeftWidth: 3,
         borderLeftColor: goal.isCompleted ? "#4ADE80" : color,
         padding: 14,
@@ -583,7 +597,7 @@ function GoalMiniCard({ goal, index }: { goal: Goal; index: number }) {
         <Text
           style={{
             flex: 1,
-            color: goal.isCompleted ? "#737373" : "#F5F5F5",
+            color: goal.isCompleted ? colors.text3 : colors.text,
             fontSize: 14,
             fontWeight: "600",
             textDecorationLine: goal.isCompleted ? "line-through" : "none",
@@ -606,6 +620,7 @@ function GoalMiniCard({ goal, index }: { goal: Goal; index: number }) {
         progress={goal.progress}
         color={goal.isCompleted ? "#4ADE80" : color}
         height={5}
+        colors={colors}
       />
     </Animated.View>
   );
@@ -613,7 +628,7 @@ function GoalMiniCard({ goal, index }: { goal: Goal; index: number }) {
 
 // ─── Habit Mini Card ──────────────────────────────────────────────────────────
 
-function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
+function HabitMiniCard({ habit, index, colors }: { habit: Habit; index: number; colors: Colors }) {
   const today = getTodayISO();
   const checkedToday = habit.checkIns.some(
     (c) => c.date.startsWith(today)
@@ -624,10 +639,10 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
     <Animated.View
       entering={FadeInDown.delay(400 + index * 60).duration(350)}
       style={{
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         padding: 14,
         marginBottom: 8,
         flexDirection: "row",
@@ -641,9 +656,9 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
           width: 32,
           height: 32,
           borderRadius: 16,
-          backgroundColor: checkedToday ? `${color}20` : "#141414",
+          backgroundColor: checkedToday ? `${color}20` : colors.bg3,
           borderWidth: 2,
-          borderColor: checkedToday ? color : "#2A2A2A",
+          borderColor: checkedToday ? color : colors.border,
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -663,7 +678,7 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
               width: 8,
               height: 8,
               borderRadius: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
             }}
           />
         )}
@@ -672,7 +687,7 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 14,
             fontWeight: "600",
           }}
@@ -681,7 +696,7 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
           {habit.title}
         </Text>
         {habit.category ? (
-          <Text style={{ color: "#737373", fontSize: 11, marginTop: 1 }}>
+          <Text style={{ color: colors.text3, fontSize: 11, marginTop: 1 }}>
             {habit.category}
           </Text>
         ) : null}
@@ -706,7 +721,7 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
         </View>
         <Text
           style={{
-            color: checkedToday ? color : "#404040",
+            color: checkedToday ? color : colors.text4,
             fontSize: 10,
             fontWeight: "500",
           }}
@@ -720,7 +735,7 @@ function HabitMiniCard({ habit, index }: { habit: Habit; index: number }) {
 
 // ─── Project Mini Card ────────────────────────────────────────────────────────
 
-function ProjectMiniCard({ project, index }: { project: Project; index: number }) {
+function ProjectMiniCard({ project, index, colors }: { project: Project; index: number; colors: Colors }) {
   const statusMap: Record<string, { color: string; label: string }> = {
     active: { color: "#4ADE80", label: "Activo" },
     paused: { color: "#FBBF24", label: "Pausado" },
@@ -733,10 +748,10 @@ function ProjectMiniCard({ project, index }: { project: Project; index: number }
     <Animated.View
       entering={FadeInDown.delay(500 + index * 60).duration(350)}
       style={{
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         padding: 14,
         marginBottom: 8,
         gap: 10,
@@ -746,7 +761,7 @@ function ProjectMiniCard({ project, index }: { project: Project; index: number }
         <Text
           style={{
             flex: 1,
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 14,
             fontWeight: "600",
           }}
@@ -771,7 +786,7 @@ function ProjectMiniCard({ project, index }: { project: Project; index: number }
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <AnimatedBar progress={project.progress} color={s.color} height={5} />
+          <AnimatedBar progress={project.progress} color={s.color} height={5} colors={colors} />
         </View>
         <Text
           style={{ color: s.color, fontSize: 12, fontWeight: "700", minWidth: 32 }}
@@ -785,7 +800,7 @@ function ProjectMiniCard({ project, index }: { project: Project; index: number }
 
 // ─── Life Goal Mini Card ──────────────────────────────────────────────────────
 
-function LifeGoalMiniCard({ goal, index }: { goal: LifeGoal; index: number }) {
+function LifeGoalMiniCard({ goal, index, colors }: { goal: LifeGoal; index: number; colors: Colors }) {
   const catColorMap: Record<string, string> = {
     carrera: "#818CF8",
     salud: "#4ADE80",
@@ -801,10 +816,10 @@ function LifeGoalMiniCard({ goal, index }: { goal: LifeGoal; index: number }) {
     <Animated.View
       entering={FadeInDown.delay(600 + index * 60).duration(350)}
       style={{
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.card,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
         padding: 14,
         marginBottom: 8,
         gap: 8,
@@ -819,7 +834,7 @@ function LifeGoalMiniCard({ goal, index }: { goal: LifeGoal; index: number }) {
         <Text
           style={{
             flex: 1,
-            color: goal.isCompleted ? "#737373" : "#F5F5F5",
+            color: goal.isCompleted ? colors.text3 : colors.text,
             fontSize: 14,
             fontWeight: "600",
           }}
@@ -835,9 +850,10 @@ function LifeGoalMiniCard({ goal, index }: { goal: LifeGoal; index: number }) {
         progress={goal.progress}
         color={goal.isCompleted ? "#4ADE80" : color}
         height={5}
+        colors={colors}
       />
       {goal.category ? (
-        <Text style={{ color: "#737373", fontSize: 10, fontWeight: "500" }}>
+        <Text style={{ color: colors.text3, fontSize: 10, fontWeight: "500" }}>
           {goal.category}
         </Text>
       ) : null}
@@ -855,7 +871,7 @@ interface FeedItem {
   icon: React.ReactNode;
 }
 
-function ActivityFeedItem({ item, index }: { item: FeedItem; index: number }) {
+function ActivityFeedItem({ item, index, colors }: { item: FeedItem; index: number; colors: Colors }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(700 + index * 50).duration(350)}
@@ -865,7 +881,7 @@ function ActivityFeedItem({ item, index }: { item: FeedItem; index: number }) {
         gap: 12,
         paddingVertical: 10,
         borderBottomWidth: index < 4 ? 1 : 0,
-        borderBottomColor: "#141414",
+        borderBottomColor: colors.bg3,
       }}
       testID={`feed-item-${index}`}
     >
@@ -889,7 +905,7 @@ function ActivityFeedItem({ item, index }: { item: FeedItem; index: number }) {
       <View style={{ flex: 1, paddingTop: 4 }}>
         <Text
           style={{
-            color: "#D4D4D4",
+            color: colors.text,
             fontSize: 13,
             fontWeight: "500",
             lineHeight: 18,
@@ -897,7 +913,7 @@ function ActivityFeedItem({ item, index }: { item: FeedItem; index: number }) {
         >
           {item.text}
         </Text>
-        <Text style={{ color: "#404040", fontSize: 11, marginTop: 2 }}>
+        <Text style={{ color: colors.text4, fontSize: 11, marginTop: 2 }}>
           {item.time}
         </Text>
       </View>
@@ -948,6 +964,7 @@ function QuickAction({
 
 export default function ProgressScreen() {
   const router = useRouter();
+  const colors = useTheme((s) => s.colors);
   const [quoteIndex] = useState(() => Math.floor(Math.random() * QUOTES.length));
   const today = getTodayISO();
   const weekStart = getStartOfWeekISO();
@@ -1120,8 +1137,8 @@ export default function ProgressScreen() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="progress-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="progress-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 4 }}>
           <Animated.View entering={FadeIn.duration(400)}>
@@ -1132,12 +1149,20 @@ export default function ProgressScreen() {
                 justifyContent: "space-between",
               }}
             >
+              {/* Back button */}
+              <Pressable
+                onPress={() => router.back()}
+                style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginRight: 12, marginTop: 2 }}
+              >
+                <ChevronLeft size={18} color={colors.text} />
+              </Pressable>
+
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
                     fontSize: 30,
                     fontWeight: "800",
-                    color: "#F5F5F5",
+                    color: colors.text,
                     letterSpacing: -1,
                     lineHeight: 36,
                   }}
@@ -1147,8 +1172,8 @@ export default function ProgressScreen() {
                 <View
                   style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}
                 >
-                  <Calendar size={12} color="#737373" />
-                  <Text style={{ color: "#737373", fontSize: 12, fontWeight: "500" }}>
+                  <Calendar size={12} color={colors.text3} />
+                  <Text style={{ color: colors.text3, fontSize: 12, fontWeight: "500" }}>
                     {formatDate(new Date())}
                   </Text>
                 </View>
@@ -1173,10 +1198,10 @@ export default function ProgressScreen() {
             {/* Quote */}
             <View
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderLeftWidth: 3,
                 borderLeftColor: "#4ADE8050",
                 paddingHorizontal: 14,
@@ -1186,7 +1211,7 @@ export default function ProgressScreen() {
             >
               <Text
                 style={{
-                  color: "#A3A3A3",
+                  color: colors.text2,
                   fontSize: 12,
                   fontStyle: "italic",
                   lineHeight: 18,
@@ -1212,7 +1237,7 @@ export default function ProgressScreen() {
         testID="progress-scroll"
       >
         {isLoading ? (
-          <LoadingSkeleton />
+          <LoadingSkeleton colors={colors} />
         ) : (
           <>
             {/* ── Stat Cards Row ───────────────────────────────────────────── */}
@@ -1227,7 +1252,7 @@ export default function ProgressScreen() {
               testID="stat-cards-scroll"
             >
               {statCards.map((card, i) => (
-                <StatCard key={i} card={card} index={i} />
+                <StatCard key={i} card={card} index={i} colors={colors} />
               ))}
             </ScrollView>
 
@@ -1239,6 +1264,7 @@ export default function ProgressScreen() {
                 habitsToday={habitsCheckedToday.length}
                 habitsTotal={Math.max(activeHabits.length, 1)}
                 overallPct={overallPct}
+                colors={colors}
               />
             </View>
 
@@ -1250,15 +1276,17 @@ export default function ProgressScreen() {
                 count={activeGoals.length}
                 color="#4ADE80"
                 delay={300}
+                colors={colors}
               />
               {activeGoals.length === 0 ? (
                 <EmptySection
                   message="Sin objetivos activos. ¡Crea uno para empezar!"
                   color="#4ADE80"
+                  colors={colors}
                 />
               ) : (
                 activeGoals.slice(0, 3).map((g, i) => (
-                  <GoalMiniCard key={g.id} goal={g} index={i} />
+                  <GoalMiniCard key={g.id} goal={g} index={i} colors={colors} />
                 ))
               )}
               {activeGoals.length > 3 ? (
@@ -1292,15 +1320,17 @@ export default function ProgressScreen() {
                 count={habitsCheckedToday.length}
                 color="#F97316"
                 delay={400}
+                colors={colors}
               />
               {activeHabits.length === 0 ? (
                 <EmptySection
                   message="Sin hábitos activos. ¡El cambio empieza con uno!"
                   color="#F97316"
+                  colors={colors}
                 />
               ) : (
                 activeHabits.slice(0, 4).map((h, i) => (
-                  <HabitMiniCard key={h.id} habit={h} index={i} />
+                  <HabitMiniCard key={h.id} habit={h} index={i} colors={colors} />
                 ))
               )}
               {activeHabits.length > 4 ? (
@@ -1334,15 +1364,17 @@ export default function ProgressScreen() {
                 count={activeProjects.length}
                 color="#60A5FA"
                 delay={500}
+                colors={colors}
               />
               {activeProjects.length === 0 ? (
                 <EmptySection
                   message="Sin proyectos activos. ¡Convierte tus ideas en acción!"
                   color="#60A5FA"
+                  colors={colors}
                 />
               ) : (
                 activeProjects.slice(0, 3).map((p, i) => (
-                  <ProjectMiniCard key={p.id} project={p} index={i} />
+                  <ProjectMiniCard key={p.id} project={p} index={i} colors={colors} />
                 ))
               )}
               {activeProjects.length > 3 ? (
@@ -1376,15 +1408,17 @@ export default function ProgressScreen() {
                 count={activeLifeGoals.length}
                 color="#FBBF24"
                 delay={600}
+                colors={colors}
               />
               {activeLifeGoals.length === 0 ? (
                 <EmptySection
                   message="Sin metas de vida. ¡Define dónde quieres llegar!"
                   color="#FBBF24"
+                  colors={colors}
                 />
               ) : (
                 activeLifeGoals.slice(0, 3).map((g, i) => (
-                  <LifeGoalMiniCard key={g.id} goal={g} index={i} />
+                  <LifeGoalMiniCard key={g.id} goal={g} index={i} colors={colors} />
                 ))
               )}
             </View>
@@ -1396,25 +1430,26 @@ export default function ProgressScreen() {
                 title="Actividad Reciente"
                 color="#A78BFA"
                 delay={700}
+                colors={colors}
               />
               <Animated.View
                 entering={FadeInDown.delay(700).duration(400)}
                 style={{
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   padding: 16,
                 }}
               >
                 {displayFeed.length === 0 ? (
                   <View style={{ paddingVertical: 16, alignItems: "center" }}>
-                    <Text style={{ color: "#404040", fontSize: 13 }}>
+                    <Text style={{ color: colors.text4, fontSize: 13 }}>
                       Aún sin actividad reciente.
                     </Text>
                     <Text
                       style={{
-                        color: "#333",
+                        color: colors.text4,
                         fontSize: 12,
                         marginTop: 4,
                         textAlign: "center",
@@ -1425,7 +1460,7 @@ export default function ProgressScreen() {
                   </View>
                 ) : (
                   displayFeed.map((item, i) => (
-                    <ActivityFeedItem key={item.id} item={item} index={i} />
+                    <ActivityFeedItem key={item.id} item={item} index={i} colors={colors} />
                   ))
                 )}
               </Animated.View>
@@ -1438,16 +1473,16 @@ export default function ProgressScreen() {
             >
               <View
                 style={{
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   padding: 18,
                 }}
               >
                 <Text
                   style={{
-                    color: "#A3A3A3",
+                    color: colors.text2,
                     fontSize: 11,
                     fontWeight: "600",
                     letterSpacing: 0.5,
@@ -1485,7 +1520,7 @@ export default function ProgressScreen() {
                         flex: 1,
                         alignItems: "center",
                         borderRightWidth: i < 3 ? 1 : 0,
-                        borderRightColor: "#1A1A1A",
+                        borderRightColor: colors.bg4,
                         paddingHorizontal: 4,
                       }}
                     >
@@ -1501,7 +1536,7 @@ export default function ProgressScreen() {
                       </Text>
                       <Text
                         style={{
-                          color: "#737373",
+                          color: colors.text3,
                           fontSize: 9,
                           textAlign: "center",
                           lineHeight: 12,
@@ -1523,7 +1558,7 @@ export default function ProgressScreen() {
             >
               <Text
                 style={{
-                  color: "#A3A3A3",
+                  color: colors.text2,
                   fontSize: 11,
                   fontWeight: "600",
                   letterSpacing: 0.5,
