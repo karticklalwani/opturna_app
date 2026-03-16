@@ -7,7 +7,10 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  Linking,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   FadeInDown,
@@ -35,6 +38,13 @@ import {
   Lightbulb,
   Star,
   FileText,
+  Clock,
+  Apple,
+  Book,
+  User,
+  Newspaper,
+  Sparkles,
+  Grid3x3,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -72,6 +82,29 @@ interface Post {
   _count: { reactions: number; comments: number };
 }
 
+interface ContentItem {
+  id: string;
+  category: string;
+  categoryLabel: string;
+  title: string;
+  summary: string;
+  imageUrl: string;
+  readTime: number;
+  source: string;
+  publishedAt: string;
+  isFeatured: boolean;
+  url: string;
+}
+
+interface ContentFeedData {
+  featured: ContentItem[];
+  latest: ContentItem[];
+  recommended: ContentItem[];
+  categories: Array<{ key: string; label: string; count: number }>;
+}
+
+// ─── Community categories ──────────────────────────────────────────────────
+
 const CATEGORIES = [
   { key: "Todos", icon: Compass, color: "#4ADE80" },
   { key: "Negocios", icon: Briefcase, color: "#F59E0B" },
@@ -84,6 +117,34 @@ const CATEGORIES = [
   { key: "Espiritualidad", icon: Star, color: "#C084FC" },
   { key: "Proyectos", icon: Zap, color: "#FB923C" },
 ];
+
+// ─── Content categories ────────────────────────────────────────────────────
+
+const CONTENT_CATEGORY_ICONS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth?: number }>> = {
+  finanzas: DollarSign,
+  fitness: Dumbbell,
+  nutricion: Apple,
+  meditacion: Leaf,
+  negocios: Briefcase,
+  filosofia: BookOpen,
+  salud: Heart,
+  lecturas: Book,
+  autoayuda: Lightbulb,
+  personal: User,
+};
+
+const CONTENT_CATEGORY_COLORS: Record<string, string> = {
+  finanzas: "#4ADE80",
+  fitness: "#F87171",
+  nutricion: "#FB923C",
+  meditacion: "#A78BFA",
+  negocios: "#F59E0B",
+  filosofia: "#60A5FA",
+  salud: "#EF4444",
+  lecturas: "#34D399",
+  autoayuda: "#FBBF24",
+  personal: "#C084FC",
+};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -138,6 +199,76 @@ function getCategoryColor(cat: string): string {
   return CATEGORY_POST_COLORS[cat?.toLowerCase()] ?? "#4ADE80";
 }
 
+function getContentCategoryColor(cat: string): string {
+  return CONTENT_CATEGORY_COLORS[cat?.toLowerCase()] ?? "#4ADE80";
+}
+
+// ─── Skeleton loader ──────────────────────────────────────────────────────────
+
+function SkeletonBox({
+  width,
+  height,
+  borderRadius = 8,
+  colors,
+}: {
+  width: number | string;
+  height: number;
+  borderRadius?: number;
+  colors: typeof DARK;
+}) {
+  return (
+    <View
+      style={{
+        width: width as number,
+        height,
+        borderRadius,
+        backgroundColor: colors.bg4,
+        opacity: 0.6,
+      }}
+    />
+  );
+}
+
+function ContentLoadingSkeleton({ colors }: { colors: typeof DARK }) {
+  return (
+    <View style={{ paddingBottom: 40 }}>
+      {/* Featured skeleton */}
+      <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+        <SkeletonBox width={120} height={16} borderRadius={6} colors={colors} />
+        <View style={{ marginTop: 12, flexDirection: "row", gap: 12 }}>
+          <SkeletonBox width={280} height={180} borderRadius={16} colors={colors} />
+          <SkeletonBox width={280} height={180} borderRadius={16} colors={colors} />
+        </View>
+      </View>
+      {/* Latest skeleton */}
+      <View style={{ paddingHorizontal: 20, gap: 12 }}>
+        <SkeletonBox width={140} height={16} borderRadius={6} colors={colors} />
+        {[0, 1, 2].map((i) => (
+          <View
+            key={i}
+            style={{
+              flexDirection: "row",
+              gap: 12,
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <SkeletonBox width={80} height={80} borderRadius={10} colors={colors} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <SkeletonBox width="90%" height={14} borderRadius={4} colors={colors} />
+              <SkeletonBox width="70%" height={12} borderRadius={4} colors={colors} />
+              <SkeletonBox width="50%" height={10} borderRadius={4} colors={colors} />
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function Avatar({
@@ -190,11 +321,13 @@ function SectionHeader({
   icon,
   iconColor,
   colors,
+  onSeeAll,
 }: {
   title: string;
   icon: React.ReactNode;
   iconColor: string;
   colors: typeof DARK;
+  onSeeAll?: () => void;
 }) {
   return (
     <View
@@ -223,10 +356,475 @@ function SectionHeader({
           {title}
         </Text>
       </View>
-      <Pressable style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+      <Pressable
+        style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
+        onPress={onSeeAll}
+      >
         <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>Ver todos</Text>
         <ChevronRight size={14} color={colors.text3} />
       </Pressable>
+    </View>
+  );
+}
+
+// ─── Content Card Components ──────────────────────────────────────────────────
+
+function FeaturedCard({
+  item,
+  colors,
+}: {
+  item: ContentItem;
+  colors: typeof DARK;
+}) {
+  const catColor = getContentCategoryColor(item.category);
+  return (
+    <Pressable
+      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      style={{
+        width: 280,
+        height: 180,
+        borderRadius: 16,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: colors.border,
+        shadowColor: catColor,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 6,
+      }}
+    >
+      <ExpoImage
+        source={{ uri: item.imageUrl }}
+        style={{ position: "absolute", width: "100%", height: "100%" }}
+        contentFit="cover"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 140 }}
+      />
+      {/* Category badge top-right */}
+      <View
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          backgroundColor: `${catColor}dd`,
+          borderRadius: 100,
+          paddingHorizontal: 9,
+          paddingVertical: 4,
+        }}
+      >
+        <Text style={{ color: "#000", fontSize: 10, fontWeight: "700" }}>
+          {item.categoryLabel}
+        </Text>
+      </View>
+      {item.isFeatured ? (
+        <View
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+            backgroundColor: "rgba(245,158,11,0.85)",
+            borderRadius: 100,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+          }}
+        >
+          <Flame size={10} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>Destacado</Text>
+        </View>
+      ) : null}
+      {/* Bottom content */}
+      <View style={{ position: "absolute", bottom: 12, left: 12, right: 12 }}>
+        <Text
+          style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "500", marginBottom: 4 }}
+        >
+          {item.source}
+        </Text>
+        <Text
+          style={{ color: "#fff", fontSize: 15, fontWeight: "800", lineHeight: 20, letterSpacing: -0.3 }}
+          numberOfLines={2}
+        >
+          {item.title}
+        </Text>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            backgroundColor: "rgba(0,0,0,0.55)",
+            borderRadius: 100,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <Clock size={10} color="rgba(255,255,255,0.7)" />
+          <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "600" }}>
+            {item.readTime} min
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function NewsCard({
+  item,
+  colors,
+}: {
+  item: ContentItem;
+  colors: typeof DARK;
+}) {
+  const catColor = getContentCategoryColor(item.category);
+  return (
+    <Pressable
+      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      style={{
+        flexDirection: "row",
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
+        gap: 12,
+      }}
+    >
+      <ExpoImage
+        source={{ uri: item.imageUrl }}
+        style={{ width: 80, height: 80, borderRadius: 10 }}
+        contentFit="cover"
+      />
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{ color: colors.text, fontSize: 14, fontWeight: "700", lineHeight: 19, marginBottom: 4 }}
+          numberOfLines={2}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={{ color: colors.text3, fontSize: 12, lineHeight: 17, marginBottom: 6 }}
+          numberOfLines={1}
+        >
+          {item.summary}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <Text style={{ color: colors.text4, fontSize: 11 }}>{item.source}</Text>
+          <Text style={{ color: colors.text4, fontSize: 11 }}>·</Text>
+          <Text style={{ color: colors.text4, fontSize: 11 }}>{formatTimeAgo(item.publishedAt)}</Text>
+          <View
+            style={{
+              backgroundColor: `${catColor}20`,
+              borderRadius: 6,
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              marginLeft: 2,
+            }}
+          >
+            <Text style={{ color: catColor, fontSize: 10, fontWeight: "600" }}>
+              {item.categoryLabel}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function RecommendedCard({
+  item,
+  colors,
+}: {
+  item: ContentItem;
+  colors: typeof DARK;
+}) {
+  const catColor = getContentCategoryColor(item.category);
+  return (
+    <Pressable
+      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      style={{
+        flex: 1,
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        overflow: "hidden",
+      }}
+    >
+      <View style={{ position: "relative" }}>
+        <ExpoImage
+          source={{ uri: item.imageUrl }}
+          style={{ width: "100%", aspectRatio: 4 / 3 }}
+          contentFit="cover"
+        />
+        <View
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            backgroundColor: `${catColor}dd`,
+            borderRadius: 100,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+          }}
+        >
+          <Text style={{ color: "#000", fontSize: 9, fontWeight: "700" }}>
+            {item.categoryLabel}
+          </Text>
+        </View>
+      </View>
+      <View style={{ padding: 10 }}>
+        <Text
+          style={{ color: colors.text, fontSize: 13, fontWeight: "700", lineHeight: 18, marginBottom: 6 }}
+          numberOfLines={2}
+        >
+          {item.title}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.text4, fontSize: 11 }} numberOfLines={1}>{item.source}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Clock size={10} color={colors.text4} />
+            <Text style={{ color: colors.text4, fontSize: 11 }}>{item.readTime}m</Text>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Content Feed component ───────────────────────────────────────────────────
+
+function ContentFeed({ colors }: { colors: typeof DARK }) {
+  const [activeContentCategory, setActiveContentCategory] = useState<string>("todo");
+
+  const { data: feedData, isLoading, isError } = useQuery({
+    queryKey: ["content-feed"],
+    queryFn: () => api.get<ContentFeedData>("/api/content/feed"),
+  });
+
+  const dynamicCategories = feedData?.categories ?? [];
+  const allCategoryOption = { key: "todo", label: "Todo", count: 0 };
+  const allCategories = [allCategoryOption, ...dynamicCategories];
+
+  const isAll = activeContentCategory === "todo";
+
+  const filterItems = (items: ContentItem[]): ContentItem[] => {
+    if (isAll) return items;
+    return items.filter((item) => item.category?.toLowerCase() === activeContentCategory.toLowerCase());
+  };
+
+  const featuredItems = filterItems(feedData?.featured ?? []);
+  const latestItems = filterItems(feedData?.latest ?? []);
+  const recommendedItems = filterItems(feedData?.recommended ?? []);
+
+  return (
+    <View testID="content-feed-mode">
+      {/* Category filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 12, paddingTop: 4 }}
+      >
+        {allCategories.map((cat) => {
+          const isActive = activeContentCategory === cat.key;
+          const IconComp = CONTENT_CATEGORY_ICONS[cat.key] ?? Compass;
+          const catColor = CONTENT_CATEGORY_COLORS[cat.key] ?? "#4ADE80";
+          return (
+            <Pressable
+              key={cat.key}
+              onPress={() => setActiveContentCategory(cat.key)}
+              testID={`content-category-${cat.key}`}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 100,
+                backgroundColor: isActive ? "#4ADE80" : colors.card,
+                borderWidth: 1,
+                borderColor: isActive ? "#4ADE80" : colors.border,
+              }}
+            >
+              {cat.key !== "todo" ? (
+                <IconComp
+                  size={13}
+                  color={isActive ? "#000" : colors.text3}
+                  strokeWidth={2}
+                />
+              ) : null}
+              <Text
+                style={{
+                  color: isActive ? "#000" : colors.text3,
+                  fontSize: 13,
+                  fontWeight: isActive ? "700" : "400",
+                }}
+              >
+                {cat.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {isLoading ? (
+        <ContentLoadingSkeleton colors={colors} />
+      ) : isError || (!feedData) ? (
+        <Animated.View
+          entering={FadeInDown.duration(300)}
+          style={{
+            alignItems: "center",
+            paddingVertical: 70,
+            paddingHorizontal: 32,
+            gap: 12,
+          }}
+        >
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: `${colors.accent}12`,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 4,
+            }}
+          >
+            <Newspaper size={30} color={colors.accent} />
+          </View>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", textAlign: "center" }}>
+            Sin contenido disponible
+          </Text>
+          <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 21 }}>
+            No hay contenido disponible en este momento. Vuelve pronto.
+          </Text>
+        </Animated.View>
+      ) : (
+        <>
+          {/* Destacado section - only when "Todo" */}
+          {isAll && featuredItems.length > 0 ? (
+            <Animated.View
+              entering={FadeInDown.duration(320).delay(0).springify()}
+              style={{ marginBottom: 28 }}
+              testID="content-featured"
+            >
+              <SectionHeader
+                title="Destacado"
+                icon={<Flame size={14} color="#F59E0B" />}
+                iconColor="#F59E0B"
+                colors={colors}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ flexGrow: 0 }}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 4 }}
+              >
+                {featuredItems.map((item) => (
+                  <FeaturedCard key={item.id} item={item} colors={colors} />
+                ))}
+              </ScrollView>
+            </Animated.View>
+          ) : null}
+
+          {/* Ultimas Noticias */}
+          {latestItems.length > 0 ? (
+            <Animated.View
+              entering={FadeInDown.duration(320).delay(80).springify()}
+              style={{ marginBottom: 28 }}
+              testID="content-latest"
+            >
+              <SectionHeader
+                title="Últimas Noticias"
+                icon={<Newspaper size={14} color="#60A5FA" />}
+                iconColor="#60A5FA"
+                colors={colors}
+              />
+              <View style={{ paddingHorizontal: 16, gap: 10 }}>
+                {latestItems.slice(0, 5).map((item, i) => (
+                  <Animated.View key={item.id} entering={FadeInDown.duration(260).delay(i * 50)}>
+                    <NewsCard item={item} colors={colors} />
+                  </Animated.View>
+                ))}
+              </View>
+              {latestItems.length > 5 ? (
+                <Pressable
+                  style={{ alignItems: "center", marginTop: 14, paddingVertical: 6 }}
+                >
+                  <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
+                    Ver más
+                  </Text>
+                </Pressable>
+              ) : null}
+            </Animated.View>
+          ) : null}
+
+          {/* Recomendado para ti */}
+          {recommendedItems.length > 0 ? (
+            <Animated.View
+              entering={FadeInDown.duration(320).delay(160).springify()}
+              style={{ marginBottom: 28, paddingHorizontal: 16 }}
+              testID="content-recommended"
+            >
+              <View style={{ marginBottom: 14, paddingHorizontal: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        backgroundColor: `${"#C084FC"}18`,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Sparkles size={14} color="#C084FC" />
+                    </View>
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.3 }}>
+                      Recomendado para ti
+                    </Text>
+                  </View>
+                  <Pressable style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                    <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "500" }}>Ver todos</Text>
+                    <ChevronRight size={14} color={colors.text3} />
+                  </Pressable>
+                </View>
+              </View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {recommendedItems.slice(0, 6).map((item, i) => (
+                  <Animated.View
+                    key={item.id}
+                    entering={FadeInDown.duration(260).delay(i * 60)}
+                    style={{ width: "47%" }}
+                  >
+                    <RecommendedCard item={item} colors={colors} />
+                  </Animated.View>
+                ))}
+              </View>
+            </Animated.View>
+          ) : null}
+
+          {featuredItems.length === 0 && latestItems.length === 0 && recommendedItems.length === 0 ? (
+            <Animated.View
+              entering={FadeInDown.duration(300)}
+              style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 32, gap: 10 }}
+            >
+              <Grid3x3 size={28} color={colors.text4} />
+              <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center" }}>
+                No hay contenido en esta categoría.
+              </Text>
+            </Animated.View>
+          ) : null}
+        </>
+      )}
     </View>
   );
 }
@@ -237,6 +835,7 @@ export default function DiscoverScreen() {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [mode, setMode] = useState<"comunidad" | "contenido">("comunidad");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
   const [optimisticFollowed, setOptimisticFollowed] = useState<Set<string>>(new Set());
@@ -264,7 +863,7 @@ export default function DiscoverScreen() {
         return api.get<Post[]>("/api/posts");
       }
     },
-    enabled: !isSearching,
+    enabled: !isSearching && mode === "comunidad",
   });
 
   // ── Mutations ──────────────────────────────────────────────────────────
@@ -343,9 +942,60 @@ export default function DiscoverScreen() {
               >
                 Descubrir
               </Text>
-              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 1 }}>
-                Explora la comunidad
-              </Text>
+              {/* Mode toggle replaces subtitle */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 8,
+                  backgroundColor: colors.card,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 3,
+                  gap: 0,
+                }}
+              >
+                <Pressable
+                  onPress={() => setMode("comunidad")}
+                  testID="community-mode"
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 7,
+                    borderRadius: 100,
+                    backgroundColor: mode === "comunidad" ? "#4ADE80" : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: mode === "comunidad" ? "#000" : colors.text3,
+                      fontSize: 13,
+                      fontWeight: mode === "comunidad" ? "700" : "400",
+                    }}
+                  >
+                    Comunidad
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setMode("contenido")}
+                  testID="content-feed-mode"
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 7,
+                    borderRadius: 100,
+                    backgroundColor: mode === "contenido" ? "#4ADE80" : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: mode === "contenido" ? "#000" : colors.text3,
+                      fontSize: 13,
+                      fontWeight: mode === "contenido" ? "700" : "400",
+                    }}
+                  >
+                    Contenido
+                  </Text>
+                </Pressable>
+              </View>
             </View>
             <View
               style={{
@@ -363,57 +1013,59 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          {/* Search bar */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: colors.card,
-              borderRadius: 14,
-              paddingHorizontal: 14,
-              gap: 10,
-              borderWidth: 1,
-              borderColor: isSearching ? `${colors.accent}50` : colors.border,
-            }}
-          >
-            <Search size={16} color={isSearching ? colors.accent : colors.text3} />
-            <TextInput
-              ref={searchInputRef}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Buscar personas, temas, posts..."
-              placeholderTextColor={colors.text3}
+          {/* Search bar - only in Comunidad mode */}
+          {mode === "comunidad" ? (
+            <View
               style={{
-                flex: 1,
-                color: colors.text,
-                fontSize: 15,
-                paddingVertical: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.card,
+                borderRadius: 14,
+                paddingHorizontal: 14,
+                gap: 10,
+                borderWidth: 1,
+                borderColor: isSearching ? `${colors.accent}50` : colors.border,
               }}
-              testID="discover-search-input"
-            />
-            {searchLoading ? (
-              <ActivityIndicator size="small" color={colors.accent} testID="search-loading" />
-            ) : searchQuery.length > 0 ? (
-              <Pressable onPress={() => setSearchQuery("")} testID="search-clear">
-                <View
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: colors.text4,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <X size={11} color={colors.bg} strokeWidth={2.5} />
-                </View>
-              </Pressable>
-            ) : null}
-          </View>
+            >
+              <Search size={16} color={isSearching ? colors.accent : colors.text3} />
+              <TextInput
+                ref={searchInputRef}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Buscar personas, temas, posts..."
+                placeholderTextColor={colors.text3}
+                style={{
+                  flex: 1,
+                  color: colors.text,
+                  fontSize: 15,
+                  paddingVertical: 12,
+                }}
+                testID="discover-search-input"
+              />
+              {searchLoading ? (
+                <ActivityIndicator size="small" color={colors.accent} testID="search-loading" />
+              ) : searchQuery.length > 0 ? (
+                <Pressable onPress={() => setSearchQuery("")} testID="search-clear">
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: colors.text4,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <X size={11} color={colors.bg} strokeWidth={2.5} />
+                  </View>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </View>
 
-        {/* Categories horizontal scroll */}
-        {!isSearching ? (
+        {/* Categories horizontal scroll - Comunidad mode only, not searching */}
+        {mode === "comunidad" && !isSearching ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -467,7 +1119,12 @@ export default function DiscoverScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}
         keyboardDismissMode="on-drag"
       >
-        {isSearching ? (
+        {mode === "contenido" ? (
+          /* ─────────────────── CONTENT FEED ──────────────────── */
+          <Animated.View entering={FadeIn.duration(200)}>
+            <ContentFeed colors={colors} />
+          </Animated.View>
+        ) : isSearching ? (
           /* ─────────────────── SEARCH RESULTS ──────────────────── */
           <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
             <Text

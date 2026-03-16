@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { WebView } from "react-native-webview";
+import CompoundInterestCalculator from "@/components/CompoundInterestCalculator";
+import InvestmentAnalysisTool from "@/components/InvestmentAnalysisTool";
 import {
   View,
   Text,
@@ -2296,6 +2298,7 @@ function InversionesTab({
   colors: ThemeColors;
 }) {
   const totalPortfolio = investments.reduce((s, i) => s + i.value, 0);
+  const [showSignalAnalysis, setShowSignalAnalysis] = useState<boolean>(false);
 
   // Asset allocation by class
   const byClass: Record<InvestmentAssetClass, number> = {
@@ -2361,6 +2364,70 @@ function InversionesTab({
 
   return (
     <View>
+      {/* Investment Signal Analysis collapsible */}
+      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+        <Pressable
+          onPress={() => setShowSignalAnalysis(!showSignalAnalysis)}
+          testID="toggle-signal-analysis"
+          style={{
+            backgroundColor: "#0F0F0F",
+            borderBottomLeftRadius: showSignalAnalysis ? 0 : 16,
+            borderBottomRightRadius: showSignalAnalysis ? 0 : 16,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: "#1F1F1F",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: `${"#60A5FA"}18`,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Zap size={16} color="#60A5FA" />
+            </View>
+            <View>
+              <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
+                Análisis de Señales
+              </Text>
+              <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>
+                BUY / SELL / EXIT · Terminal de trading
+              </Text>
+            </View>
+          </View>
+          <ChevronRight
+            size={18}
+            color={colors.text3}
+            style={{ transform: [{ rotate: showSignalAnalysis ? "90deg" : "0deg" }] }}
+          />
+        </Pressable>
+        {showSignalAnalysis ? (
+          <View
+            style={{
+              backgroundColor: "#0A0A0A",
+              borderWidth: 1,
+              borderTopWidth: 0,
+              borderColor: "#1F1F1F",
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              padding: 16,
+            }}
+          >
+            <InvestmentAnalysisTool />
+          </View>
+        ) : null}
+      </View>
+
       {/* TradingView chart */}
       <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
         <Text
@@ -2674,6 +2741,7 @@ function AhorroTab({
 }) {
   const totalSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0);
   const totalTarget = savingsGoals.reduce((s, g) => s + g.targetAmount, 0);
+  const [showCalculator, setShowCalculator] = useState<boolean>(false);
 
   return (
     <View>
@@ -2874,6 +2942,69 @@ function AhorroTab({
             Nueva meta de ahorro
           </Text>
         </Pressable>
+      </View>
+
+      {/* Compound Interest Calculator collapsible */}
+      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+        <Pressable
+          onPress={() => setShowCalculator(!showCalculator)}
+          testID="toggle-compound-calculator"
+          style={{
+            backgroundColor: "#0F0F0F",
+            borderRadius: showCalculator ? 16 : 16,
+            borderBottomLeftRadius: showCalculator ? 0 : 16,
+            borderBottomRightRadius: showCalculator ? 0 : 16,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: "#1F1F1F",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: `${colors.accent}18`,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <TrendingUp size={16} color={colors.accent} />
+            </View>
+            <View>
+              <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
+                Calculadora de Interés Compuesto
+              </Text>
+              <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>
+                Proyecta el crecimiento de tus ahorros
+              </Text>
+            </View>
+          </View>
+          <ChevronRight
+            size={18}
+            color={colors.text3}
+            style={{ transform: [{ rotate: showCalculator ? "90deg" : "0deg" }] }}
+          />
+        </Pressable>
+        {showCalculator ? (
+          <View
+            style={{
+              backgroundColor: "#0A0A0A",
+              borderWidth: 1,
+              borderTopWidth: 0,
+              borderColor: "#1F1F1F",
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              padding: 16,
+            }}
+          >
+            <CompoundInterestCalculator />
+          </View>
+        ) : null}
       </View>
     </View>
   );

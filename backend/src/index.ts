@@ -8,6 +8,8 @@ import { liveRouter } from "./routes/live";
 import tasks from "./routes/tasks";
 import habits from "./routes/habits";
 import projects from "./routes/projects";
+import financeToolsRouter from "./routes/finance-tools";
+import contentRouter from "./routes/content";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -1080,6 +1082,12 @@ app.route("/api/habits", habits);
 
 // ===== PROJECTS ROUTES =====
 app.route("/api/projects", projects);
+
+// ===== FINANCE TOOLS ROUTES =====
+app.route("/api/finance", financeToolsRouter);
+
+// ===== CONTENT ROUTES =====
+app.route("/api/content", contentRouter);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);
