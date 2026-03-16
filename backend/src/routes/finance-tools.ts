@@ -160,7 +160,7 @@ financeToolsRouter.get("/inflation", (c) => {
   });
 });
 
-// ─── Investment Analysis ─────────────────────────────────────────────────────
+// ─── Investment Analysis (Pine Script Algorithm - Server Side Only) ───────────
 
 const investmentAnalysisSchema = z.object({
   asset: z.string().min(1).max(20),
@@ -169,32 +169,253 @@ const investmentAnalysisSchema = z.object({
 });
 
 const BASE_PRICES: Record<string, number> = {
-  BTC: 85000,
-  ETH: 3200,
-  SOL: 155,
-  BNB: 380,
-  AAPL: 185,
-  MSFT: 415,
-  NVDA: 820,
-  GOOGL: 165,
-  AMZN: 195,
-  TSLA: 265,
-  SPY: 510,
-  QQQ: 430,
-  GLD: 225,
+  BTC: 85000, ETH: 3200, SOL: 155, BNB: 380,
+  AAPL: 185, MSFT: 415, NVDA: 820, GOOGL: 165, AMZN: 195, TSLA: 265,
+  SPY: 510, QQQ: 430, GLD: 225,
 };
 
+type OHLCV = { open: number; high: number; low: number; close: number };
+type TradingSignal = "BUY" | "SELL" | "EXIT" | "HOLD";
+type RecentSignalEntry = { time: string; signal: "BUY" | "SELL" | "EXIT"; price: number };
+
+// ── Seeded PRNG (Park-Miller) ────────────────────────────────────────────────
+function seededPRNG(seed: number): () => number {
+  let s = Math.abs(seed % 2147483647);
+  if (s === 0) s = 1;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
 function hashAsset(asset: string): number {
-  let h = 0;
+  let h = 5381;
   for (let i = 0; i < asset.length; i++) {
-    h = (Math.imul(31, h) + asset.charCodeAt(i)) | 0;
+    h = ((h << 5) + h) + asset.charCodeAt(i);
   }
   return h;
 }
 
-type TradingSignal = "BUY" | "SELL" | "EXIT" | "HOLD";
-type RecentSignalEntry = { time: string; signal: "BUY" | "SELL" | "EXIT"; price: number };
+// ── Generate realistic OHLCV candles ────────────────────────────────────────
+function generateCandles(asset: string, n: number): OHLCV[] {
+  const basePrice = BASE_PRICES[asset.toUpperCase()] ?? 100;
+  const hourSlot = Math.floor(Date.now() / 3_600_000);
+  const rng = seededPRNG(hashAsset(asset) + hourSlot * 137);
 
+  const cryptoAssets = ["BTC", "ETH", "SOL", "BNB"];
+  const isCrypto = cryptoAssets.includes(asset.toUpperCase());
+  const dailyVol = isCrypto ? 0.022 : 0.010;
+
+  const candles: OHLCV[] = [];
+  let close = basePrice;
+  const trendDrift = (rng() - 0.5) * 0.002 * close;
+
+  for (let i = 0; i < n; i++) {
+    const bodyMove = (rng() - 0.5) * 2 * dailyVol * close + trendDrift;
+    const open = close;
+    close = Math.max(open * 0.5, open + bodyMove);
+    const wickH = rng() * dailyVol * close * 0.6;
+    const wickL = rng() * dailyVol * close * 0.6;
+    const high = Math.max(open, close) + wickH;
+    const low  = Math.min(open, close) - wickL;
+    candles.push({ open, high, low: Math.max(0.01, low), close });
+  }
+  return candles;
+}
+
+// ── RMA (Wilder's MA) ────────────────────────────────────────────────────────
+function calcRMA(values: number[], period: number): number[] {
+  const result: number[] = new Array(values.length).fill(NaN) as number[];
+  let prev = 0;
+  let initialized = false;
+  for (let i = 0; i < values.length; i++) {
+    if (i < period - 1) continue;
+    if (!initialized) {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += (isNaN(values[j] ?? NaN) ? 0 : (values[j] ?? 0));
+      prev = sum / period;
+      result[i] = prev;
+      initialized = true;
+    } else {
+      const vi = values[i] ?? NaN;
+      const v = isNaN(vi) ? prev : vi;
+      prev = (prev * (period - 1) + v) / period;
+      result[i] = prev;
+    }
+  }
+  return result;
+}
+
+// ── EMA ──────────────────────────────────────────────────────────────────────
+function calcEMA(values: number[], period: number): number[] {
+  const result: number[] = new Array(values.length).fill(NaN) as number[];
+  const alpha = 2 / (period + 1);
+  let prev = 0;
+  let initialized = false;
+  for (let i = 0; i < values.length; i++) {
+    const vi = values[i] ?? NaN;
+    const v = isNaN(vi) ? 0 : vi;
+    if (i < period - 1) continue;
+    if (!initialized) {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += (isNaN(values[j] ?? NaN) ? 0 : (values[j] ?? 0));
+      prev = sum / period;
+      result[i] = prev;
+      initialized = true;
+    } else {
+      prev = alpha * v + (1 - alpha) * prev;
+      result[i] = prev;
+    }
+  }
+  return result;
+}
+
+// ── ATR (using Wilder RMA on True Range) ─────────────────────────────────────
+function calcATR(candles: OHLCV[], period: number): number[] {
+  const tr = candles.map((c, i) => {
+    if (i === 0) return c.high - c.low;
+    const pC = (candles[i - 1] as OHLCV).close;
+    return Math.max(c.high - c.low, Math.abs(c.high - pC), Math.abs(c.low - pC));
+  });
+  return calcRMA(tr, period);
+}
+
+// ── RSI (Wilder's smoothing) ──────────────────────────────────────────────────
+function calcRSI(closes: number[], period: number): number[] {
+  const result: number[] = new Array(closes.length).fill(NaN) as number[];
+  if (closes.length < period + 1) return result;
+  let avgGain = 0, avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
+    const d = (closes[i] ?? 0) - (closes[i - 1] ?? 0);
+    if (d > 0) avgGain += d; else avgLoss -= d;
+  }
+  avgGain /= period; avgLoss /= period;
+  result[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  for (let i = period + 1; i < closes.length; i++) {
+    const d = (closes[i] ?? 0) - (closes[i - 1] ?? 0);
+    avgGain = (avgGain * (period - 1) + Math.max(d, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-d, 0)) / period;
+    result[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  }
+  return result;
+}
+
+// ── Supertrend ────────────────────────────────────────────────────────────────
+// direction: -1 = bullish (price above ST = buy zone), 1 = bearish (price below = sell zone)
+function calcSupertrend(candles: OHLCV[], factor: number, atrLen: number): {
+  superTrend: number[];
+  direction: number[];
+} {
+  const n = candles.length;
+  const atr = calcATR(candles, atrLen);
+  const closes = candles.map(c => c.close);
+  const hl2 = candles.map(c => (c.high + c.low) / 2);
+
+  const upper: number[] = new Array(n).fill(0) as number[];
+  const lower: number[] = new Array(n).fill(0) as number[];
+  const st: number[]    = new Array(n).fill(0) as number[];
+  const dir: number[]   = new Array(n).fill(1) as number[];
+
+  for (let i = 0; i < n; i++) {
+    const atrRaw = atr[i] ?? NaN;
+    const candleI = candles[i] as OHLCV;
+    const atrI = isNaN(atrRaw) ? (candleI.high - candleI.low) : atrRaw;
+    const hl2I = hl2[i] ?? 0;
+    const rawU = hl2I + factor * atrI;
+    const rawL = hl2I - factor * atrI;
+
+    if (i === 0) {
+      upper[i] = rawU; lower[i] = rawL; dir[i] = 1; st[i] = rawU;
+      continue;
+    }
+
+    const prevLower = lower[i - 1] ?? 0;
+    const prevUpper = upper[i - 1] ?? 0;
+    const prevClose = closes[i - 1] ?? 0;
+    const prevSt    = st[i - 1] ?? 0;
+    const curClose  = closes[i] ?? 0;
+
+    lower[i] = rawL > prevLower || prevClose < prevLower ? rawL : prevLower;
+    upper[i] = rawU < prevUpper || prevClose > prevUpper ? rawU : prevUpper;
+
+    const curUpper = upper[i] ?? 0;
+    const curLower = lower[i] ?? 0;
+
+    if (prevSt === prevUpper) {
+      dir[i] = curClose > curUpper ? -1 : 1;
+    } else {
+      dir[i] = curClose < curLower ? 1 : -1;
+    }
+    st[i] = (dir[i] ?? 1) === -1 ? curLower : curUpper;
+  }
+  return { superTrend: st, direction: dir };
+}
+
+// ── QQE (Quantitative Qualitative Estimation) ─────────────────────────────────
+function calcQQE(closes: number[], rsiPeriod: number, sf: number, kqe: number): {
+  qqeLong: (number | null)[];
+  qqeShort: (number | null)[];
+} {
+  const n = closes.length;
+  const wildersPeriod = rsiPeriod * 2 - 1;
+
+  const rsi = calcRSI(closes, rsiPeriod);
+  const rsiSafe = rsi.map(v => isNaN(v) ? 50 : v);
+  const rsiMa = calcEMA(rsiSafe, sf);
+  const rsiMaSafe = rsiMa.map(v => isNaN(v) ? 50 : v);
+
+  const atrRsi = rsiMaSafe.map((v, i) => i === 0 ? 0 : Math.abs((rsiMaSafe[i - 1] ?? 50) - v));
+  const maAtrRsi = calcEMA(atrRsi, wildersPeriod);
+  const maAtrRsiSafe = maAtrRsi.map(v => isNaN(v) ? 0 : v);
+  const dar = calcEMA(maAtrRsiSafe, wildersPeriod).map(v => (isNaN(v) ? 0 : v) * kqe);
+
+  const longband:  number[] = new Array(n).fill(0) as number[];
+  const shortband: number[] = new Array(n).fill(0) as number[];
+  const trend:     number[] = new Array(n).fill(1) as number[];
+  const fastTL:    number[] = new Array(n).fill(0) as number[];
+
+  for (let i = 1; i < n; i++) {
+    const rs = rsiMaSafe[i] ?? 50;
+    const d  = dar[i] ?? 0;
+    const newS = rs + d;
+    const newL = rs - d;
+
+    const prevLb  = longband[i - 1] ?? 0;
+    const prevSb  = shortband[i - 1] ?? 0;
+    const prevRsM = rsiMaSafe[i - 1] ?? 50;
+
+    longband[i]  = rs > prevLb && prevRsM > prevLb ? Math.max(prevLb, newL) : newL;
+    shortband[i] = rs < prevSb && prevRsM < prevSb ? Math.min(prevSb, newS) : newS;
+
+    const curSb = shortband[i] ?? 0;
+    const curLb = longband[i] ?? 0;
+
+    const crossShort = (prevSb > prevRsM && curSb <= rs) || (prevSb < prevRsM && curSb >= rs);
+    const crossLong  = (prevLb > prevRsM && curLb <= rs) || (prevLb < prevRsM && curLb >= rs);
+
+    if (crossShort) trend[i] = 1;
+    else if (crossLong) trend[i] = -1;
+    else trend[i] = trend[i - 1] ?? 1;
+
+    fastTL[i] = (trend[i] ?? 1) === 1 ? curLb : curSb;
+  }
+
+  const exlong:  number[] = new Array(n).fill(0) as number[];
+  const exshort: number[] = new Array(n).fill(0) as number[];
+  for (let i = 1; i < n; i++) {
+    const ftl  = fastTL[i] ?? 0;
+    const rsm  = rsiMaSafe[i] ?? 50;
+    exlong[i]  = ftl < rsm ? (exlong[i - 1] ?? 0) + 1 : 0;
+    exshort[i] = ftl > rsm ? (exshort[i - 1] ?? 0) + 1 : 0;
+  }
+
+  const qqeLong  = exlong.map((v, i)  => v === 1 ? (fastTL[i - 1] ?? 0) - 50 : null);
+  const qqeShort = exshort.map((v, i) => v === 1 ? (fastTL[i - 1] ?? 0) - 50 : null);
+
+  return { qqeLong, qqeShort };
+}
+
+// ── Main Trading Algorithm ────────────────────────────────────────────────────
 function runTradingAlgorithm(asset: string, amount: number): {
   asset: string;
   currentPrice: number;
@@ -212,113 +433,138 @@ function runTradingAlgorithm(asset: string, amount: number): {
   analysisId: string;
 } {
   const upperAsset = asset.toUpperCase();
-  const basePrice = BASE_PRICES[upperAsset] ?? 100;
-  const seed = Math.sin(hashAsset(upperAsset) + Date.now() / 3600000);
+  const N = 50;
 
-  // Generate 20 price history points using seeded pseudo-random sequence
-  const prices: number[] = [];
-  let price = basePrice;
-  const now = Date.now();
-  const priceHistory: Array<{ time: string; price: number }> = [];
+  const FACTOR   = 2;
+  const ATR_LEN  = 11;
+  const ATR_SL   = 14;
+  const ATR_RISK = 4;
+  const R1       = 0.7;
+  const R2       = 1.2;
+  const R3       = 1.5;
+  const RSI_P    = 14;
+  const SF       = 5;
+  const KQE      = 4.238;
 
-  for (let i = 0; i < 20; i++) {
-    const localSeed = Math.sin(seed * (i + 1) * 9301 + 49297) * 233280;
-    const rand = (localSeed - Math.floor(localSeed)) * 2 - 1; // -1 to 1
-    const volatility = basePrice * 0.015; // 1.5% per step
-    price = price + rand * volatility;
-    prices.push(price);
-    const t = new Date(now - (19 - i) * 3 * 60000);
-    priceHistory.push({
-      time: t.toISOString(),
-      price: Math.round(price * 100) / 100,
-    });
+  const candles = generateCandles(upperAsset, N);
+  const closes  = candles.map(c => c.close);
+  const lows    = candles.map(c => c.low);
+  const highs   = candles.map(c => c.high);
+
+  const { direction } = calcSupertrend(candles, FACTOR, ATR_LEN);
+  const atrSL         = calcATR(candles, ATR_SL);
+  const { qqeLong, qqeShort } = calcQQE(closes, RSI_P, SF, KQE);
+  const rsiArr        = calcRSI(closes, RSI_P);
+
+  const last         = N - 1;
+  const currentPrice = closes[last] ?? (BASE_PRICES[upperAsset] ?? 100);
+  const rsiRaw       = rsiArr[last] ?? NaN;
+  const rsi: number  = isNaN(rsiRaw) ? 50 : rsiRaw;
+  const atrRaw       = atrSL[last] ?? NaN;
+  const atrNow: number = isNaN(atrRaw) ? currentPrice * 0.01 : atrRaw;
+
+  // ── Detect last bull/bear crossover ──────────────────────────────────────
+  let lastBullIdx = -1;
+  let lastBearIdx = -1;
+  for (let i = 1; i <= last; i++) {
+    if ((direction[i] ?? 1) === -1 && (direction[i - 1] ?? 1) === 1)  lastBullIdx = i;
+    if ((direction[i] ?? 1) ===  1 && (direction[i - 1] ?? 1) === -1) lastBearIdx = i;
   }
 
-  const currentPrice = prices[prices.length - 1] ?? basePrice;
-
-  // RSI calculation (14-period but we only have 20 points, use all available)
-  const period = Math.min(14, prices.length - 1);
-  let gains = 0;
-  let losses = 0;
-  for (let i = prices.length - period; i < prices.length; i++) {
-    const curr = prices[i] ?? 0;
-    const prev = prices[i - 1] ?? 0;
-    const diff = curr - prev;
-    if (diff > 0) gains += diff;
-    else losses += Math.abs(diff);
+  // ── Detect last QQE reversal ──────────────────────────────────────────────
+  let lastQQELongIdx  = -1;
+  let lastQQEShortIdx = -1;
+  for (let i = 0; i <= last; i++) {
+    if ((qqeLong[i]  ?? null) !== null) lastQQELongIdx  = i;
+    if ((qqeShort[i] ?? null) !== null) lastQQEShortIdx = i;
   }
-  const avgGain = gains / period;
-  const avgLoss = losses / period;
-  const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-  const rsi = 100 - 100 / (1 + rs);
 
-  // MACD (simplified: 6-period EMA minus 12-period EMA)
-  const ema6 = prices.slice(-6).reduce((a, b) => a + b, 0) / 6;
-  const ema12 = prices.slice(-12).reduce((a, b) => a + b, 0) / 12;
-  const macd = ema6 - ema12;
+  const currentTrend = direction[last] ?? 1;
 
-  // Momentum
-  const momentum = (prices[prices.length - 1] ?? 0) - (prices[prices.length - 5] ?? 0);
-
-  // Signal determination
   let signal: TradingSignal;
   let confidence: number;
 
-  if (rsi < 30) {
-    signal = "BUY";
-    confidence = Math.round(65 + (30 - rsi) * 1.5);
-  } else if (rsi > 70) {
-    signal = "SELL";
-    confidence = Math.round(65 + (rsi - 70) * 1.5);
-  } else if (rsi >= 45 && rsi <= 55) {
-    signal = macd > 0 ? "EXIT" : "HOLD";
-    confidence = Math.round(50 + Math.abs(rsi - 50) * 2);
+  const barsFromBull = lastBullIdx === -1 ? 999 : last - lastBullIdx;
+  const barsFromBear = lastBearIdx === -1 ? 999 : last - lastBearIdx;
+
+  const qqqOpposes =
+    (currentTrend === -1 && lastQQEShortIdx > lastBullIdx) ||
+    (currentTrend ===  1 && lastQQELongIdx  > lastBearIdx);
+
+  if (barsFromBull < barsFromBear) {
+    signal = qqqOpposes ? "EXIT" : "BUY";
+    confidence = Math.round(75 - barsFromBull * 2 + (rsi < 50 ? 10 : 0));
+  } else if (barsFromBear < barsFromBull) {
+    signal = qqqOpposes ? "EXIT" : "SELL";
+    confidence = Math.round(75 - barsFromBear * 2 + (rsi > 50 ? 10 : 0));
   } else {
-    // Probabilistic based on seeded value
-    const prob = (seed + 1) / 2; // 0 to 1
-    if (prob > 0.6) {
-      signal = macd > 0 ? "BUY" : "SELL";
-      confidence = Math.round(52 + prob * 20);
-    } else {
-      signal = momentum > 0 ? "BUY" : "SELL";
-      confidence = Math.round(50 + (1 - prob) * 20);
+    signal = "HOLD";
+    confidence = 45;
+  }
+
+  confidence = Math.min(94, Math.max(42, confidence));
+
+  // ── TP / SL calculation ───────────────────────────────────────────────────
+  const atrBand    = atrNow * ATR_RISK;
+  const isLong     = signal === "BUY" || (signal !== "SELL" && currentTrend === -1);
+  const entryLow:  number = lows[lastBullIdx !== -1 ? lastBullIdx : last] ?? currentPrice;
+  const entryHigh: number = highs[lastBearIdx !== -1 ? lastBearIdx : last] ?? currentPrice;
+
+  const stopLossPrice = isLong
+    ? Math.round((entryLow  - atrBand) * 10000) / 10000
+    : Math.round((entryHigh + atrBand) * 10000) / 10000;
+
+  const entry: number = currentPrice;
+  const tp1 = isLong
+    ? Math.round((entry + (entry - stopLossPrice) * R1) * 10000) / 10000
+    : Math.round((entry - (stopLossPrice - entry) * R1) * 10000) / 10000;
+  const tp2 = isLong
+    ? Math.round((entry + (entry - stopLossPrice) * R2) * 10000) / 10000
+    : Math.round((entry - (stopLossPrice - entry) * R2) * 10000) / 10000;
+  const tp3 = isLong
+    ? Math.round((entry + (entry - stopLossPrice) * R3) * 10000) / 10000
+    : Math.round((entry - (stopLossPrice - entry) * R3) * 10000) / 10000;
+
+  const estimatedGainPct = Math.abs(tp2 - entry) / entry;
+  const estimatedLossPct = Math.abs(entry - stopLossPrice) / entry;
+  const estimatedGain    = Math.round(amount * estimatedGainPct * 100) / 100;
+  const estimatedLoss    = Math.round(amount * estimatedLossPct * 100) / 100;
+  const riskRewardRatio  = estimatedLoss > 0 ? Math.round((estimatedGain / estimatedLoss) * 100) / 100 : R2;
+  const movementPercent  = Math.round(estimatedGainPct * 1000) / 10;
+
+  // ── Price history ─────────────────────────────────────────────────────────
+  const now = Date.now();
+  const priceHistory = candles.slice(-20).map((c, i) => ({
+    time: new Date(now - (19 - i) * 5 * 60000).toISOString(),
+    price: Math.round(c.close * 100) / 100,
+  }));
+
+  // ── Recent signals ────────────────────────────────────────────────────────
+  const recentSignals: RecentSignalEntry[] = [];
+  const histStart = N - 20;
+  for (let i = Math.max(1, histStart); i <= last && recentSignals.length < 5; i++) {
+    const dirI  = direction[i] ?? 1;
+    const dirP  = direction[i - 1] ?? 1;
+    const ph    = priceHistory[i - histStart];
+    if (!ph) continue;
+    if (dirI === -1 && dirP === 1) {
+      recentSignals.push({ time: ph.time, signal: "BUY",  price: ph.price });
+    } else if (dirI === 1 && dirP === -1) {
+      recentSignals.push({ time: ph.time, signal: "SELL", price: ph.price });
+    } else if ((qqeLong[i] ?? null) !== null) {
+      recentSignals.push({ time: ph.time, signal: "BUY",  price: ph.price });
+    } else if ((qqeShort[i] ?? null) !== null) {
+      recentSignals.push({ time: ph.time, signal: "EXIT", price: ph.price });
     }
   }
 
-  confidence = Math.min(95, Math.max(40, confidence));
-
-  // Risk/reward calculations
-  const volatilityPct = Math.abs(seed) * 0.03 + 0.02; // 2-5%
-  const movementPercent = Math.round(volatilityPct * 100 * 10) / 10;
-  const estimatedGain = Math.round(amount * volatilityPct * 1.8 * 100) / 100;
-  const estimatedLoss = Math.round(amount * volatilityPct * 100) / 100;
-  const riskRewardRatio = Math.round((estimatedGain / estimatedLoss) * 10) / 10;
-
-  const stopLossPrice = Math.round(currentPrice * (1 - volatilityPct) * 100) / 100;
-  const takeProfitPrice = Math.round(currentPrice * (1 + volatilityPct * 1.8) * 100) / 100;
-
-  // Recent signals (last 3 notable points)
-  const recentSignalTypes: Array<"BUY" | "SELL" | "EXIT"> = ["BUY", "SELL", "EXIT"];
-  const recentSignals: RecentSignalEntry[] = [0, 1, 2].map((i) => {
-    const idx = 5 + i * 4;
-    const entry = priceHistory[idx] ?? priceHistory[0];
-    return {
-      time: entry?.time ?? new Date().toISOString(),
-      signal: recentSignalTypes[i % 3] as "BUY" | "SELL" | "EXIT",
-      price: entry?.price ?? currentPrice,
-    };
-  });
-
-  // Summary in Spanish
-  const signalMessages: Record<TradingSignal, string> = {
-    BUY: `El activo ${upperAsset} muestra señales de sobreventa con RSI en ${rsi.toFixed(1)}. El análisis técnico sugiere una oportunidad de entrada con potencial alcista del ${movementPercent}%.`,
-    SELL: `${upperAsset} presenta sobrecompra con RSI en ${rsi.toFixed(1)}. Se recomienda considerar toma de ganancias con riesgo de corrección del ${movementPercent}%.`,
-    EXIT: `${upperAsset} está en zona neutral. El MACD indica posible agotamiento de tendencia. Considera gestionar posiciones abiertas.`,
-    HOLD: `${upperAsset} muestra consolidación. El momentum es mixto y el RSI en zona neutral (${rsi.toFixed(1)}). Mantener posición y vigilar próximos movimientos.`,
+  // ── Summary in Spanish ────────────────────────────────────────────────────
+  const summaries: Record<TradingSignal, string> = {
+    BUY:  `${upperAsset} acaba de generar señal BUY. El Supertrend ha cruzado al alza y el RSI (${rsi.toFixed(1)}) confirma momentum positivo. Stop Loss fijado en ${stopLossPrice.toLocaleString("es-ES")}. TP1: ${tp1.toLocaleString("es-ES")} · TP2: ${tp2.toLocaleString("es-ES")} · TP3: ${tp3.toLocaleString("es-ES")}.`,
+    SELL: `${upperAsset} ha generado señal SELL. El Supertrend ha cruzado a la baja con RSI en ${rsi.toFixed(1)}. Stop Loss en ${stopLossPrice.toLocaleString("es-ES")}. TP1: ${tp1.toLocaleString("es-ES")} · TP2: ${tp2.toLocaleString("es-ES")} · TP3: ${tp3.toLocaleString("es-ES")}.`,
+    EXIT: `El indicador QQE detecta agotamiento de la tendencia actual en ${upperAsset}. RSI en ${rsi.toFixed(1)}. Se recomienda cerrar posiciones abiertas y esperar confirmación de nueva señal.`,
+    HOLD: `${upperAsset} se encuentra en fase de consolidación. Sin cruce confirmado en el Supertrend. RSI neutral en ${rsi.toFixed(1)}. Mantener posición y esperar ruptura de rango.`,
   };
-
-  const summary = signalMessages[signal];
-  const analysisId = `${upperAsset}-${Date.now().toString(36).toUpperCase()}`;
 
   return {
     asset: upperAsset,
@@ -330,11 +576,11 @@ function runTradingAlgorithm(asset: string, amount: number): {
     riskRewardRatio,
     movementPercent,
     stopLoss: stopLossPrice,
-    takeProfit: takeProfitPrice,
+    takeProfit: tp2,
     priceHistory,
     recentSignals,
-    summary,
-    analysisId,
+    summary: summaries[signal] ?? "",
+    analysisId: `${upperAsset}-${Date.now().toString(36).toUpperCase()}`,
   };
 }
 
