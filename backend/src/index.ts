@@ -9,6 +9,7 @@ import tasks from "./routes/tasks";
 import habits from "./routes/habits";
 import projects from "./routes/projects";
 import financeToolsRouter from "./routes/finance-tools";
+import { signalsRouter } from "./routes/signals";
 import contentRouter from "./routes/content";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
@@ -1085,6 +1086,9 @@ app.route("/api/projects", projects);
 
 // ===== FINANCE TOOLS ROUTES =====
 app.route("/api/finance", financeToolsRouter);
+
+// ===== SIGNALS ROUTES =====
+app.route("/api/signals", signalsRouter);
 
 // ===== CONTENT ROUTES =====
 app.route("/api/content", contentRouter);

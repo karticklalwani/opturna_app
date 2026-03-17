@@ -566,3 +566,68 @@ model LifeGoal {
   targetDate  DateTime?
   emoji       String?  // An emoji representing the goal
 }
+
+// ============ INVESTMENT SIGNALS ============
+model Signal {
+  id              String   @id @default(cuid())
+  symbol          String
+  name            String
+  assetType       String
+  exchange        String?
+  currency        String   @default("USD")
+  signal          String   // BUY, SELL, NEUTRAL
+  signalSource    String   @default("Supertrend")
+  signalStatus    String   @default("active") // active, closed
+  price           Float
+  entryPrice      Float
+  stopLoss        Float
+  tp1             Float
+  tp2             Float
+  tp3             Float
+  riskReward      Float
+  confidenceScore Float
+  riskLevel       String   // low, medium, high
+  movementPercent Float
+  gainEstimate    Float    @default(0)
+  lossEstimate    Float    @default(0)
+  capitalInvested Float    @default(0)
+  timeframe       String   @default("1h")
+  analysisSummary String
+  atr             Float
+  supertrendValue Float
+  telegramSent    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  logs            SignalLog[]
+  telegramLogs    TelegramDeliveryLog[]
+}
+
+model SignalLog {
+  id        String   @id @default(cuid())
+  signalId  String
+  signal    Signal   @relation(fields: [signalId], references: [id])
+  event     String
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model MonitoredAsset {
+  id              String   @id @default(cuid())
+  symbol          String   @unique
+  name            String
+  assetType       String
+  active          Boolean  @default(true)
+  telegramEnabled Boolean  @default(true)
+  lastSignal      String?
+  lastSignalAt    DateTime?
+  createdAt       DateTime @default(now())
+}
+
+model TelegramDeliveryLog {
+  id        String   @id @default(cuid())
+  signalId  String
+  signal    Signal   @relation(fields: [signalId], references: [id])
+  success   Boolean
+  error     String?
+  createdAt DateTime @default(now())
+}

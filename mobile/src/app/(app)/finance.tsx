@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { WebView } from "react-native-webview";
 import CompoundInterestCalculator from "@/components/CompoundInterestCalculator";
 import InvestmentAnalysisTool from "@/components/InvestmentAnalysisTool";
+import { InvestmentsSection } from "../../components/InvestmentsSection";
 import {
   View,
   Text,
@@ -3623,11 +3624,7 @@ export default function FinanceScreen() {
             colors={colors}
           />
         ) : activeTab === "inversiones" ? (
-          <InversionesTab
-            investments={investments}
-            onAddInvestment={() => setShowInvestmentModal(true)}
-            colors={colors}
-          />
+          <InvestmentsSection />
         ) : activeTab === "ahorro" ? (
           <AhorroTab
             savingsGoals={savingsGoals}
