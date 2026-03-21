@@ -334,6 +334,7 @@ export interface AnalysisResult {
   dataStatus: "live" | "delayed";
   lastSignalTimestamp: string;
   telegramSent: boolean;
+  crossoverOccurred: boolean;
   candles: OHLCCandle[];
 }
 
@@ -390,6 +391,7 @@ export async function runSignalEngine(
       dataStatus: "live",
       lastSignalTimestamp: new Date().toISOString(),
       telegramSent: false,
+      crossoverOccurred: false,
       candles: []
     };
   }
@@ -422,13 +424,24 @@ export async function runSignalEngine(
   const bullCross = prevClose <= prevSupertrend && lastClose > lastSupertrend;
   const bearCross = prevClose >= prevSupertrend && lastClose < lastSupertrend;
 
+  // Check if crossover happened recently (within last 3 candles)
+  const recentBullCross = supertrendData.directions.slice(-3).some((d, i, arr) =>
+    i > 0 && arr[i] === 1 && arr[i - 1] === -1
+  ) || bullCross;
+  const recentBearCross = supertrendData.directions.slice(-3).some((d, i, arr) =>
+    i > 0 && arr[i] === -1 && arr[i - 1] === 1
+  ) || bearCross;
+
+  const crossoverOccurred = recentBullCross || recentBearCross;
+
   let signal: "BUY" | "SELL" | "NEUTRAL";
-  if (bullCross || lastDir === 1) {
+  if (recentBullCross) {
     signal = "BUY";
-  } else if (bearCross || lastDir === -1) {
+  } else if (recentBearCross) {
     signal = "SELL";
   } else {
-    signal = "NEUTRAL";
+    // Continuous trend - still useful for directional bias
+    signal = lastDir === 1 ? "BUY" : "SELL";
   }
 
   const entryPrice = lastClose;
@@ -558,7 +571,7 @@ export async function runSignalEngine(
     entryPrice,
     signal,
     signalSource: "Supertrend",
-    signalStatus: signal !== "NEUTRAL" ? "active" : "waiting",
+    signalStatus: "active",
     supertrendValue: lastSupertrend,
     supertrendDirection: lastDir,
     atr: lastATR,
@@ -586,11 +599,12 @@ export async function runSignalEngine(
     resistanceLevels: resistances,
     analysisSummary,
     riskLevel,
-    operationState: signal !== "NEUTRAL" ? "active" : "waiting",
+    operationState: "active",
     validationState,
     dataStatus: "live",
     lastSignalTimestamp: new Date().toISOString(),
     telegramSent: false,
+    crossoverOccurred,
     candles: candles.slice(-100)
   };
 }

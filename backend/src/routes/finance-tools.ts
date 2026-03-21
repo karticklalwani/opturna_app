@@ -13,11 +13,18 @@ type ChartPoint = { month: number; nominal: number; real: number; contributed: n
 const compoundInterestSchema = z.object({
   initialAmount: z.number().min(0),
   periodicContribution: z.number().min(0),
-  frequency: z.enum(["daily", "weekly", "monthly", "annual"]),
+  frequency: z.enum(["Diaria", "Semanal", "Mensual", "Anual", "daily", "weekly", "monthly", "annual"]),
   annualInterestRate: z.number().min(0).max(1000),
   periodMonths: z.number().int().min(1).max(600),
   inflationRate: z.number().min(0).max(1000),
 });
+
+const FREQUENCY_SPANISH_MAP: Record<string, "daily" | "weekly" | "monthly" | "annual"> = {
+  Diaria: "daily",
+  Semanal: "weekly",
+  Mensual: "monthly",
+  Anual: "annual",
+};
 
 const FREQUENCY_MULTIPLIERS: Record<"daily" | "weekly" | "monthly" | "annual", number> = {
   daily: 30.44,
@@ -56,7 +63,9 @@ financeToolsRouter.post(
       inflationRate,
     } = c.req.valid("json");
 
-    const monthlyMultiplier = FREQUENCY_MULTIPLIERS[frequency];
+    const normalizedFrequency: "daily" | "weekly" | "monthly" | "annual" =
+      FREQUENCY_SPANISH_MAP[frequency] ?? (frequency as "daily" | "weekly" | "monthly" | "annual");
+    const monthlyMultiplier = FREQUENCY_MULTIPLIERS[normalizedFrequency];
     const r = annualInterestRate / 100 / 12;
 
     // Determine step size to keep chartData at most 120 points

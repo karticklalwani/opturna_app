@@ -360,11 +360,11 @@ export default function CompoundInterestCalculator() {
       <Animated.View entering={FadeInDown.duration(300).springify()}>
         <View
           style={{
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.bg2,
             borderRadius: 20,
             padding: 18,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             marginBottom: 12,
           }}
         >
@@ -418,7 +418,7 @@ export default function CompoundInterestCalculator() {
                 keyboardType="decimal-pad"
                 testID="calc-initial-amount"
                 style={{
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
@@ -426,7 +426,7 @@ export default function CompoundInterestCalculator() {
                   fontSize: 15,
                   fontWeight: "700",
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               />
             </View>
@@ -450,7 +450,7 @@ export default function CompoundInterestCalculator() {
                 keyboardType="decimal-pad"
                 testID="calc-contribution"
                 style={{
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
@@ -458,7 +458,7 @@ export default function CompoundInterestCalculator() {
                   fontSize: 15,
                   fontWeight: "700",
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               />
             </View>
@@ -495,9 +495,9 @@ export default function CompoundInterestCalculator() {
                     paddingVertical: 8,
                     borderRadius: 10,
                     alignItems: "center",
-                    backgroundColor: isActive ? `${colors.accent}20` : "#141414",
+                    backgroundColor: isActive ? `${colors.accent}20` : colors.bg3,
                     borderWidth: 1,
-                    borderColor: isActive ? `${colors.accent}60` : "#1F1F1F",
+                    borderColor: isActive ? `${colors.accent}60` : colors.border,
                   }}
                 >
                   <Text
@@ -536,7 +536,7 @@ export default function CompoundInterestCalculator() {
                 keyboardType="decimal-pad"
                 testID="calc-interest-rate"
                 style={{
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
@@ -544,7 +544,7 @@ export default function CompoundInterestCalculator() {
                   fontSize: 15,
                   fontWeight: "700",
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               />
             </View>
@@ -568,7 +568,7 @@ export default function CompoundInterestCalculator() {
                 keyboardType="number-pad"
                 testID="calc-period"
                 style={{
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 12,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
@@ -576,7 +576,7 @@ export default function CompoundInterestCalculator() {
                   fontSize: 15,
                   fontWeight: "700",
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               />
             </View>
@@ -602,7 +602,7 @@ export default function CompoundInterestCalculator() {
             keyboardType="decimal-pad"
             testID="calc-inflation"
             style={{
-              backgroundColor: "#141414",
+              backgroundColor: colors.bg3,
               borderRadius: 12,
               paddingHorizontal: 12,
               paddingVertical: 10,
@@ -610,7 +610,7 @@ export default function CompoundInterestCalculator() {
               fontSize: 15,
               fontWeight: "700",
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               marginBottom: 16,
             }}
           />
@@ -656,12 +656,12 @@ export default function CompoundInterestCalculator() {
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.bg2,
               borderRadius: 12,
               padding: 4,
               marginBottom: 12,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
             }}
           >
             {(["Nominal", "Real (ajustado)"] as const).map((label) => {
@@ -735,7 +735,7 @@ export default function CompoundInterestCalculator() {
                 key={card.label}
                 style={{
                   width: "47.5%",
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.bg2,
                   borderRadius: 16,
                   padding: 14,
                   borderWidth: 1,
@@ -787,11 +787,11 @@ export default function CompoundInterestCalculator() {
           {/* Chart */}
           <View
             style={{
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.bg2,
               borderRadius: 20,
               padding: 16,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               marginBottom: 12,
             }}
           >
@@ -902,11 +902,11 @@ export default function CompoundInterestCalculator() {
           onPress={handleShowInflation}
           testID="toggle-inflation"
           style={{
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.bg2,
             borderRadius: 16,
             padding: 16,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -947,7 +947,7 @@ export default function CompoundInterestCalculator() {
         {showInflation ? (
           <View
             style={{
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.bg2,
               borderRadius: 16,
               borderTopLeftRadius: 0,
               borderTopRightRadius: 0,
@@ -955,7 +955,7 @@ export default function CompoundInterestCalculator() {
               paddingTop: 8,
               borderWidth: 1,
               borderTopWidth: 0,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               marginBottom: 4,
             }}
           >
@@ -985,7 +985,7 @@ export default function CompoundInterestCalculator() {
                     alignItems: "center",
                     paddingVertical: 16,
                     borderBottomWidth: 1,
-                    borderBottomColor: "#1F1F1F",
+                    borderBottomColor: colors.border,
                     marginBottom: 14,
                   }}
                 >
@@ -1014,7 +1014,7 @@ export default function CompoundInterestCalculator() {
                 <View
                   style={{
                     flexDirection: "row",
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderRadius: 10,
                     padding: 3,
                     marginBottom: 14,
@@ -1032,9 +1032,9 @@ export default function CompoundInterestCalculator() {
                           paddingVertical: 7,
                           borderRadius: 8,
                           alignItems: "center",
-                          backgroundColor: isActive ? "#0F0F0F" : "transparent",
+                          backgroundColor: isActive ? colors.bg2 : "transparent",
                           borderWidth: isActive ? 1 : 0,
-                          borderColor: isActive ? "#1F1F1F" : "transparent",
+                          borderColor: isActive ? colors.border : "transparent",
                         }}
                       >
                         <Text
@@ -1062,7 +1062,7 @@ export default function CompoundInterestCalculator() {
                           justifyContent: "space-between",
                           paddingVertical: 8,
                           borderBottomWidth: 1,
-                          borderBottomColor: "#1A1A1A",
+                          borderBottomColor: colors.bg4,
                         }}
                       >
                         <Text style={{ color: colors.text2, fontSize: 13 }}>
@@ -1099,7 +1099,7 @@ export default function CompoundInterestCalculator() {
                           alignItems: "center",
                           paddingVertical: 9,
                           borderBottomWidth: 1,
-                          borderBottomColor: "#1A1A1A",
+                          borderBottomColor: colors.bg4,
                           gap: 10,
                         }}
                       >

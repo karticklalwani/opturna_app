@@ -332,10 +332,10 @@ export function InvestmentsSection() {
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { background: #080808; overflow: hidden; width: 100%; height: 100%; }
+    html, body { background: #080808; overflow: hidden; width: 100%; height: 100%; touch-action: pan-x pan-y; }
     #tv_chart_container { width: 100%; height: 100%; }
   </style>
 </head>
@@ -715,7 +715,8 @@ export function InvestmentsSection() {
           source={{ html: chartHTML }}
           style={{ flex: 1, backgroundColor: "#080808" }}
           scrollEnabled={false}
-          pointerEvents="none"
+          bounces={false}
+          scalesPageToFit={false}
           testID="tradingview-chart"
         />
       </Animated.View>

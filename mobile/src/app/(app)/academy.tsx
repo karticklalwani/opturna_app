@@ -4,10 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import { Course } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BookOpen, Play, Users, Lock, Plus, X, ChevronRight, ImageIcon } from "lucide-react-native";
+import { BookOpen, Play, Users, Lock, Plus, X, ChevronRight, ImageIcon, ChevronLeft } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
+import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { uploadFile } from "@/lib/upload";
 
@@ -196,6 +197,7 @@ function CourseCard({ course, index, colors }: { course: Course; index: number; 
 export default function AcademyScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showCreate, setShowCreate] = useState(false);
   const [newCourse, setNewCourse] = useState({ title: "", description: "", category: "", access: "free", thumbnail: "" });
@@ -256,6 +258,12 @@ export default function AcademyScreen() {
       <SafeAreaView edges={["top"]}>
         <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ width: 40, height: 40, borderRadius: 100, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginRight: 10 }}
+            >
+              <ChevronLeft size={20} color={colors.text} />
+            </Pressable>
             <Text style={{ flex: 1, fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5 }}>
               {t("academy")}
             </Text>

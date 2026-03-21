@@ -36,10 +36,12 @@ import {
   Archive,
   Pencil,
   Layers,
+  ChevronLeft,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { api } from "@/lib/api/api";
 import { Project } from "@/types";
+import { useTheme } from "@/lib/theme";
 
 // ─── Status config ─────────────────────────────────────────────────────────────
 
@@ -78,6 +80,7 @@ const STATUS_CONFIG: Record<
 // ─── Animated progress bar ─────────────────────────────────────────────────────
 
 function ProgressBar({ progress, color }: { progress: number; color: string }) {
+  const { colors } = useTheme();
   const width = useSharedValue(0);
 
   useEffect(() => {
@@ -101,7 +104,7 @@ function ProgressBar({ progress, color }: { progress: number; color: string }) {
           marginBottom: 6,
         }}
       >
-        <Text style={{ color: "#A3A3A3", fontSize: 11, fontWeight: "500" }}>
+        <Text style={{ color: colors.text2, fontSize: 11, fontWeight: "500" }}>
           Progreso
         </Text>
         <Text
@@ -117,7 +120,7 @@ function ProgressBar({ progress, color }: { progress: number; color: string }) {
       <View
         style={{
           height: 6,
-          backgroundColor: "#1A1A1A",
+          backgroundColor: colors.bg4,
           borderRadius: 100,
           overflow: "hidden",
         }}
@@ -154,6 +157,7 @@ function ProjectCard({
   onEdit: (project: Project) => void;
   onDelete: (id: string) => void;
 }) {
+  const { colors } = useTheme();
   const cfg = STATUS_CONFIG[project.status];
   const StatusIcon = cfg.Icon;
 
@@ -171,10 +175,10 @@ function ProjectCard({
       <View
         testID="project-card"
         style={{
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.card,
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           borderLeftWidth: 3,
           borderLeftColor: cfg.color,
           padding: 18,
@@ -206,7 +210,7 @@ function ProjectCard({
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: project.status === "archived" ? "#737373" : "#F5F5F5",
+                color: project.status === "archived" ? colors.text3 : colors.text,
                 fontSize: 15,
                 fontWeight: "700",
                 letterSpacing: 0.1,
@@ -218,7 +222,7 @@ function ProjectCard({
             {project.description ? (
               <Text
                 style={{
-                  color: "#737373",
+                  color: colors.text3,
                   fontSize: 12,
                   lineHeight: 18,
                   marginBottom: 6,
@@ -257,7 +261,7 @@ function ProjectCard({
               </View>
               <View
                 style={{
-                  backgroundColor: "#1A1A1A",
+                  backgroundColor: colors.bg4,
                   borderRadius: 100,
                   paddingHorizontal: 8,
                   paddingVertical: 3,
@@ -267,13 +271,13 @@ function ProjectCard({
                 }}
               >
                 {project.isPublic ? (
-                  <Globe size={9} color="#A3A3A3" />
+                  <Globe size={9} color={colors.text2} />
                 ) : (
-                  <Lock size={9} color="#A3A3A3" />
+                  <Lock size={9} color={colors.text2} />
                 )}
                 <Text
                   style={{
-                    color: "#737373",
+                    color: colors.text3,
                     fontSize: 10,
                     fontWeight: "500",
                   }}
@@ -293,14 +297,14 @@ function ProjectCard({
                 width: 32,
                 height: 32,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Pencil size={13} color="#A3A3A3" />
+              <Pencil size={13} color={colors.text2} />
             </Pressable>
             <Pressable
               testID={`delete-project-${project.id}`}
@@ -335,12 +339,12 @@ function ProjectCard({
               alignItems: "center",
               gap: 6,
               alignSelf: "flex-start",
-              backgroundColor: "#1A1A1A",
+              backgroundColor: colors.bg4,
               borderRadius: 100,
               paddingHorizontal: 12,
               paddingVertical: 6,
               borderWidth: 1,
-              borderColor: "#2A2A2A",
+              borderColor: colors.border,
             }}
           >
             <ExternalLink size={12} color="#818CF8" />
@@ -372,6 +376,7 @@ function DeleteModal({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const { colors } = useTheme();
   return (
     <Modal
       visible={visible}
@@ -390,10 +395,10 @@ function DeleteModal({
       >
         <View
           style={{
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 24,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 24,
             width: "100%",
             maxWidth: 360,
@@ -417,7 +422,7 @@ function DeleteModal({
           </View>
           <Text
             style={{
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 18,
               fontWeight: "700",
               textAlign: "center",
@@ -428,7 +433,7 @@ function DeleteModal({
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 14,
               textAlign: "center",
               lineHeight: 20,
@@ -436,7 +441,7 @@ function DeleteModal({
             }}
           >
             {"¿Eliminar "}
-            <Text style={{ color: "#A3A3A3", fontWeight: "600" }}>
+            <Text style={{ color: colors.text2, fontWeight: "600" }}>
               {projectTitle}
             </Text>
             {"? Esta acción no se puede deshacer."}
@@ -449,14 +454,14 @@ function DeleteModal({
                 flex: 1,
                 paddingVertical: 14,
                 borderRadius: 100,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderWidth: 1,
-                borderColor: "#2A2A2A",
+                borderColor: colors.border,
                 alignItems: "center",
               }}
             >
               <Text
-                style={{ color: "#A3A3A3", fontSize: 14, fontWeight: "600" }}
+                style={{ color: colors.text2, fontSize: 14, fontWeight: "600" }}
               >
                 Cancelar
               </Text>
@@ -523,6 +528,24 @@ function ProjectFormModal({
   isPending: boolean;
   editProject: Project | null;
 }) {
+  const { colors } = useTheme();
+  const labelStyle = {
+    color: colors.text2,
+    fontSize: 12,
+    fontWeight: "600" as const,
+    marginBottom: 8,
+    letterSpacing: 0.3,
+  };
+  const inputStyle = {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 14,
+    color: colors.text,
+    fontSize: 15,
+    marginBottom: 20,
+  };
   const [form, setForm] = useState<ProjectFormData>(EMPTY_FORM);
 
   useEffect(() => {
@@ -565,13 +588,13 @@ function ProjectFormModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={{ flex: 1, backgroundColor: "#080808" }}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           {/* Drag handle */}
           <View
             style={{
               width: 36,
               height: 4,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: colors.border,
               borderRadius: 100,
               alignSelf: "center",
               marginTop: 12,
@@ -596,18 +619,18 @@ function ProjectFormModal({
                 height: 36,
                 borderRadius: 100,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <X size={16} color="#A3A3A3" />
+              <X size={16} color={colors.text2} />
             </Pressable>
             <Text
               style={{
                 flex: 1,
                 textAlign: "center",
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
               }}
@@ -627,7 +650,7 @@ function ProjectFormModal({
               value={form.title}
               onChangeText={(v) => setForm((p) => ({ ...p, title: v }))}
               placeholder="Ej. App de productividad"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="project-title-input"
               style={inputStyle}
             />
@@ -638,7 +661,7 @@ function ProjectFormModal({
               value={form.description}
               onChangeText={(v) => setForm((p) => ({ ...p, description: v }))}
               placeholder="¿En qué consiste este proyecto?"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="project-description-input"
               style={[inputStyle, { minHeight: 90, textAlignVertical: "top" }]}
@@ -671,18 +694,18 @@ function ProjectFormModal({
                       paddingHorizontal: 14,
                       paddingVertical: 8,
                       borderRadius: 100,
-                      backgroundColor: active ? cfg.bg : "#0F0F0F",
+                      backgroundColor: active ? cfg.bg : colors.card,
                       borderWidth: 1.5,
-                      borderColor: active ? cfg.color : "#1F1F1F",
+                      borderColor: active ? cfg.color : colors.border,
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 5,
                     }}
                   >
-                    <Ico size={12} color={active ? cfg.color : "#737373"} />
+                    <Ico size={12} color={active ? cfg.color : colors.text3} />
                     <Text
                       style={{
-                        color: active ? cfg.color : "#737373",
+                        color: active ? cfg.color : colors.text3,
                         fontSize: 13,
                         fontWeight: active ? "600" : "400",
                       }}
@@ -705,7 +728,7 @@ function ProjectFormModal({
                 }
               }}
               placeholder="0"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               keyboardType="number-pad"
               testID="project-progress-input"
               style={inputStyle}
@@ -717,7 +740,7 @@ function ProjectFormModal({
               value={form.url}
               onChangeText={(v) => setForm((p) => ({ ...p, url: v }))}
               placeholder="https://miproyecto.com"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               keyboardType="url"
               autoCapitalize="none"
               testID="project-url-input"
@@ -730,9 +753,9 @@ function ProjectFormModal({
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 borderRadius: 14,
                 padding: 16,
                 marginBottom: 32,
@@ -742,19 +765,19 @@ function ProjectFormModal({
                 {form.isPublic ? (
                   <Globe size={18} color="#4ADE80" />
                 ) : (
-                  <Lock size={18} color="#737373" />
+                  <Lock size={18} color={colors.text3} />
                 )}
                 <View>
                   <Text
                     style={{
-                      color: "#F5F5F5",
+                      color: colors.text,
                       fontSize: 14,
                       fontWeight: "600",
                     }}
                   >
                     {form.isPublic ? "Proyecto público" : "Proyecto privado"}
                   </Text>
-                  <Text style={{ color: "#737373", fontSize: 12, marginTop: 1 }}>
+                  <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>
                     {form.isPublic
                       ? "Visible para todos"
                       : "Solo tú puedes verlo"}
@@ -765,8 +788,8 @@ function ProjectFormModal({
                 value={form.isPublic}
                 onValueChange={(v) => setForm((p) => ({ ...p, isPublic: v }))}
                 testID="project-public-toggle"
-                trackColor={{ false: "#1F1F1F", true: "#4ADE8050" }}
-                thumbColor={form.isPublic ? "#4ADE80" : "#404040"}
+                trackColor={{ false: colors.border, true: "#4ADE8050" }}
+                thumbColor={form.isPublic ? "#4ADE80" : colors.text4}
               />
             </View>
 
@@ -788,11 +811,11 @@ function ProjectFormModal({
               }}
             >
               {isPending ? (
-                <ActivityIndicator color="#080808" />
+                <ActivityIndicator color={colors.bg} />
               ) : (
                 <Text
                   style={{
-                    color: "#080808",
+                    color: colors.bg,
                     fontSize: 15,
                     fontWeight: "700",
                   }}
@@ -808,28 +831,10 @@ function ProjectFormModal({
   );
 }
 
-const labelStyle = {
-  color: "#A3A3A3",
-  fontSize: 12,
-  fontWeight: "600" as const,
-  marginBottom: 8,
-  letterSpacing: 0.3,
-};
-
-const inputStyle = {
-  backgroundColor: "#0F0F0F",
-  borderWidth: 1,
-  borderColor: "#1F1F1F",
-  borderRadius: 14,
-  padding: 14,
-  color: "#F5F5F5",
-  fontSize: 15,
-  marginBottom: 20,
-};
-
 // ─── Stats row ─────────────────────────────────────────────────────────────────
 
 function StatsRow({ projects }: { projects: Project[] }) {
+  const { colors } = useTheme();
   const active = projects.filter((p) => p.status === "active").length;
   const completed = projects.filter((p) => p.status === "completed").length;
   const avgProgress =
@@ -852,10 +857,10 @@ function StatsRow({ projects }: { projects: Project[] }) {
           key={i}
           style={{
             flex: 1,
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: 18,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 14,
             alignItems: "center",
             gap: 4,
@@ -873,7 +878,7 @@ function StatsRow({ projects }: { projects: Project[] }) {
           </Text>
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 10,
               fontWeight: "500",
               textAlign: "center",
@@ -894,6 +899,7 @@ type StatusFilter = ProjectStatus | "all";
 export default function ProjectsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors } = useTheme();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showForm, setShowForm] = useState(false);
@@ -995,7 +1001,7 @@ export default function ProjectsScreen() {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: "#080808" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       testID="projects-screen"
     >
       <SafeAreaView edges={["top"]}>
@@ -1016,32 +1022,33 @@ export default function ProjectsScreen() {
                 style={{
                   fontSize: 28,
                   fontWeight: "800",
-                  color: "#F5F5F5",
+                  color: colors.text,
                   letterSpacing: -0.8,
                 }}
               >
                 Proyectos
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
                 {allProjects.length === 0
                   ? "Sin proyectos aún"
                   : `${allProjects.length} proyecto${allProjects.length !== 1 ? "s" : ""} en total`}
               </Text>
             </View>
-            <View
+            <Pressable
+              onPress={() => router.back()}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 100,
-                backgroundColor: "#4ADE801A",
+                backgroundColor: colors.card,
                 borderWidth: 1,
-                borderColor: "#4ADE8030",
+                borderColor: colors.border,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <FolderKanban size={18} color="#4ADE80" />
-            </View>
+              <ChevronLeft size={20} color={colors.text} />
+            </Pressable>
           </View>
 
           {/* Productivity nav strip */}
@@ -1071,14 +1078,14 @@ export default function ProjectsScreen() {
                     paddingHorizontal: 16,
                     paddingVertical: 8,
                     borderRadius: 100,
-                    backgroundColor: isCurrent ? "#4ADE80" : "#0F0F0F",
+                    backgroundColor: isCurrent ? "#4ADE80" : colors.card,
                     borderWidth: 1,
-                    borderColor: isCurrent ? "#4ADE80" : "#1F1F1F",
+                    borderColor: isCurrent ? "#4ADE80" : colors.border,
                   }}
                 >
                   <Text
                     style={{
-                      color: isCurrent ? "#080808" : "#737373",
+                      color: isCurrent ? colors.bg : colors.text3,
                       fontSize: 13,
                       fontWeight: isCurrent ? "700" : "500",
                     }}
@@ -1101,8 +1108,8 @@ export default function ProjectsScreen() {
               const active = statusFilter === ft.key;
               const color =
                 ft.key === "all"
-                  ? "#A3A3A3"
-                  : STATUS_CONFIG[ft.key as ProjectStatus]?.color ?? "#A3A3A3";
+                  ? colors.text2
+                  : STATUS_CONFIG[ft.key as ProjectStatus]?.color ?? colors.text2;
               return (
                 <Pressable
                   key={ft.key}
@@ -1114,20 +1121,20 @@ export default function ProjectsScreen() {
                     borderRadius: 100,
                     backgroundColor: active
                       ? ft.key === "all"
-                        ? "#1F1F1F"
+                        ? colors.bg4
                         : `${color}1F`
                       : "transparent",
                     borderWidth: 1,
                     borderColor: active
                       ? ft.key === "all"
-                        ? "#2A2A2A"
+                        ? colors.border
                         : `${color}4D`
                       : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      color: active ? (ft.key === "all" ? "#F5F5F5" : color) : "#404040",
+                      color: active ? (ft.key === "all" ? colors.text : color) : colors.text4,
                       fontSize: 12,
                       fontWeight: active ? "600" : "400",
                     }}
@@ -1166,7 +1173,7 @@ export default function ProjectsScreen() {
             testID="loading-indicator"
           >
             <ActivityIndicator color="#4ADE80" />
-            <Text style={{ color: "#737373", fontSize: 13, marginTop: 12 }}>
+            <Text style={{ color: colors.text3, fontSize: 13, marginTop: 12 }}>
               Cargando proyectos...
             </Text>
           </View>
@@ -1176,10 +1183,10 @@ export default function ProjectsScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 56,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 24,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderStyle: "dashed",
             }}
             testID="empty-state"
@@ -1201,7 +1208,7 @@ export default function ProjectsScreen() {
             </View>
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 17,
                 fontWeight: "700",
                 marginBottom: 8,
@@ -1213,7 +1220,7 @@ export default function ProjectsScreen() {
             </Text>
             <Text
               style={{
-                color: "#737373",
+                color: colors.text3,
                 fontSize: 13,
                 textAlign: "center",
                 paddingHorizontal: 28,

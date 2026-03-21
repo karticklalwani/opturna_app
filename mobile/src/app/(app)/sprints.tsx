@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, Modal, TextInput,
-  ActivityIndicator, RefreshControl, Alert,
+  ActivityIndicator, RefreshControl, Alert, Pressable,
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import { Sprint, Goal } from "@/types";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Plus, Zap, Target, X, Flame, Calendar, Trash2 } from "lucide-react-native";
+import { Plus, Zap, Target, X, Flame, Calendar, Trash2, ChevronLeft } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
+import { useRouter } from "expo-router";
 
 function SprintCard({ sprint, colors, t }: { sprint: Sprint; colors: any; t: (key: any) => string }) {
   const queryClient = useQueryClient();
@@ -398,6 +399,7 @@ function GoalCard({ goal, colors, t }: { goal: Goal; colors: any; t: (key: any) 
 export default function SprintsScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"sprints" | "goals">("sprints");
   const [showNewSprint, setShowNewSprint] = useState(false);
   const [showNewGoal, setShowNewGoal] = useState(false);
@@ -424,9 +426,18 @@ export default function SprintsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="sprints-screen">
       <SafeAreaView edges={["top"]}>
         <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
-          <Text style={{ fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5, marginBottom: 16 }}>
-            {t("accountability")}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ width: 40, height: 40, borderRadius: 100, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}
+            >
+              <ChevronLeft size={20} color={colors.text} />
+            </Pressable>
+            <Text style={{ fontSize: 28, fontWeight: "800", color: colors.text, letterSpacing: -0.5 }}>
+              {t("accountability")}
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
 
           <View style={{
             flexDirection: "row",

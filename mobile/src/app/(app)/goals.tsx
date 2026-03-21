@@ -38,7 +38,7 @@ import {
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { Goal } from "@/types";
-import { useTheme, DARK } from "@/lib/theme";
+import { useTheme } from "@/lib/theme";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 
@@ -160,14 +160,12 @@ function GoalCard({
   onComplete,
   onDelete,
   onUpdateProgress,
-  colors,
 }: {
   goal: Goal;
   index: number;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateProgress: (id: string, progress: number) => void;
-  colors: typeof DARK;
 }) {
   const { colors: themeColors } = useTheme();
   const catStyle = getCategoryStyle(goal.category);
@@ -530,7 +528,7 @@ function CreateGoalModal({
               value={form.title}
               onChangeText={(v) => setForm((p) => ({ ...p, title: v }))}
               placeholder="Ej. Lanzar mi primer producto"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="goal-title-input"
               style={{
                 backgroundColor: colors.card,
@@ -560,7 +558,7 @@ function CreateGoalModal({
               value={form.description}
               onChangeText={(v) => setForm((p) => ({ ...p, description: v }))}
               placeholder="¿Qué quieres lograr exactamente?"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               multiline
               testID="goal-description-input"
               style={{
@@ -649,7 +647,7 @@ function CreateGoalModal({
               value={form.targetDate}
               onChangeText={(v) => setForm((p) => ({ ...p, targetDate: v }))}
               placeholder="AAAA-MM-DD (ej. 2026-06-30)"
-              placeholderTextColor="#404040"
+              placeholderTextColor={colors.text4}
               testID="goal-date-input"
               style={{
                 backgroundColor: colors.card,
@@ -681,11 +679,11 @@ function CreateGoalModal({
               }}
             >
               {isPending ? (
-                <ActivityIndicator color="#080808" />
+                <ActivityIndicator color={colors.bg} />
               ) : (
                 <Text
                   style={{
-                    color: "#080808",
+                    color: colors.bg,
                     fontSize: 15,
                     fontWeight: "700",
                   }}
@@ -1101,7 +1099,6 @@ export default function GoalsScreen() {
               key={goal.id}
               goal={goal}
               index={i}
-              colors={colors}
               onComplete={(id) => completeGoal.mutate(id)}
               onDelete={(id) => deleteGoal.mutate(id)}
               onUpdateProgress={(id, progress) =>
@@ -1133,7 +1130,7 @@ export default function GoalsScreen() {
           elevation: 8,
         }}
       >
-        <Plus size={24} color="#080808" strokeWidth={2.5} />
+        <Plus size={24} color={colors.bg} strokeWidth={2.5} />
       </Pressable>
 
       {/* Create modal */}
