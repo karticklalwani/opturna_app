@@ -90,6 +90,7 @@ function CompoundChart({
   showReal: boolean;
   width: number;
 }) {
+  const { colors } = useTheme();
   const chartWidth = width - 40;
   const chartHeight = 200;
   const paddingLeft = 56;
@@ -149,7 +150,7 @@ function CompoundChart({
           y1={paddingTop + plotH * (1 - t)}
           x2={paddingLeft + plotW}
           y2={paddingTop + plotH * (1 - t)}
-          stroke="#1F1F1F"
+          stroke={colors.border}
           strokeWidth="1"
         />
       ))}
@@ -168,7 +169,7 @@ function CompoundChart({
             y1={parseFloat(prev.split(",")[1])}
             x2={parseFloat(pt.split(",")[0])}
             y2={parseFloat(pt.split(",")[1])}
-            stroke="#737373"
+            stroke={colors.text3}
             strokeWidth="1.5"
             strokeDasharray="4,3"
           />
@@ -203,7 +204,7 @@ function CompoundChart({
         cy={toY(data[data.length - 1].nominal)}
         r={4}
         fill="#4ADE80"
-        stroke="#080808"
+        stroke={colors.bg}
         strokeWidth="2"
       />
       {showReal ? (
@@ -212,7 +213,7 @@ function CompoundChart({
           cy={toY(data[data.length - 1].real)}
           r={4}
           fill="#60A5FA"
-          stroke="#080808"
+          stroke={colors.bg}
           strokeWidth="2"
         />
       ) : null}
@@ -223,7 +224,7 @@ function CompoundChart({
           key={i}
           x={paddingLeft - 4}
           y={toY(v) + 4}
-          fill="#737373"
+          fill={colors.text3}
           fontSize="9"
           textAnchor="end"
         >
@@ -237,7 +238,7 @@ function CompoundChart({
           key={idx}
           x={toX(idx)}
           y={chartHeight - 4}
-          fill="#737373"
+          fill={colors.text3}
           fontSize="9"
           textAnchor="middle"
         >
@@ -251,7 +252,7 @@ function CompoundChart({
         y1={paddingTop}
         x2={paddingLeft}
         y2={paddingTop + plotH}
-        stroke="#1F1F1F"
+        stroke={colors.border}
         strokeWidth="1"
       />
       <Line
@@ -259,7 +260,7 @@ function CompoundChart({
         y1={paddingTop + plotH}
         x2={paddingLeft + plotW}
         y2={paddingTop + plotH}
-        stroke="#1F1F1F"
+        stroke={colors.border}
         strokeWidth="1"
       />
     </Svg>

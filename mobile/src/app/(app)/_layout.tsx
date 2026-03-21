@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Compass, Radio, Brain, ChartBar, Target, User } from "lucide-react-native";
+import { Home, Compass, Radio, Brain, ChartBar, Target, User, FlaskConical } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { useTheme } from "@/lib/theme";
 import { useI18n } from "@/lib/i18n";
@@ -122,6 +122,14 @@ export default function AppLayout() {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon Icon={Target} focused={focused} label="Objetivos" />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="research"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={FlaskConical} focused={focused} label="Research" />
           ),
         }}
       />

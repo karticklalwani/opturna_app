@@ -37,6 +37,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { api } from "../lib/api/api";
+import { useTheme } from "@/lib/theme";
 
 // ---- Types ----
 
@@ -196,12 +197,12 @@ const tvIntervalMap: Record<string, string> = {
 
 // ---- Skeleton ----
 
-const SkeletonBox = ({ style }: { style?: object }) => (
+const SkeletonBox = ({ style, colors }: { style?: object; colors: { bg4: string } }) => (
   <Animated.View
     entering={FadeIn}
     style={[
       {
-        backgroundColor: "#1A1A1A",
+        backgroundColor: colors.bg4,
         borderRadius: 12,
       },
       style,
@@ -212,6 +213,7 @@ const SkeletonBox = ({ style }: { style?: object }) => (
 // ---- Main Component ----
 
 export function InvestmentsSection() {
+  const { colors } = useTheme();
   const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
   const [selectedTimeframe, setSelectedTimeframe] = useState("1D");
   const [searchQuery, setSearchQuery] = useState("");
@@ -332,10 +334,10 @@ export function InvestmentsSection() {
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { background: #080808; overflow: hidden; width: 100%; height: 100%; touch-action: pan-x pan-y; }
+    html, body { background: ${colors.bg}; width: 100%; height: 100%; touch-action: auto; overflow: hidden; }
     #tv_chart_container { width: 100%; height: 100%; }
   </style>
 </head>
@@ -349,20 +351,20 @@ export function InvestmentsSection() {
       "symbol": "${selectedSymbol}",
       "interval": "${tvInterval}",
       "timezone": "exchange",
-      "theme": "dark",
+      "theme": "${colors.bg === '#F8F8F8' ? 'light' : 'dark'}",
       "style": "1",
       "locale": "es",
-      "toolbar_bg": "#080808",
+      "toolbar_bg": "${colors.bg}",
       "enable_publishing": false,
-      "hide_side_toolbar": true,
+      "hide_side_toolbar": false,
       "hide_top_toolbar": false,
       "save_image": false,
       "container_id": "tv_chart_container",
-      "studies": ["RSI@tv-basicstudies", "MASimple@tv-basicstudies"],
+      "studies": ["RSI@tv-basicstudies"],
       "overrides": {
-        "paneProperties.background": "#080808",
-        "paneProperties.vertGridProperties.color": "#1A1A1A",
-        "paneProperties.horzGridProperties.color": "#1A1A1A"
+        "paneProperties.background": "${colors.bg}",
+        "paneProperties.vertGridProperties.color": "${colors.border}",
+        "paneProperties.horzGridProperties.color": "${colors.border}"
       }
     });
   </script>
@@ -378,7 +380,7 @@ export function InvestmentsSection() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: "#080808" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       showsVerticalScrollIndicator={false}
       testID="investments-scroll"
     >
@@ -397,7 +399,7 @@ export function InvestmentsSection() {
         <View>
           <Text
             style={{
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 22,
               fontWeight: "800",
               letterSpacing: -0.5,
@@ -405,7 +407,7 @@ export function InvestmentsSection() {
           >
             Señales de Inversión
           </Text>
-          <Text style={{ color: "#737373", fontSize: 12, marginTop: 2 }}>
+          <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
             Powered by Opturna Engine
           </Text>
         </View>
@@ -457,12 +459,12 @@ export function InvestmentsSection() {
           }}
           testID="asset-selector"
           style={{
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: showSearch ? 16 : 16,
             borderBottomLeftRadius: showSearch ? 0 : 16,
             borderBottomRightRadius: showSearch ? 0 : 16,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             padding: 16,
             flexDirection: "row",
             alignItems: "center",
@@ -473,7 +475,7 @@ export function InvestmentsSection() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 28,
                   fontWeight: "800",
                   letterSpacing: -1,
@@ -484,26 +486,26 @@ export function InvestmentsSection() {
               {(selectedAssetInfo?.exchange ?? (analysis?.exchange || "")) ? (
                 <View
                   style={{
-                    backgroundColor: "#1A1A1A",
+                    backgroundColor: colors.bg4,
                     borderRadius: 6,
                     paddingHorizontal: 6,
                     paddingVertical: 2,
                   }}
                 >
-                  <Text style={{ color: "#A3A3A3", fontSize: 10, fontWeight: "600" }}>
+                  <Text style={{ color: colors.text2, fontSize: 10, fontWeight: "600" }}>
                     {selectedAssetInfo?.exchange ?? analysis?.exchange ?? ""}
                   </Text>
                 </View>
               ) : null}
             </View>
-            <Text style={{ color: "#A3A3A3", fontSize: 13, marginBottom: 6 }}>
+            <Text style={{ color: colors.text2, fontSize: 13, marginBottom: 6 }}>
               {selectedAssetInfo?.name ?? analysis?.name ?? "Cargando..."}
             </Text>
             {analysis ? (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <Text
                   style={{
-                    color: "#F5F5F5",
+                    color: colors.text,
                     fontSize: 18,
                     fontWeight: "700",
                   }}
@@ -535,9 +537,9 @@ export function InvestmentsSection() {
           </View>
           <View style={{ alignItems: "center", justifyContent: "center", paddingLeft: 8 }}>
             {showSearch ? (
-              <ChevronUp size={20} color="#A3A3A3" />
+              <ChevronUp size={20} color={colors.text2} />
             ) : (
-              <ChevronDown size={20} color="#A3A3A3" />
+              <ChevronDown size={20} color={colors.text2} />
             )}
           </View>
         </Pressable>
@@ -546,10 +548,10 @@ export function InvestmentsSection() {
         {showSearch ? (
           <View
             style={{
-              backgroundColor: "#0A0A0A",
+              backgroundColor: colors.bg,
               borderWidth: 1,
               borderTopWidth: 0,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderBottomLeftRadius: 16,
               borderBottomRightRadius: 16,
               padding: 12,
@@ -559,25 +561,25 @@ export function InvestmentsSection() {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderRadius: 10,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 paddingHorizontal: 12,
                 marginBottom: 10,
               }}
             >
-              <Search size={16} color="#737373" />
+              <Search size={16} color={colors.text3} />
               <TextInput
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholder="Buscar activo... (AAPL, BTC, ETH)"
-                placeholderTextColor="#404040"
+                placeholderTextColor={colors.text4}
                 autoFocus
                 testID="search-input"
                 style={{
                   flex: 1,
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 14,
                   paddingVertical: 10,
                   paddingLeft: 8,
@@ -600,14 +602,14 @@ export function InvestmentsSection() {
                       paddingVertical: 10,
                       paddingHorizontal: 4,
                       borderBottomWidth: 1,
-                      borderBottomColor: "#141414",
+                      borderBottomColor: colors.bg3,
                     }}
                   >
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                         <Text
                           style={{
-                            color: "#F5F5F5",
+                            color: colors.text,
                             fontSize: 14,
                             fontWeight: "700",
                           }}
@@ -616,31 +618,31 @@ export function InvestmentsSection() {
                         </Text>
                         <View
                           style={{
-                            backgroundColor: "#1A1A1A",
+                            backgroundColor: colors.bg4,
                             borderRadius: 4,
                             paddingHorizontal: 5,
                             paddingVertical: 1,
                           }}
                         >
-                          <Text style={{ color: "#737373", fontSize: 10 }}>
+                          <Text style={{ color: colors.text3, fontSize: 10 }}>
                             {item.assetType}
                           </Text>
                         </View>
                       </View>
                       <Text
-                        style={{ color: "#737373", fontSize: 12, marginTop: 1 }}
+                        style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}
                       >
                         {item.name} · {item.exchange}
                       </Text>
                     </View>
-                    <ChevronRight size={14} color="#404040" />
+                    <ChevronRight size={14} color={colors.text4} />
                   </Pressable>
                 ))}
               </View>
             ) : searchQuery.length > 0 && !searchLoading ? (
               <Text
                 style={{
-                  color: "#737373",
+                  color: colors.text3,
                   fontSize: 13,
                   textAlign: "center",
                   paddingVertical: 12,
@@ -674,18 +676,18 @@ export function InvestmentsSection() {
               testID={`timeframe-${tf}`}
               style={{
                 backgroundColor:
-                  selectedTimeframe === tf ? "#4ADE80" : "#141414",
+                  selectedTimeframe === tf ? "#4ADE80" : colors.bg3,
                 borderRadius: 8,
                 paddingHorizontal: 14,
                 paddingVertical: 7,
                 borderWidth: 1,
                 borderColor:
-                  selectedTimeframe === tf ? "#4ADE80" : "#1F1F1F",
+                  selectedTimeframe === tf ? "#4ADE80" : colors.border,
               }}
             >
               <Text
                 style={{
-                  color: selectedTimeframe === tf ? "#080808" : "#A3A3A3",
+                  color: selectedTimeframe === tf ? colors.bg : colors.text2,
                   fontSize: 12,
                   fontWeight: "700",
                   letterSpacing: 0.2,
@@ -707,16 +709,20 @@ export function InvestmentsSection() {
           borderRadius: 16,
           overflow: "hidden",
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           height: 280,
         }}
       >
         <WebView
           source={{ html: chartHTML }}
-          style={{ flex: 1, backgroundColor: "#080808" }}
+          style={{ flex: 1, backgroundColor: colors.bg }}
           scrollEnabled={false}
           bounces={false}
           scalesPageToFit={false}
+          allowsInlineMediaPlayback={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          nestedScrollEnabled={true}
           testID="tradingview-chart"
         />
       </Animated.View>
@@ -734,7 +740,7 @@ export function InvestmentsSection() {
           disabled={loading}
           testID="analyze-button"
           style={{
-            backgroundColor: loading ? "#1A1A1A" : "#4ADE80",
+            backgroundColor: loading ? colors.bg4 : "#4ADE80",
             borderRadius: 14,
             paddingVertical: 16,
             flexDirection: "row",
@@ -800,7 +806,7 @@ export function InvestmentsSection() {
             >
               Error al analizar
             </Text>
-            <Text style={{ color: "#A3A3A3", fontSize: 12, lineHeight: 18 }}>
+            <Text style={{ color: colors.text2, fontSize: 12, lineHeight: 18 }}>
               {error}
             </Text>
             <Pressable
@@ -835,7 +841,7 @@ export function InvestmentsSection() {
           testID="insufficient-data-state"
         >
           <AlertTriangle size={20} color="#F59E0B" />
-          <Text style={{ color: "#F5F5F5", fontSize: 13, lineHeight: 20, flex: 1 }}>
+          <Text style={{ color: colors.text, fontSize: 13, lineHeight: 20, flex: 1 }}>
             Datos insuficientes para generar un análisis confiable. Prueba con
             otro timeframe o activo.
           </Text>
@@ -845,14 +851,14 @@ export function InvestmentsSection() {
       {/* ---- Loading Skeleton ---- */}
       {loading && !analysis ? (
         <View style={{ marginHorizontal: 16, gap: 12 }}>
-          <SkeletonBox style={{ height: 160, borderRadius: 16 }} />
+          <SkeletonBox style={{ height: 160, borderRadius: 16 }} colors={colors} />
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <SkeletonBox style={{ flex: 1, height: 80 }} />
-            <SkeletonBox style={{ flex: 1, height: 80 }} />
+            <SkeletonBox style={{ flex: 1, height: 80 }} colors={colors} />
+            <SkeletonBox style={{ flex: 1, height: 80 }} colors={colors} />
           </View>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <SkeletonBox style={{ flex: 1, height: 80 }} />
-            <SkeletonBox style={{ flex: 1, height: 80 }} />
+            <SkeletonBox style={{ flex: 1, height: 80 }} colors={colors} />
+            <SkeletonBox style={{ flex: 1, height: 80 }} colors={colors} />
           </View>
         </View>
       ) : null}
@@ -866,7 +872,7 @@ export function InvestmentsSection() {
             style={{
               marginHorizontal: 16,
               marginBottom: 16,
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 20,
               borderWidth: 1.5,
               borderColor: signalColor(analysis.signal) + "40",
@@ -928,7 +934,7 @@ export function InvestmentsSection() {
             </View>
 
             {/* Subtitle */}
-            <Text style={{ color: "#A3A3A3", fontSize: 13, marginBottom: 16 }}>
+            <Text style={{ color: colors.text2, fontSize: 13, marginBottom: 16 }}>
               {analysis.signal === "BUY"
                 ? "Señal alcista confirmada"
                 : analysis.signal === "SELL"
@@ -939,18 +945,18 @@ export function InvestmentsSection() {
             {/* Entry price */}
             <View
               style={{
-                backgroundColor: "#141414",
+                backgroundColor: colors.bg3,
                 borderRadius: 12,
                 padding: 14,
                 marginBottom: 14,
               }}
             >
-              <Text style={{ color: "#737373", fontSize: 11, marginBottom: 4 }}>
+              <Text style={{ color: colors.text3, fontSize: 11, marginBottom: 4 }}>
                 PRECIO DE ENTRADA
               </Text>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 22,
                   fontWeight: "800",
                   letterSpacing: -0.5,
@@ -969,7 +975,7 @@ export function InvestmentsSection() {
                   marginBottom: 6,
                 }}
               >
-                <Text style={{ color: "#737373", fontSize: 11 }}>CONFIANZA</Text>
+                <Text style={{ color: colors.text3, fontSize: 11 }}>CONFIANZA</Text>
                 <Text
                   style={{
                     color: signalColor(analysis.signal),
@@ -983,7 +989,7 @@ export function InvestmentsSection() {
               <View
                 style={{
                   height: 6,
-                  backgroundColor: "#1A1A1A",
+                  backgroundColor: colors.bg4,
                   borderRadius: 3,
                   overflow: "hidden",
                 }}
@@ -1006,12 +1012,12 @@ export function InvestmentsSection() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 10,
                   padding: 10,
                 }}
               >
-                <Text style={{ color: "#737373", fontSize: 10, marginBottom: 2 }}>
+                <Text style={{ color: colors.text3, fontSize: 10, marginBottom: 2 }}>
                   RSI
                 </Text>
                 <Text
@@ -1021,7 +1027,7 @@ export function InvestmentsSection() {
                         ? "#EF4444"
                         : analysis.rsi < 30
                           ? "#4ADE80"
-                          : "#F5F5F5",
+                          : colors.text,
                     fontSize: 16,
                     fontWeight: "700",
                   }}
@@ -1032,7 +1038,7 @@ export function InvestmentsSection() {
               <View
                 style={{
                   flex: 2,
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                   borderRadius: 10,
                   padding: 10,
                   flexDirection: "row",
@@ -1046,7 +1052,7 @@ export function InvestmentsSection() {
                   <TrendingDown size={16} color="#EF4444" />
                 )}
                 <View>
-                  <Text style={{ color: "#737373", fontSize: 10 }}>TENDENCIA</Text>
+                  <Text style={{ color: colors.text3, fontSize: 10 }}>TENDENCIA</Text>
                   <Text
                     style={{
                       color: analysis.trendRibbonBullish ? "#4ADE80" : "#EF4444",
@@ -1064,13 +1070,13 @@ export function InvestmentsSection() {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
               <View
                 style={{
-                  backgroundColor: "#1A1A1A",
+                  backgroundColor: colors.bg4,
                   borderRadius: 8,
                   paddingHorizontal: 10,
                   paddingVertical: 5,
                 }}
               >
-                <Text style={{ color: "#A3A3A3", fontSize: 11 }}>
+                <Text style={{ color: colors.text2, fontSize: 11 }}>
                   {analysis.operationState || analysis.signalStatus}
                 </Text>
               </View>
@@ -1116,7 +1122,7 @@ export function InvestmentsSection() {
           >
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "700",
                 letterSpacing: 1,
@@ -1144,7 +1150,7 @@ export function InvestmentsSection() {
                     STOP LOSS
                   </Text>
                 </View>
-                <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "800" }}>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800" }}>
                   {formatPriceRaw(analysis.stopLoss)}
                 </Text>
                 <Text style={{ color: "#EF4444", fontSize: 11, marginTop: 2 }}>
@@ -1169,7 +1175,7 @@ export function InvestmentsSection() {
                     TP1
                   </Text>
                 </View>
-                <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "800" }}>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800" }}>
                   {formatPriceRaw(analysis.tp1)}
                 </Text>
                 <Text style={{ color: "#4ADE80", fontSize: 11, marginTop: 2 }}>
@@ -1196,7 +1202,7 @@ export function InvestmentsSection() {
                     TP2 (Objetivo)
                   </Text>
                 </View>
-                <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "800" }}>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800" }}>
                   {formatPriceRaw(analysis.tp2)}
                 </Text>
                 <Text style={{ color: "#4ADE80", fontSize: 11, marginTop: 2 }}>
@@ -1221,7 +1227,7 @@ export function InvestmentsSection() {
                     TP3
                   </Text>
                 </View>
-                <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "800" }}>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800" }}>
                   {formatPriceRaw(analysis.tp3)}
                 </Text>
                 <Text style={{ color: "#4ADE80", fontSize: 11, marginTop: 2 }}>
@@ -1240,10 +1246,10 @@ export function InvestmentsSection() {
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 12,
                 alignItems: "center",
               }}
@@ -1252,16 +1258,16 @@ export function InvestmentsSection() {
               <Text style={{ color: "#60A5FA", fontSize: 17, fontWeight: "800" }}>
                 {analysis.riskReward.toFixed(2)}x
               </Text>
-              <Text style={{ color: "#737373", fontSize: 10, marginTop: 3 }}>R/B RATIO</Text>
+              <Text style={{ color: colors.text3, fontSize: 10, marginTop: 3 }}>R/B RATIO</Text>
             </View>
             {/* Movement % */}
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 12,
                 alignItems: "center",
               }}
@@ -1277,7 +1283,7 @@ export function InvestmentsSection() {
               >
                 {formatPercent(analysis.movementPercent)}
               </Text>
-              <Text style={{ color: "#737373", fontSize: 10, marginTop: 3 }}>
+              <Text style={{ color: colors.text3, fontSize: 10, marginTop: 3 }}>
                 MOVIMIENTO
               </Text>
             </View>
@@ -1285,10 +1291,10 @@ export function InvestmentsSection() {
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 12,
                 alignItems: "center",
               }}
@@ -1304,7 +1310,7 @@ export function InvestmentsSection() {
               >
                 {analysis.riskLevel.toUpperCase()}
               </Text>
-              <Text style={{ color: "#737373", fontSize: 10, marginTop: 3 }}>RIESGO</Text>
+              <Text style={{ color: colors.text3, fontSize: 10, marginTop: 3 }}>RIESGO</Text>
             </View>
           </Animated.View>
 
@@ -1317,14 +1323,14 @@ export function InvestmentsSection() {
               onPress={() => setShowCapitalInput(!showCapitalInput)}
               testID="capital-toggle"
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: showCapitalInput ? 0 : 14,
                 borderTopLeftRadius: 14,
                 borderTopRightRadius: 14,
                 borderBottomLeftRadius: showCapitalInput ? 0 : 14,
                 borderBottomRightRadius: showCapitalInput ? 0 : 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 14,
                 flexDirection: "row",
                 alignItems: "center",
@@ -1332,24 +1338,24 @@ export function InvestmentsSection() {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <DollarSign size={16} color="#A3A3A3" />
-                <Text style={{ color: "#F5F5F5", fontSize: 14, fontWeight: "600" }}>
+                <DollarSign size={16} color={colors.text2} />
+                <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
                   Capital y Estimaciones
                 </Text>
               </View>
               {showCapitalInput ? (
-                <ChevronUp size={16} color="#737373" />
+                <ChevronUp size={16} color={colors.text3} />
               ) : (
-                <ChevronDown size={16} color="#737373" />
+                <ChevronDown size={16} color={colors.text3} />
               )}
             </Pressable>
             {showCapitalInput ? (
               <View
                 style={{
-                  backgroundColor: "#0A0A0A",
+                  backgroundColor: colors.bg,
                   borderWidth: 1,
                   borderTopWidth: 0,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   borderBottomLeftRadius: 14,
                   borderBottomRightRadius: 14,
                   padding: 14,
@@ -1358,31 +1364,31 @@ export function InvestmentsSection() {
               >
                 {/* Capital input */}
                 <View>
-                  <Text style={{ color: "#737373", fontSize: 11, marginBottom: 6 }}>
+                  <Text style={{ color: colors.text3, fontSize: 11, marginBottom: 6 }}>
                     CAPITAL INVERTIDO (USD)
                   </Text>
                   <View
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      backgroundColor: "#141414",
+                      backgroundColor: colors.bg3,
                       borderRadius: 10,
                       borderWidth: 1,
-                      borderColor: "#1F1F1F",
+                      borderColor: colors.border,
                       paddingHorizontal: 12,
                     }}
                   >
-                    <Edit2 size={14} color="#737373" />
+                    <Edit2 size={14} color={colors.text3} />
                     <TextInput
                       value={capitalInvested}
                       onChangeText={setCapitalInvested}
                       keyboardType="numeric"
                       placeholder="1000"
-                      placeholderTextColor="#404040"
+                      placeholderTextColor={colors.text4}
                       testID="capital-input"
                       style={{
                         flex: 1,
-                        color: "#F5F5F5",
+                        color: colors.text,
                         fontSize: 15,
                         fontWeight: "600",
                         paddingVertical: 10,
@@ -1403,19 +1409,19 @@ export function InvestmentsSection() {
                   <View
                     style={{
                       flex: 1,
-                      backgroundColor: "#141414",
+                      backgroundColor: colors.bg3,
                       borderRadius: 10,
                       padding: 10,
                     }}
                   >
-                    <Text style={{ color: "#737373", fontSize: 10, marginBottom: 3 }}>
+                    <Text style={{ color: colors.text3, fontSize: 10, marginBottom: 3 }}>
                       CANTIDAD
                     </Text>
-                    <Text style={{ color: "#F5F5F5", fontSize: 14, fontWeight: "700" }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
                       {analysis.quantity > 0
                         ? analysis.quantity.toFixed(4)
                         : "--"}{" "}
-                      <Text style={{ color: "#737373", fontSize: 10 }}>
+                      <Text style={{ color: colors.text3, fontSize: 10 }}>
                         {analysis.symbol}
                       </Text>
                     </Text>
@@ -1423,15 +1429,15 @@ export function InvestmentsSection() {
                   <View
                     style={{
                       flex: 1,
-                      backgroundColor: "#141414",
+                      backgroundColor: colors.bg3,
                       borderRadius: 10,
                       padding: 10,
                     }}
                   >
-                    <Text style={{ color: "#737373", fontSize: 10, marginBottom: 3 }}>
+                    <Text style={{ color: colors.text3, fontSize: 10, marginBottom: 3 }}>
                       ENTRADA
                     </Text>
-                    <Text style={{ color: "#F5F5F5", fontSize: 14, fontWeight: "700" }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
                       {formatPriceRaw(analysis.entryPrice)}
                     </Text>
                   </View>
@@ -1450,7 +1456,7 @@ export function InvestmentsSection() {
                     }}
                     testID="gain-card"
                   >
-                    <Text style={{ color: "#737373", fontSize: 10, marginBottom: 4 }}>
+                    <Text style={{ color: colors.text3, fontSize: 10, marginBottom: 4 }}>
                       GANANCIA EST.
                     </Text>
                     <Text
@@ -1474,7 +1480,7 @@ export function InvestmentsSection() {
                     }}
                     testID="loss-card"
                   >
-                    <Text style={{ color: "#737373", fontSize: 10, marginBottom: 4 }}>
+                    <Text style={{ color: colors.text3, fontSize: 10, marginBottom: 4 }}>
                       PÉRDIDA EST.
                     </Text>
                     <Text
@@ -1492,7 +1498,7 @@ export function InvestmentsSection() {
                 {/* Movement % */}
                 <View
                   style={{
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderRadius: 10,
                     padding: 12,
                     flexDirection: "row",
@@ -1500,7 +1506,7 @@ export function InvestmentsSection() {
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ color: "#737373", fontSize: 12 }}>
+                  <Text style={{ color: colors.text3, fontSize: 12 }}>
                     Movimiento esperado
                   </Text>
                   <Text
@@ -1525,7 +1531,7 @@ export function InvestmentsSection() {
           >
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "700",
                 letterSpacing: 1,
@@ -1536,10 +1542,10 @@ export function InvestmentsSection() {
             </Text>
             <View
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 14,
               }}
             >
@@ -1554,15 +1560,15 @@ export function InvestmentsSection() {
                     style={{
                       flex: 1,
                       borderRightWidth: idx < 2 ? 1 : 0,
-                      borderRightColor: "#1A1A1A",
+                      borderRightColor: colors.bg4,
                       paddingHorizontal: 8,
                       paddingLeft: idx === 0 ? 0 : 8,
                     }}
                   >
-                    <Text style={{ color: "#737373", fontSize: 9, marginBottom: 3 }}>
+                    <Text style={{ color: colors.text3, fontSize: 9, marginBottom: 3 }}>
                       {item.label}
                     </Text>
-                    <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                    <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                       {item.value}
                     </Text>
                   </View>
@@ -1577,12 +1583,12 @@ export function InvestmentsSection() {
                   alignItems: "center",
                   paddingBottom: 12,
                   borderBottomWidth: 1,
-                  borderBottomColor: "#141414",
+                  borderBottomColor: colors.bg3,
                   marginBottom: 12,
                 }}
               >
-                <Text style={{ color: "#737373", fontSize: 11 }}>Volumen</Text>
-                <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                <Text style={{ color: colors.text3, fontSize: 11 }}>Volumen</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                   {analysis.volume > 1000000
                     ? `${(analysis.volume / 1000000).toFixed(2)}M`
                     : analysis.volume > 1000
@@ -1600,7 +1606,7 @@ export function InvestmentsSection() {
                     marginBottom: 4,
                   }}
                 >
-                  <Text style={{ color: "#737373", fontSize: 11 }}>
+                  <Text style={{ color: colors.text3, fontSize: 11 }}>
                     RSI(14)
                   </Text>
                   <Text
@@ -1610,7 +1616,7 @@ export function InvestmentsSection() {
                           ? "#EF4444"
                           : analysis.rsi < 30
                             ? "#4ADE80"
-                            : "#F5F5F5",
+                            : colors.text,
                       fontSize: 11,
                       fontWeight: "700",
                     }}
@@ -1626,7 +1632,7 @@ export function InvestmentsSection() {
                 <View
                   style={{
                     height: 4,
-                    backgroundColor: "#1A1A1A",
+                    backgroundColor: colors.bg4,
                     borderRadius: 2,
                     overflow: "hidden",
                   }}
@@ -1649,8 +1655,8 @@ export function InvestmentsSection() {
 
               {/* ATR */}
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ color: "#737373", fontSize: 11 }}>ATR</Text>
-                <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                <Text style={{ color: colors.text3, fontSize: 11 }}>ATR</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                   {formatPriceRaw(analysis.atr)}
                 </Text>
               </View>
@@ -1664,7 +1670,7 @@ export function InvestmentsSection() {
           >
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "700",
                 letterSpacing: 1,
@@ -1675,10 +1681,10 @@ export function InvestmentsSection() {
             </Text>
             <View
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
                 padding: 14,
                 gap: 10,
               }}
@@ -1687,7 +1693,7 @@ export function InvestmentsSection() {
               <View
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
               >
-                <Text style={{ color: "#737373", fontSize: 12 }}>
+                <Text style={{ color: colors.text3, fontSize: 12 }}>
                   Cinta de tendencia
                 </Text>
                 <View
@@ -1717,7 +1723,7 @@ export function InvestmentsSection() {
               <View
                 style={{
                   height: 1,
-                  backgroundColor: "#141414",
+                  backgroundColor: colors.bg3,
                 }}
               />
 
@@ -1747,12 +1753,12 @@ export function InvestmentsSection() {
                             : "#EF4444",
                       }}
                     />
-                    <Text style={{ color: "#737373", fontSize: 12 }}>
+                    <Text style={{ color: colors.text3, fontSize: 12 }}>
                       {ema.label}
                     </Text>
                   </View>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                    <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                       {formatPriceRaw(ema.value)}
                     </Text>
                     <Text
@@ -1772,7 +1778,7 @@ export function InvestmentsSection() {
                 </View>
               ))}
 
-              <View style={{ height: 1, backgroundColor: "#141414" }} />
+              <View style={{ height: 1, backgroundColor: colors.bg3 }} />
 
               {/* RSI Gauge */}
               <View>
@@ -1783,7 +1789,7 @@ export function InvestmentsSection() {
                     marginBottom: 6,
                   }}
                 >
-                  <Text style={{ color: "#737373", fontSize: 12 }}>
+                  <Text style={{ color: colors.text3, fontSize: 12 }}>
                     Oscilador RSI
                   </Text>
                   <Text
@@ -1804,7 +1810,7 @@ export function InvestmentsSection() {
                 <View
                   style={{
                     height: 8,
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderRadius: 4,
                     overflow: "hidden",
                     position: "relative",
@@ -1852,10 +1858,10 @@ export function InvestmentsSection() {
                     marginTop: 3,
                   }}
                 >
-                  <Text style={{ color: "#404040", fontSize: 9 }}>0</Text>
+                  <Text style={{ color: colors.text4, fontSize: 9 }}>0</Text>
                   <Text style={{ color: "#4ADE8060", fontSize: 9 }}>30</Text>
                   <Text style={{ color: "#EF444460", fontSize: 9 }}>70</Text>
-                  <Text style={{ color: "#404040", fontSize: 9 }}>100</Text>
+                  <Text style={{ color: colors.text4, fontSize: 9 }}>100</Text>
                 </View>
               </View>
             </View>
@@ -1870,7 +1876,7 @@ export function InvestmentsSection() {
             >
               <Text
                 style={{
-                  color: "#A3A3A3",
+                  color: colors.text2,
                   fontSize: 11,
                   fontWeight: "700",
                   letterSpacing: 1,
@@ -1884,10 +1890,10 @@ export function InvestmentsSection() {
                 <View
                   style={{
                     flex: 1,
-                    backgroundColor: "#0F0F0F",
+                    backgroundColor: colors.card,
                     borderRadius: 14,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: colors.border,
                     padding: 12,
                   }}
                 >
@@ -1912,7 +1918,7 @@ export function InvestmentsSection() {
                           backgroundColor: "#4ADE80",
                         }}
                       />
-                      <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                      <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                         {formatPriceRaw(lvl)}
                       </Text>
                     </View>
@@ -1922,10 +1928,10 @@ export function InvestmentsSection() {
                 <View
                   style={{
                     flex: 1,
-                    backgroundColor: "#0F0F0F",
+                    backgroundColor: colors.card,
                     borderRadius: 14,
                     borderWidth: 1,
-                    borderColor: "#1F1F1F",
+                    borderColor: colors.border,
                     padding: 12,
                   }}
                 >
@@ -1950,7 +1956,7 @@ export function InvestmentsSection() {
                           backgroundColor: "#EF4444",
                         }}
                       />
-                      <Text style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}>
+                      <Text style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}>
                         {formatPriceRaw(lvl)}
                       </Text>
                     </View>
@@ -1968,7 +1974,7 @@ export function InvestmentsSection() {
             >
               <Text
                 style={{
-                  color: "#A3A3A3",
+                  color: colors.text2,
                   fontSize: 11,
                   fontWeight: "700",
                   letterSpacing: 1,
@@ -1979,16 +1985,16 @@ export function InvestmentsSection() {
               </Text>
               <View
                 style={{
-                  backgroundColor: "#0F0F0F",
+                  backgroundColor: colors.card,
                   borderRadius: 14,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   padding: 16,
                 }}
               >
                 <Text
                   style={{
-                    color: "#D4D4D4",
+                    color: colors.text,
                     fontSize: 13,
                     lineHeight: 22,
                     marginBottom: 14,
@@ -2003,7 +2009,7 @@ export function InvestmentsSection() {
                     gap: 8,
                     paddingTop: 12,
                     borderTopWidth: 1,
-                    borderTopColor: "#141414",
+                    borderTopColor: colors.bg3,
                   }}
                 >
                   {analysis.telegramSent ? (
@@ -2015,8 +2021,8 @@ export function InvestmentsSection() {
                     </>
                   ) : (
                     <>
-                      <Send size={14} color="#737373" />
-                      <Text style={{ color: "#737373", fontSize: 12 }}>
+                      <Send size={14} color={colors.text3} />
+                      <Text style={{ color: colors.text3, fontSize: 12 }}>
                         Telegram no configurado
                       </Text>
                     </>
@@ -2042,10 +2048,10 @@ export function InvestmentsSection() {
               marginBottom: 12,
             }}
           >
-            <Activity size={14} color="#A3A3A3" />
+            <Activity size={14} color={colors.text2} />
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 11,
                 fontWeight: "700",
                 letterSpacing: 1,
@@ -2056,10 +2062,10 @@ export function InvestmentsSection() {
           </View>
           <View
             style={{
-              backgroundColor: "#0F0F0F",
+              backgroundColor: colors.card,
               borderRadius: 14,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               overflow: "hidden",
             }}
             testID="signal-history"
@@ -2072,7 +2078,7 @@ export function InvestmentsSection() {
                   alignItems: "center",
                   padding: 14,
                   borderBottomWidth: idx < signalHistory.length - 1 ? 1 : 0,
-                  borderBottomColor: "#141414",
+                  borderBottomColor: colors.bg3,
                 }}
               >
                 {/* Signal badge */}
@@ -2104,14 +2110,14 @@ export function InvestmentsSection() {
                   >
                     <Text
                       style={{
-                        color: "#F5F5F5",
+                        color: colors.text,
                         fontSize: 13,
                         fontWeight: "700",
                       }}
                     >
                       {sig.symbol}
                     </Text>
-                    <Text style={{ color: "#737373", fontSize: 12 }}>
+                    <Text style={{ color: colors.text3, fontSize: 12 }}>
                       ${formatPriceRaw(sig.price)}
                     </Text>
                   </View>
@@ -2123,16 +2129,16 @@ export function InvestmentsSection() {
                       marginTop: 2,
                     }}
                   >
-                    <Text style={{ color: "#404040", fontSize: 11 }}>
+                    <Text style={{ color: colors.text4, fontSize: 11 }}>
                       {timeAgo(sig.createdAt)}
                     </Text>
-                    <Text style={{ color: "#404040", fontSize: 11 }}>·</Text>
-                    <Text style={{ color: "#404040", fontSize: 11 }}>
+                    <Text style={{ color: colors.text4, fontSize: 11 }}>·</Text>
+                    <Text style={{ color: colors.text4, fontSize: 11 }}>
                       {sig.confidenceScore}%
                     </Text>
                     {sig.telegramSent ? (
                       <>
-                        <Text style={{ color: "#404040", fontSize: 11 }}>·</Text>
+                        <Text style={{ color: colors.text4, fontSize: 11 }}>·</Text>
                         <CheckCircle size={11} color="#4ADE80" />
                         <Text style={{ color: "#4ADE80", fontSize: 11 }}>
                           TG
@@ -2145,13 +2151,13 @@ export function InvestmentsSection() {
                 {/* Timeframe */}
                 <View
                   style={{
-                    backgroundColor: "#141414",
+                    backgroundColor: colors.bg3,
                     borderRadius: 5,
                     paddingHorizontal: 6,
                     paddingVertical: 2,
                   }}
                 >
-                  <Text style={{ color: "#737373", fontSize: 10 }}>
+                  <Text style={{ color: colors.text3, fontSize: 10 }}>
                     {sig.timeframe}
                   </Text>
                 </View>

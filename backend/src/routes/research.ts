@@ -77,8 +77,8 @@ researchRouter.get("/quote/:symbol", async (c) => {
     return c.json({
       data: {
         symbol: quote.symbol ?? symbol,
+        name: quote.longName ?? quote.shortName ?? null,
         shortName: quote.shortName ?? null,
-        longName: quote.longName ?? null,
         price: quote.regularMarketPrice ?? null,
         previousClose: quote.regularMarketPreviousClose ?? null,
         change: quote.regularMarketChange ?? null,
@@ -110,10 +110,9 @@ researchRouter.get(
       const results = await yf.search(q, {}, { validateResult: false }) as YFSearchResult;
       const quotes = (results.quotes ?? []).slice(0, 10).map((item) => ({
         symbol: item.symbol ?? null,
-        shortname: item.shortname ?? null,
-        longname: item.longname ?? null,
-        exchDisp: item.exchDisp ?? null,
-        typeDisp: item.typeDisp ?? null,
+        name: item.longname ?? item.shortname ?? null,
+        exchange: item.exchDisp ?? null,
+        type: item.typeDisp ?? null,
       }));
       return c.json({ data: quotes });
     } catch (err) {
@@ -167,7 +166,7 @@ researchRouter.get("/news/:symbol", async (c) => {
       title: n.title,
       publisher: n.publisher,
       link: n.link,
-      providerPublishTime: n.providerPublishTime
+      publishedAt: n.providerPublishTime
         ? new Date(n.providerPublishTime as string).toISOString()
         : null,
       type: n.type ?? null,
@@ -266,4 +265,59 @@ researchRouter.get("/summary/:symbol", async (c) => {
   }
 });
 
+// GET /api/research/fundamentals/:symbol — Financial ratios
+researchRouter.get("/fundamentals/:symbol", async (c) => {
+  const symbol = c.req.param("symbol").toUpperCase();
+  try {
+    const summary = await yf.quoteSummary(symbol, {
+      modules: ["summaryDetail", "defaultKeyStatistics", "financialData"],
+    }, { validateResult: false }) as any;
+
+    const sd = summary.summaryDetail ?? {};
+    const ks = summary.defaultKeyStatistics ?? {};
+    const fd = summary.financialData ?? {};
+
+    return c.json({
+      data: {
+        // Valuation
+        trailingPE: sd.trailingPE ?? ks.trailingEps ?? null,
+        forwardPE: sd.forwardPE ?? null,
+        priceToBook: ks.priceToBook ?? null,
+        priceToSales: sd.priceToSalesTrailing12Months ?? null,
+        evEbitda: ks.enterpriseToEbitda ?? null,
+        // Profitability
+        returnOnEquity: fd.returnOnEquity ?? null,
+        returnOnAssets: fd.returnOnAssets ?? null,
+        grossMargins: fd.grossMargins ?? null,
+        operatingMargins: fd.operatingMargins ?? null,
+        profitMargins: fd.profitMargins ?? null,
+        // Growth
+        revenueGrowth: fd.revenueGrowth ?? null,
+        earningsGrowth: fd.earningsGrowth ?? null,
+        // Financial Health
+        debtToEquity: fd.debtToEquity ?? null,
+        currentRatio: fd.currentRatio ?? null,
+        totalCash: fd.totalCash ?? null,
+        freeCashflow: fd.freeCashflow ?? null,
+        totalRevenue: fd.totalRevenue ?? null,
+        totalDebt: fd.totalDebt ?? null,
+        // Other
+        beta: sd.beta ?? null,
+        fiftyTwoWeekHigh: sd.fiftyTwoWeekHigh ?? null,
+        fiftyTwoWeekLow: sd.fiftyTwoWeekLow ?? null,
+        dividendYield: sd.dividendYield ?? null,
+        payoutRatio: sd.payoutRatio ?? null,
+        trailingEps: ks.trailingEps ?? null,
+        forwardEps: ks.forwardEps ?? null,
+        sharesOutstanding: ks.sharesOutstanding ?? null,
+        bookValue: ks.bookValuePerShare ?? null,
+      }
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to fetch fundamentals";
+    return c.json({ error: { message } }, 502);
+  }
+});
+
 export default researchRouter;
+

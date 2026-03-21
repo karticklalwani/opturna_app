@@ -428,7 +428,7 @@ export default function SprintsScreen() {
         <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.push("/(app)/goals")}
               style={{ width: 40, height: 40, borderRadius: 100, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}
             >
               <ChevronLeft size={20} color={colors.text} />

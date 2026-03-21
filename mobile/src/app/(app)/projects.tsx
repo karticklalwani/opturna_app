@@ -1035,7 +1035,7 @@ export default function ProjectsScreen() {
               </Text>
             </View>
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.push("/(app)/goals")}
               style={{
                 width: 40,
                 height: 40,

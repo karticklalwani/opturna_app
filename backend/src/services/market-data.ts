@@ -8,9 +8,16 @@ const TIMEFRAME_MAP: Record<string, string> = {
 };
 
 // How many candles to fetch per timeframe (in minutes of history)
+// Must be enough for EMA200: 200 candles * timeframe_duration
 const TIMEFRAME_PERIOD: Record<string, number> = {
-  "1m": 1, "5m": 5, "15m": 15, "30m": 60,
-  "1h": 60 * 24, "4h": 60 * 24 * 4, "1D": 60 * 24 * 60, "1W": 60 * 24 * 365
+  "1m":  60 * 4,            // 4 hours  (~240 candles)
+  "5m":  60 * 24 * 5,       // 5 days   (~1440 candles)
+  "15m": 60 * 24 * 10,      // 10 days  (~960 candles)
+  "30m": 60 * 24 * 20,      // 20 days  (~960 candles)
+  "1h":  60 * 24 * 14,      // 14 days  (~336 candles)
+  "4h":  60 * 24 * 60,      // 60 days  (~360 candles)
+  "1D":  60 * 24 * 400,     // 400 days (~400 candles)
+  "1W":  60 * 24 * 365 * 5, // 5 years  (~260 candles)
 };
 
 export interface OHLCCandle {

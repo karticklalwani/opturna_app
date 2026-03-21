@@ -777,7 +777,7 @@ export default function JournalScreen() {
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <Pressable
-                onPress={() => router.back()}
+                onPress={() => router.canGoBack() ? router.back() : router.push("/(app)/goals")}
                 style={{
                   width: 36,
                   height: 36,

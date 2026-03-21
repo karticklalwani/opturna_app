@@ -1180,7 +1180,7 @@ export default function LifeGoalsScreen() {
           >
             {/* Back button */}
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.push("/(app)/goals")}
               style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginRight: 12 }}
             >
               <ChevronLeft size={18} color={colors.text} />
