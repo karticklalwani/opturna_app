@@ -728,7 +728,7 @@ export default function ResearchScreen() {
               }}>
                 {searchResults.slice(0, 7).map((item) => (
                   <Pressable
-                    key={item.symbol}
+                    key={`${item.symbol}-${item.exchange}`}
                     onPress={() => selectSymbol(item.symbol)}
                     testID={`search-result-${item.symbol}`}
                     style={({ pressed }) => ({
@@ -1084,7 +1084,7 @@ export default function ResearchScreen() {
                     }}>
                       {compareResults.slice(0, 5).map((item) => (
                         <Pressable
-                          key={item.symbol}
+                          key={`${item.symbol}-${item.exchange}`}
                           onPress={() => {
                             setCompareSymbol(item.symbol);
                             setCompareSearch(item.symbol);
