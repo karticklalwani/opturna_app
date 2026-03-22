@@ -783,4 +783,341 @@ inflationRouter.get("/countries", (c) => {
   });
 });
 
+// ─── GET /poder-adquisitivo ──────────────────────────────────────────────────
+
+inflationRouter.get("/poder-adquisitivo", async (c) => {
+  const cached = getCached<InflationData>("inflation-realtime");
+  const spainRate = cached?.spain.current ?? FALLBACK_SPAIN.current;
+  const eurozoneRate = cached?.eurozone.current ?? FALLBACK_EUROZONE.current;
+  const worldRate = cached?.world.current ?? FALLBACK_WORLD.current;
+  const byCategory = cached?.byCategory ?? FALLBACK_BY_CATEGORY;
+  const lastUpdated = cached?.lastUpdated ?? new Date().toISOString();
+
+  // Compute cumulative purchasing power from base 100 in 2015
+  const historical: Array<{ year: number; power: number; inflation: number }> = [];
+  let power = 100;
+  for (const point of HISTORICAL_DATA) {
+    power = power / (1 + point.spain / 100);
+    historical.push({
+      year: point.year,
+      power: parseFloat(power.toFixed(2)),
+      inflation: point.spain,
+    });
+  }
+
+  const currentPower = historical[historical.length - 1]?.power ?? 100;
+  const yearAgoPower = historical[historical.length - 2]?.power ?? 100;
+  const change = parseFloat((currentPower - yearAgoPower).toFixed(2));
+  const changePercent = yearAgoPower !== 0
+    ? parseFloat(((change / yearAgoPower) * 100).toFixed(2))
+    : 0;
+
+  const categoryEntries: Array<{ name: string; rate: number; impact: "alto" | "medio" | "bajo" }> = [
+    { name: "Alimentos", rate: byCategory.alimentos, impact: byCategory.alimentos >= 5 ? "alto" : byCategory.alimentos >= 3 ? "medio" : "bajo" },
+    { name: "Transporte", rate: byCategory.transporte, impact: byCategory.transporte >= 5 ? "alto" : byCategory.transporte >= 3 ? "medio" : "bajo" },
+    { name: "Vivienda", rate: byCategory.vivienda, impact: byCategory.vivienda >= 5 ? "alto" : byCategory.vivienda >= 3 ? "medio" : "bajo" },
+    { name: "Energía", rate: byCategory.energia, impact: byCategory.energia >= 5 ? "alto" : byCategory.energia >= 3 ? "medio" : "bajo" },
+    { name: "Educación", rate: byCategory.educacion, impact: byCategory.educacion >= 5 ? "alto" : byCategory.educacion >= 3 ? "medio" : "bajo" },
+    { name: "Salud", rate: byCategory.salud, impact: byCategory.salud >= 5 ? "alto" : byCategory.salud >= 3 ? "medio" : "bajo" },
+  ];
+
+  return c.json({
+    data: {
+      currentPower,
+      yearAgoPower,
+      change,
+      changePercent,
+      historical,
+      byCategory: categoryEntries,
+      spainRate,
+      eurozoneRate,
+      worldRate,
+      lastUpdated,
+    },
+  });
+});
+
+// ─── POST /inflacion-personal ────────────────────────────────────────────────
+
+const inflacionPersonalSchema = z.object({
+  gastos: z.object({
+    comida: z.number().min(0).default(0),
+    alquiler: z.number().min(0).default(0),
+    transporte: z.number().min(0).default(0),
+    ocio: z.number().min(0).default(0),
+    energia: z.number().min(0).default(0),
+    salud: z.number().min(0).default(0),
+    educacion: z.number().min(0).default(0),
+    otros: z.number().min(0).default(0),
+  }),
+  ingresos: z.number().min(0).default(0),
+});
+
+inflationRouter.post("/inflacion-personal", zValidator("json", inflacionPersonalSchema), async (c) => {
+  const { gastos, ingresos } = c.req.valid("json");
+
+  const cached = getCached<InflationData>("inflation-realtime");
+  const officialRate = cached?.spain.current ?? FALLBACK_SPAIN.current;
+  const byCategory = cached?.byCategory ?? FALLBACK_BY_CATEGORY;
+
+  const categoryRates: Record<keyof typeof gastos, number> = {
+    comida: byCategory.alimentos,
+    alquiler: byCategory.vivienda,
+    transporte: byCategory.transporte,
+    ocio: 2.5,
+    energia: byCategory.energia,
+    salud: byCategory.salud,
+    educacion: byCategory.educacion,
+    otros: 3.0,
+  };
+
+  const categoryNames: Record<keyof typeof gastos, string> = {
+    comida: "Comida",
+    alquiler: "Alquiler",
+    transporte: "Transporte",
+    ocio: "Ocio",
+    energia: "Energía",
+    salud: "Salud",
+    educacion: "Educación",
+    otros: "Otros",
+  };
+
+  const totalExpenses = Object.values(gastos).reduce((sum, v) => sum + v, 0);
+
+  const byCategoryResult = (Object.keys(gastos) as Array<keyof typeof gastos>).map((key) => {
+    const amount = gastos[key];
+    const rate = categoryRates[key];
+    const weight = totalExpenses > 0 ? parseFloat(((amount / totalExpenses) * 100).toFixed(2)) : 0;
+    const impact = parseFloat(((amount * rate) / Math.max(totalExpenses, 1)).toFixed(4));
+    return {
+      name: categoryNames[key],
+      amount,
+      rate,
+      weight,
+      impact,
+    };
+  });
+
+  const personalRate = totalExpenses > 0
+    ? parseFloat((byCategoryResult.reduce((sum, cat) => sum + cat.impact, 0)).toFixed(2))
+    : officialRate;
+
+  const difference = parseFloat((personalRate - officialRate).toFixed(2));
+  const savingsRate = ingresos > 0
+    ? parseFloat((((ingresos - totalExpenses) / ingresos) * 100).toFixed(1))
+    : 0;
+
+  const ratio = officialRate > 0 ? personalRate / officialRate : 1;
+  let message: string;
+  if (ratio >= 2) {
+    message = `Tu inflación personal es ${ratio.toFixed(1)}x la oficial`;
+  } else if (difference > 0) {
+    message = `Tu inflación personal supera la oficial en ${difference.toFixed(1)} puntos`;
+  } else if (difference < 0) {
+    message = `Tu inflación personal está ${Math.abs(difference).toFixed(1)} puntos por debajo de la oficial`;
+  } else {
+    message = "Tu inflación personal coincide con la tasa oficial";
+  }
+
+  return c.json({
+    data: {
+      personalRate,
+      officialRate,
+      difference,
+      byCategory: byCategoryResult,
+      totalExpenses,
+      income: ingresos,
+      savingsRate,
+      message,
+    },
+  });
+});
+
+// ─── POST /estabilidad-avanzada ───────────────────────────────────────────────
+
+const estabilidadAvanzadaSchema = z.object({
+  income: z.number().min(0),
+  expenses: z.number().min(0),
+  savings: z.number().min(0),
+  investments: z.number().min(0),
+  debt: z.number().min(0).default(0),
+  personalInflation: z.number().min(0).default(3.4),
+});
+
+inflationRouter.post("/estabilidad-avanzada", zValidator("json", estabilidadAvanzadaSchema), async (c) => {
+  const { income, expenses, savings, investments, debt, personalInflation } = c.req.valid("json");
+
+  const cached = getCached<InflationData>("inflation-realtime");
+  const officialRate = cached?.spain.current ?? FALLBACK_SPAIN.current;
+
+  const annualIncome = income * 12;
+
+  const savingsScore = Math.min(income > 0 ? (savings / income) * 100 : 0, 25);
+  const expenseScore = Math.max(income > 0 ? (1 - expenses / income) * 20 : 0, 0);
+  const investmentScore = Math.min(annualIncome > 0 ? (investments / annualIncome) : 0, 1) * 20;
+  const debtScore = Math.max(0, 20 - (annualIncome > 0 ? (debt / annualIncome) * 20 : 0));
+  const inflationScore = Math.max(0, 15 - personalInflation * 2);
+
+  const rawScore = savingsScore + expenseScore + investmentScore + debtScore + inflationScore;
+  const score = Math.round(Math.max(0, Math.min(100, rawScore)));
+
+  let level: string;
+  if (score <= 30) level = "Crítico";
+  else if (score <= 50) level = "Bajo";
+  else if (score <= 70) level = "Moderado";
+  else if (score <= 85) level = "Bueno";
+  else level = "Excelente";
+
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+  const recommendations: string[] = [];
+
+  const savingsRate = income > 0 ? (savings / income) * 100 : 0;
+  const expenseRatio = income > 0 ? expenses / income : 0;
+  const investmentCoverage = annualIncome > 0 ? investments / annualIncome : 0;
+  const debtRatio = annualIncome > 0 ? debt / annualIncome : 0;
+  const inflationGap = personalInflation - officialRate;
+
+  if (savingsScore >= 15) strengths.push("Excelente tasa de ahorro respecto a tus ingresos");
+  else if (savingsScore >= 8) strengths.push("Buena tasa de ahorro mensual");
+  else weaknesses.push("Tasa de ahorro baja respecto a tus ingresos");
+
+  if (expenseScore >= 15) strengths.push("Buen control de gastos mensuales");
+  else if (expenseScore < 5) weaknesses.push("Gastos muy elevados en proporción a ingresos");
+
+  if (investmentScore >= 15) strengths.push("Sólida base de inversiones acumulada");
+  else if (investmentScore >= 8) strengths.push("Inversiones en desarrollo");
+  else weaknesses.push("Poca inversión acumulada para tu nivel de ingresos");
+
+  if (debtScore >= 15) strengths.push("Deuda bien controlada");
+  else if (debtScore < 8) weaknesses.push("Ratio de deuda elevado");
+
+  if (inflationScore >= 10) strengths.push("Buena protección contra la inflación");
+  else weaknesses.push("Alta exposición al impacto inflacionario personal");
+
+  if (savingsRate < 10) {
+    recommendations.push("Incrementa tu tasa de ahorro al menos al 10% de tus ingresos mensuales.");
+  }
+  if (expenseRatio > 0.9) {
+    recommendations.push("Revisa y reduce gastos no esenciales para mejorar tu margen financiero.");
+  }
+  if (investmentCoverage < 0.5) {
+    recommendations.push("Aumenta tus inversiones para cubrir al menos 6 meses de ingresos anuales.");
+  }
+  if (debtRatio > 0.5) {
+    recommendations.push("Prioriza reducir deuda: destina un extra mensual a amortización anticipada.");
+  }
+  if (inflationGap > 1) {
+    recommendations.push("Tu inflación personal supera la oficial. Renegocia contratos de energía y alimentación.");
+  }
+  if (recommendations.length < 3) {
+    recommendations.push("Diversifica tus inversiones en activos que protejan contra la inflación (fondos indexados, REITs).");
+  }
+  if (recommendations.length < 4) {
+    recommendations.push("Automatiza tus ahorros transfiriendo un porcentaje fijo el día de cobro.");
+  }
+
+  return c.json({
+    data: {
+      score,
+      level,
+      breakdown: {
+        savingsScore: parseFloat(savingsScore.toFixed(2)),
+        expenseScore: parseFloat(expenseScore.toFixed(2)),
+        investmentScore: parseFloat(investmentScore.toFixed(2)),
+        debtScore: parseFloat(debtScore.toFixed(2)),
+        inflationScore: parseFloat(inflationScore.toFixed(2)),
+      },
+      strengths,
+      weaknesses,
+      recommendations: recommendations.slice(0, 5),
+      metrics: {
+        savingsRate: parseFloat(savingsRate.toFixed(2)),
+        expenseRatio: parseFloat(expenseRatio.toFixed(2)),
+        investmentCoverage: parseFloat((investmentCoverage * 12).toFixed(2)),
+        debtRatio: parseFloat(debtRatio.toFixed(2)),
+        inflationGap: parseFloat(inflationGap.toFixed(2)),
+      },
+    },
+  });
+});
+
+// ─── GET /radar-precios ──────────────────────────────────────────────────────
+
+inflationRouter.get("/radar-precios", async (c) => {
+  const cached = getCached<InflationData>("inflation-realtime");
+  const spainCurrent = cached?.spain.current ?? FALLBACK_SPAIN.current;
+  const byCategory = cached?.byCategory ?? FALLBACK_BY_CATEGORY;
+  const lastUpdated = cached?.lastUpdated ?? new Date().toISOString();
+
+  type Severity = "critical" | "high" | "medium" | "low";
+  type Trend = "up" | "down" | "stable";
+
+  function getSeverity(rate: number): Severity {
+    if (rate >= 8) return "critical";
+    if (rate >= 5) return "high";
+    if (rate >= 2) return "medium";
+    return "low";
+  }
+
+  function getTrend(current: number, previous: number): Trend {
+    const diff = current - previous;
+    if (Math.abs(diff) < 0.15) return "stable";
+    return diff > 0 ? "up" : "down";
+  }
+
+  const rawCategories = [
+    { name: "Gasolina", icon: "⛽", current: 8.2, previous: 5.1 },
+    { name: "Alquiler", icon: "🏠", current: 7.4, previous: 4.2 },
+    { name: "Comida", icon: "🛒", current: byCategory.alimentos, previous: 6.1 },
+    { name: "Energía", icon: "⚡", current: byCategory.energia, previous: 12.0 },
+    { name: "Transporte", icon: "🚌", current: byCategory.transporte, previous: 3.4 },
+    { name: "Electricidad", icon: "💡", current: 4.8, previous: 8.2 },
+    { name: "Inflación general", icon: "📊", current: spainCurrent, previous: FALLBACK_SPAIN.previous },
+  ];
+
+  const categories = rawCategories.map((cat) => {
+    const change = parseFloat((cat.current - cat.previous).toFixed(2));
+    return {
+      name: cat.name,
+      icon: cat.icon,
+      current: parseFloat(cat.current.toFixed(1)),
+      previous: parseFloat(cat.previous.toFixed(1)),
+      change,
+      trend: getTrend(cat.current, cat.previous),
+      severity: getSeverity(cat.current),
+    };
+  });
+
+  const alerts: string[] = [];
+  for (const cat of categories) {
+    if (alerts.length >= 3) break;
+    if (cat.change > 3) {
+      alerts.push(`${cat.name} ha subido ${cat.change.toFixed(1)} puntos respecto al año pasado`);
+    } else if (cat.current > 7) {
+      alerts.push(`${cat.name} mantiene una tasa elevada del ${cat.current.toFixed(1)}%`);
+    }
+  }
+
+  const averageChange = parseFloat(
+    (categories.reduce((sum, c) => sum + c.change, 0) / categories.length).toFixed(2)
+  );
+
+  const highest = categories.reduce((a, b) => (a.current > b.current ? a : b));
+  const lowest = categories.reduce((a, b) => (a.current < b.current ? a : b));
+
+  return c.json({
+    data: {
+      categories,
+      alerts,
+      summary: {
+        averageChange,
+        highestCategory: highest.name,
+        lowestCategory: lowest.name,
+      },
+      lastUpdated,
+    },
+  });
+});
+
 export default inflationRouter;

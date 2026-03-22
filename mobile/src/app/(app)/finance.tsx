@@ -9,6 +9,10 @@ import ComparadorPaises from "@/components/ComparadorPaises";
 import PignorarModule from "@/components/PignorarModule";
 import GestorPatrimonio from "@/components/GestorPatrimonio";
 import IALiquidez from "@/components/IALiquidez";
+import PoderAdquisitivo from "@/components/PoderAdquisitivo";
+import InflacionPersonal from "@/components/InflacionPersonal";
+import EstabilidadFinanciera from "@/components/EstabilidadFinanciera";
+import RadarPrecios from "@/components/RadarPrecios";
 import {
   View,
   Text,
@@ -133,7 +137,8 @@ type MainTab =
   | "gastos"
   | "inversiones"
   | "ahorro"
-  | "objetivos";
+  | "objetivos"
+  | "analisis";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -298,6 +303,7 @@ function TabBar({
     { key: "inversiones", label: "Inversiones" },
     { key: "ahorro", label: "Ahorro" },
     { key: "objetivos", label: "Objetivos" },
+    { key: "analisis", label: "Análisis" },
   ];
 
   return (
@@ -3632,6 +3638,16 @@ export default function FinanceScreen() {
     [monthlyIncome, monthlyExpenses]
   );
 
+  const totalSavings = useMemo(
+    () => savingsGoals.reduce((s, g) => s + g.currentAmount, 0),
+    [savingsGoals]
+  );
+
+  const totalInvestments = useMemo(
+    () => investments.reduce((s, i) => s + i.value, 0),
+    [investments]
+  );
+
   // ── What modal to show for FAB ──
   const handleFabPress = () => {
     if (activeTab === "ingresos" || activeTab === "gastos") {
@@ -3749,6 +3765,18 @@ export default function FinanceScreen() {
             onAddBackendGoal={() => setShowCreateGoalModal(true)}
             colors={colors}
           />
+        ) : activeTab === "analisis" ? (
+          <View style={{ paddingHorizontal: 16, gap: 16, paddingTop: 8 }}>
+            <RadarPrecios />
+            <PoderAdquisitivo />
+            <InflacionPersonal transactions={transactions} />
+            <EstabilidadFinanciera
+              income={monthlyIncome}
+              expenses={monthlyExpenses}
+              savings={totalSavings}
+              investments={totalInvestments}
+            />
+          </View>
         ) : null}
       </ScrollView>
 
