@@ -51,6 +51,7 @@ import {
   MessageSquare,
   Calendar,
   Flame,
+  Shield,
 } from "lucide-react-native";
 import { authClient } from "@/lib/auth/auth-client";
 import { fetch } from "expo/fetch";
@@ -97,6 +98,7 @@ const CATEGORIES = [
   "Plan",
   "Impuestos",
   "Estrategia",
+  "Liquidez",
 ];
 
 const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
@@ -340,8 +342,33 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   {
     id: "plan7",
     icon: TrendingUp,
-    text: "Ayúdame a crear un plan de negocio desde cero",
+    text: "Ay\u00FAdame a crear un plan de negocio desde cero",
     category: "Plan",
+  },
+  // Liquidez
+  {
+    id: "liq1",
+    icon: Shield,
+    text: "\u00BFQu\u00E9 es pignorar y c\u00F3mo funciona?",
+    category: "Liquidez",
+  },
+  {
+    id: "liq2",
+    icon: DollarSign,
+    text: "\u00BFCu\u00E1ndo conviene pignorar vs vender?",
+    category: "Liquidez",
+  },
+  {
+    id: "liq3",
+    icon: TrendingUp,
+    text: "Estrategias para protegerme de la inflaci\u00F3n",
+    category: "Liquidez",
+  },
+  {
+    id: "liq4",
+    icon: BarChart2,
+    text: "\u00BFC\u00F3mo calcular el valor real de mis ahorros?",
+    category: "Liquidez",
   },
 ];
 

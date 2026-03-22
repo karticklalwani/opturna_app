@@ -93,6 +93,24 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 | POST | /api/ai/chat | AI chat (streaming SSE) — OpenAI gpt-4o |
 | POST | /api/upload | Upload file |
 
+### Anti-Inflation Financial System (Ahorro Tab)
+- **Valor Real del Dinero**: Real-time inflation dashboard showing savings purchasing power loss, Spain/Eurozone/World/Food inflation rates, category breakdown, and 10-year historical chart. Data from INE, Eurostat, WorldBank APIs with 1-hour cache.
+- **Simulador Anti-Inflacion**: Calculate future value of money, inflation loss, compare savings vs investment, year-by-year SVG projection charts.
+- **Comparador de Paises**: 31 countries with inflation rates, region filter, color-coded rates, trend indicators, detail comparison vs Spain.
+- **Pignorar**: Pledge/collateral simulator - calculate liquidity, costs, risk assessment. Compare vs selling, traditional loans, inflation impact.
+- **Gestor de Patrimonio**: Financial health analyzer (0-100 score), savings rate, debt-to-income ratio, emergency fund coverage, personalized recommendations.
+- **IA Liquidez Inteligente**: Specialized AI financial advisor for liquidity, pignorar, inflation strategies. Uses OpenAI when available, rule-based fallback.
+
+### Inflation API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/inflation/real-time | Real-time inflation data from INE/Eurostat/WorldBank |
+| POST | /api/inflation/simulate | Anti-inflation purchasing power simulator |
+| POST | /api/inflation/pignorar | Pignorar (pledge) cost and comparison simulator |
+| POST | /api/inflation/patrimonio | Financial health analysis and recommendations |
+| POST | /api/inflation/ai-advisor | AI financial advisor for liquidity questions |
+| GET | /api/inflation/countries | Country inflation list (31 countries by region) |
+
 ## AI Assistant
 
 The AI Assistant (`/api/ai/chat`) uses OpenAI gpt-4o with a comprehensive system prompt covering:

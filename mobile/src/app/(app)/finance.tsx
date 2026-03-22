@@ -3,6 +3,12 @@ import { WebView } from "react-native-webview";
 import CompoundInterestCalculator from "@/components/CompoundInterestCalculator";
 import InvestmentAnalysisTool from "@/components/InvestmentAnalysisTool";
 import { InvestmentsSection } from "../../components/InvestmentsSection";
+import ValorReal from "@/components/ValorReal";
+import SimuladorInflacion from "@/components/SimuladorInflacion";
+import ComparadorPaises from "@/components/ComparadorPaises";
+import PignorarModule from "@/components/PignorarModule";
+import GestorPatrimonio from "@/components/GestorPatrimonio";
+import IALiquidez from "@/components/IALiquidez";
 import {
   View,
   Text,
@@ -39,6 +45,12 @@ import {
   CheckCircle2,
   Zap,
   Clock,
+  Shield,
+  Globe,
+  BarChart3,
+  Brain,
+  Banknote,
+  LineChart,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -2743,6 +2755,7 @@ function AhorroTab({
   const totalSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0);
   const totalTarget = savingsGoals.reduce((s, g) => s + g.targetAmount, 0);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
+  const [activeModule, setActiveModule] = useState<string | null>(null);
 
   return (
     <View>
@@ -3007,6 +3020,98 @@ function AhorroTab({
           </View>
         ) : null}
       </View>
+
+      {/* ── Advanced Anti-Inflation Modules ── */}
+      <Animated.View
+        entering={FadeInDown.duration(400).delay(100).springify()}
+        style={{ marginHorizontal: 16, marginBottom: 12, marginTop: 8 }}
+      >
+        <Text style={{ color: colors.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 12 }}>
+          HERRAMIENTAS ANTI-INFLACI{"\u00D3"}N
+        </Text>
+      </Animated.View>
+
+      {/* Module cards - collapsible */}
+      {[
+        { key: "valor-real", icon: LineChart, title: "Valor Real del Dinero", desc: "Tu ahorro ajustado por inflaci\u00F3n", color: "#EF4444" },
+        { key: "simulador", icon: BarChart3, title: "Simulador Anti-Inflaci\u00F3n", desc: "Proyecta el impacto en tu dinero", color: "#FFD60A" },
+        { key: "comparador", icon: Globe, title: "Comparador de Pa\u00EDses", desc: "Inflaci\u00F3n por pa\u00EDs y regi\u00F3n", color: "#00B4D8" },
+        { key: "pignorar", icon: Shield, title: "Pignorar", desc: "Simulador de pignoraci\u00F3n", color: "#A78BFA" },
+        { key: "gestor", icon: Banknote, title: "Gestor de Patrimonio", desc: "Diagn\u00F3stico financiero inteligente", color: "#4ADE80" },
+        { key: "ia-liquidez", icon: Brain, title: "IA Liquidez Inteligente", desc: "Asistente financiero especializado", color: "#F472B6" },
+      ].map((mod, idx) => (
+        <Animated.View
+          key={mod.key}
+          entering={FadeInDown.duration(350).delay(150 + idx * 50).springify()}
+          style={{ marginHorizontal: 16, marginBottom: activeModule === mod.key ? 0 : 10 }}
+        >
+          <Pressable
+            onPress={() => setActiveModule(activeModule === mod.key ? null : mod.key)}
+            testID={`module-${mod.key}`}
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              borderBottomLeftRadius: activeModule === mod.key ? 0 : 16,
+              borderBottomRightRadius: activeModule === mod.key ? 0 : 16,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: activeModule === mod.key ? `${mod.color}40` : colors.border,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: `${mod.color}15`,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <mod.icon size={18} color={mod.color} />
+              </View>
+              <View>
+                <Text style={{ color: colors.text, fontSize: 14, fontWeight: "700" }}>
+                  {mod.title}
+                </Text>
+                <Text style={{ color: colors.text3, fontSize: 12, marginTop: 1 }}>
+                  {mod.desc}
+                </Text>
+              </View>
+            </View>
+            <ChevronRight
+              size={18}
+              color={colors.text3}
+              style={{ transform: [{ rotate: activeModule === mod.key ? "90deg" : "0deg" }] }}
+            />
+          </Pressable>
+          {activeModule === mod.key ? (
+            <View
+              style={{
+                backgroundColor: "#0A0A0A",
+                borderWidth: 1,
+                borderTopWidth: 0,
+                borderColor: `${mod.color}40`,
+                borderBottomLeftRadius: 16,
+                borderBottomRightRadius: 16,
+                padding: 8,
+                marginBottom: 10,
+              }}
+            >
+              {mod.key === "valor-real" ? <ValorReal savings={totalSaved} /> : null}
+              {mod.key === "simulador" ? <SimuladorInflacion /> : null}
+              {mod.key === "comparador" ? <ComparadorPaises /> : null}
+              {mod.key === "pignorar" ? <PignorarModule /> : null}
+              {mod.key === "gestor" ? <GestorPatrimonio /> : null}
+              {mod.key === "ia-liquidez" ? <IALiquidez /> : null}
+            </View>
+          ) : null}
+        </Animated.View>
+      ))}
     </View>
   );
 }
