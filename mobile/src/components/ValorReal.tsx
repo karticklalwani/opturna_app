@@ -46,14 +46,20 @@ interface HistoricalPoint {
   rate: number;
 }
 
+interface InflationMetric {
+  current: number;
+  previous: number;
+  trend: string;
+}
+
 interface InflationRealTimeData {
-  spain: number;
-  eurozone: number;
-  world: number;
-  food: number;
-  byCategory: CategoryRate[];
+  spain: InflationMetric;
+  eurozone: InflationMetric;
+  world: InflationMetric;
+  food: InflationMetric;
+  byCategory: { alimentos: number; transporte: number; vivienda: number; energia: number; educacion: number; salud: number };
   countries: Array<{ code: string; name: string; rate: number; flag: string }>;
-  historical: HistoricalPoint[];
+  historical: Array<{ year: number; spain: number; eurozone: number; world: number }>;
   lastUpdated: string;
 }
 
@@ -225,7 +231,7 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
     queryFn: () => api.get<InflationRealTimeData>("/api/inflation/real-time"),
   });
 
-  const spainRate = Number(data?.spain ?? 0);
+  const spainRate = Number(data?.spain?.current ?? 0);
   const realValue = savings * (1 - spainRate / 100);
   const inflationLoss = savings - realValue;
 
@@ -467,13 +473,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: Number(data?.eurozone ?? 0) > 3 ? colors.error : colors.accent,
+                  color: Number(data?.eurozone?.current ?? 0) > 3 ? colors.error : colors.accent,
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {Number(data?.eurozone ?? 0).toFixed(1)}%
+                {Number(data?.eurozone?.current ?? 0).toFixed(1)}%
               </Text>
             </View>
 
@@ -496,13 +502,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: Number(data?.world ?? 0) > 5 ? colors.error : "#FFD60A",
+                  color: Number(data?.world?.current ?? 0) > 5 ? colors.error : "#FFD60A",
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {Number(data?.world ?? 0).toFixed(1)}%
+                {Number(data?.world?.current ?? 0).toFixed(1)}%
               </Text>
             </View>
 
@@ -525,13 +531,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: Number(data?.food ?? 0) > 5 ? colors.error : "#FFD60A",
+                  color: Number(data?.food?.current ?? 0) > 5 ? colors.error : "#FFD60A",
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {Number(data?.food ?? 0).toFixed(1)}%
+                {Number(data?.food?.current ?? 0).toFixed(1)}%
               </Text>
             </View>
           </View>
@@ -562,12 +568,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
           </Text>
 
           <View style={{ gap: 14 }}>
-            {(data?.byCategory ?? []).map((cat, idx) => {
-              const maxRate = Math.max(
-                ...(data?.byCategory ?? []).map((c) => Math.abs(c.rate)),
-                1
-              );
-              const barWidth = (Math.abs(cat.rate) / maxRate) * 100;
+            {(() => {
+              const categoryArray: CategoryRate[] = data?.byCategory
+                ? Object.entries(data.byCategory).map(([name, rate]) => ({ name, rate }))
+                : [];
+              const maxRate = Math.max(...categoryArray.map((c) => Math.abs(c.rate)), 1);
+              return categoryArray.map((cat, idx) => {
+                const barWidth = (Math.abs(cat.rate) / maxRate) * 100;
               const barColor =
                 cat.rate > 5
                   ? colors.error
@@ -627,7 +634,8 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
                   </View>
                 </View>
               );
-            })}
+              });
+            })()}
           </View>
         </View>
       </Animated.View>
@@ -665,7 +673,7 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               Ultimos 10 anos
             </Text>
 
-            <HistoricalChart data={data?.historical ?? []} width={width - 32} />
+            <HistoricalChart data={(data?.historical ?? []).map((h) => ({ year: h.year, rate: h.spain }))} width={width - 32} />
           </View>
         </Animated.View>
       ) : null}
