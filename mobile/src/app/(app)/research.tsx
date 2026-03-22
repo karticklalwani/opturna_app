@@ -433,7 +433,7 @@ function AIAnalysisPanel({ symbol, colors }: { symbol: string; colors: typeof DA
                 ? <TrendingDown size={14} color={sentimentColor} />
                 : <Minus size={14} color={sentimentColor} />}
             <Text style={{ color: sentimentColor, fontSize: 12, fontWeight: "700", letterSpacing: 0.5 }}>
-              {data.sentiment.toUpperCase()}
+              {data.sentiment?.toUpperCase()}
             </Text>
           </View>
 
