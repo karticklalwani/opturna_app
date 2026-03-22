@@ -206,7 +206,7 @@ function PriceChart({
           // Upward triangle
           return (
             <Polygon
-              key={i}
+              key={`sig-${sig.time}-${sig.signal}`}
               points={`${x},${y - 12} ${x - 6},${y} ${x + 6},${y}`}
               fill={color}
               opacity={0.9}
@@ -216,7 +216,7 @@ function PriceChart({
         // Downward triangle
         return (
           <Polygon
-            key={i}
+            key={`sig-${sig.time}-${sig.signal}`}
             points={`${x},${y + 12} ${x - 6},${y} ${x + 6},${y}`}
             fill={color}
             opacity={0.9}
@@ -237,7 +237,7 @@ function PriceChart({
       {/* Y labels */}
       {yLabels.map((v, i) => (
         <SvgText
-          key={i}
+          key={`ylabel-${v.toFixed(2)}`}
           x={paddingLeft - 4}
           y={toY(v) + 4}
           fill="#737373"
@@ -951,7 +951,7 @@ export default function InvestmentAnalysisTool() {
                 const sigColor = SIGNAL_COLORS[sig.signal];
                 return (
                   <View
-                    key={i}
+                    key={`signal-${sig.time}-${sig.signal}-${i}`}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",

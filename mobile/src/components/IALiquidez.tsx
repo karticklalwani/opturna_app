@@ -256,7 +256,7 @@ export default function IALiquidez({ financialContext }: IALiquidezProps) {
                             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                               {msg.relatedTopics.map((topic, idx) => (
                                 <Pressable
-                                  key={idx}
+                                  key={`related-${topic}-${idx}`}
                                   testID={`ia-related-${idx}`}
                                   onPress={() => handleRelatedTopic(topic)}
                                   disabled={advisor.isPending}

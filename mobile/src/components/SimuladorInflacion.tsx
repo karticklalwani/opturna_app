@@ -182,7 +182,7 @@ function SimulationChart({
 
         {/* Y labels */}
         {[minVal, minVal + range * 0.5, maxVal].map((v, i) => (
-          <SvgText key={i} x={paddingLeft - 4} y={toY(v) + 4} fill={colors.text3} fontSize="9" textAnchor="end">
+          <SvgText key={`ylabel-${v.toFixed(2)}`} x={paddingLeft - 4} y={toY(v) + 4} fill={colors.text3} fontSize="9" textAnchor="end">
             {formatCurrency(v)}€
           </SvgText>
         ))}

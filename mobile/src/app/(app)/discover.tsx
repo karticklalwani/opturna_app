@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
-  Linking,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -372,14 +371,16 @@ function SectionHeader({
 function FeaturedCard({
   item,
   colors,
+  onPress,
 }: {
   item: ContentItem;
   colors: typeof DARK;
+  onPress: () => void;
 }) {
   const catColor = getContentCategoryColor(item.category);
   return (
     <Pressable
-      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      onPress={onPress}
       style={{
         width: 280,
         height: 180,
@@ -478,14 +479,16 @@ function FeaturedCard({
 function NewsCard({
   item,
   colors,
+  onPress,
 }: {
   item: ContentItem;
   colors: typeof DARK;
+  onPress: () => void;
 }) {
   const catColor = getContentCategoryColor(item.category);
   return (
     <Pressable
-      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      onPress={onPress}
       style={{
         flexDirection: "row",
         backgroundColor: colors.card,
@@ -540,14 +543,16 @@ function NewsCard({
 function RecommendedCard({
   item,
   colors,
+  onPress,
 }: {
   item: ContentItem;
   colors: typeof DARK;
+  onPress: () => void;
 }) {
   const catColor = getContentCategoryColor(item.category);
   return (
     <Pressable
-      onPress={() => item.url ? Linking.openURL(item.url) : null}
+      onPress={onPress}
       style={{
         flex: 1,
         backgroundColor: colors.card,
@@ -601,6 +606,7 @@ function RecommendedCard({
 // ─── Content Feed component ───────────────────────────────────────────────────
 
 function ContentFeed({ colors }: { colors: typeof DARK }) {
+  const contentRouter = useRouter();
   const [activeContentCategory, setActiveContentCategory] = useState<string>("todo");
 
   const { data: feedData, isLoading, isError } = useQuery({
@@ -728,7 +734,7 @@ function ContentFeed({ colors }: { colors: typeof DARK }) {
                 contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 4 }}
               >
                 {featuredItems.map((item) => (
-                  <FeaturedCard key={item.id} item={item} colors={colors} />
+                  <FeaturedCard key={item.id} item={item} colors={colors} onPress={() => contentRouter.push(`/article-detail?id=${item.id}` as any)} />
                 ))}
               </ScrollView>
             </Animated.View>
@@ -750,7 +756,7 @@ function ContentFeed({ colors }: { colors: typeof DARK }) {
               <View style={{ paddingHorizontal: 16, gap: 10 }}>
                 {latestItems.slice(0, 5).map((item, i) => (
                   <Animated.View key={item.id} entering={FadeInDown.duration(260).delay(i * 50)}>
-                    <NewsCard item={item} colors={colors} />
+                    <NewsCard item={item} colors={colors} onPress={() => contentRouter.push(`/article-detail?id=${item.id}` as any)} />
                   </Animated.View>
                 ))}
               </View>
@@ -805,7 +811,7 @@ function ContentFeed({ colors }: { colors: typeof DARK }) {
                     entering={FadeInDown.duration(260).delay(i * 60)}
                     style={{ width: "47%" }}
                   >
-                    <RecommendedCard item={item} colors={colors} />
+                    <RecommendedCard item={item} colors={colors} onPress={() => contentRouter.push(`/article-detail?id=${item.id}` as any)} />
                   </Animated.View>
                 ))}
               </View>

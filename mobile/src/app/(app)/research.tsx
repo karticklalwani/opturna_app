@@ -141,8 +141,10 @@ const fmtVal = (n?: number, suffix = "") => {
   return `${n.toFixed(2)}${suffix}`;
 };
 
-const timeAgo = (iso: string) => {
+const timeAgo = (iso?: string | null) => {
+  if (!iso) return "--";
   const diff = Date.now() - new Date(iso).getTime();
+  if (isNaN(diff)) return "--";
   const h = Math.floor(diff / 3600000);
   if (h < 1) return `${Math.floor(diff / 60000)}m`;
   if (h < 24) return `${h}h`;
@@ -205,7 +207,7 @@ function Skeleton({ h, r = 8, colors }: { h: number; r?: number; colors: { bg4: 
 // ─── QuoteCard ────────────────────────────────────────────────────────────────
 
 function QuoteCard({ quote, colors }: { quote: Quote; colors: typeof DARK }) {
-  const isUp = quote.changePercent >= 0;
+  const isUp = (quote.changePercent ?? 0) >= 0;
   return (
     <Animated.View
       entering={FadeInDown.duration(350)}
@@ -263,10 +265,10 @@ function QuoteCard({ quote, colors }: { quote: Quote; colors: typeof DARK }) {
       </View>
       <View style={{ flexDirection: "row", gap: 0, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 }}>
         {[
-          { label: "MCap", value: fmtLarge(quote.marketCap) },
-          { label: "Vol", value: quote.volume > 1e6 ? `${(quote.volume / 1e6).toFixed(1)}M` : `${(quote.volume / 1e3).toFixed(0)}K` },
-          { label: "High", value: fmtPrice(quote.high) },
-          { label: "Low", value: fmtPrice(quote.low) },
+          { label: "MCap", value: fmtLarge(quote.marketCap ?? 0) },
+          { label: "Vol", value: (quote.volume ?? 0) > 1e6 ? `${((quote.volume ?? 0) / 1e6).toFixed(1)}M` : `${((quote.volume ?? 0) / 1e3).toFixed(0)}K` },
+          { label: "High", value: fmtPrice(quote.high ?? 0) },
+          { label: "Low", value: fmtPrice(quote.low ?? 0) },
         ].map((item, i) => (
           <View
             key={item.label}

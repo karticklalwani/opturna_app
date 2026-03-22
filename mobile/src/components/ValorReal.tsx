@@ -176,7 +176,7 @@ function HistoricalChart({
 
       {[minVal, minVal + range * 0.5, maxVal].map((v, i) => (
         <SvgText
-          key={i}
+          key={`ylabel-${v.toFixed(2)}`}
           x={paddingLeft - 4}
           y={toY(v) + 4}
           fill={colors.text3}
@@ -577,7 +577,7 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               const Icon = getCategoryIcon(cat.name);
 
               return (
-                <View key={idx} style={{ gap: 6 }}>
+                <View key={`cat-${cat.name}`} style={{ gap: 6 }}>
                   <View
                     style={{
                       flexDirection: "row",

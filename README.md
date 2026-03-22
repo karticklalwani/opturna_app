@@ -43,6 +43,23 @@ A premium social network and intelligence platform for ambitious people focused 
 - Free / Followers-only / Pro content tiers
 - Lesson tracking
 
+### Discover (Content)
+- Curated articles by category (Finanzas, Crecimiento, Tecnologia, Impuestos, etc.)
+- Featured, news, and recommended content cards
+- In-app article detail view (no external browser needed)
+- Search by title, user, hashtags
+
+### Research (Stock Market)
+- Yahoo Finance stock/market data integration
+- Quote engine with price, change %, market cap, P/E ratio
+- Fundamental analysis (P/E, P/S, P/B, EV/EBITDA, ROE, debt ratios)
+- News feeds per stock
+- AI-powered company insights (OpenAI)
+
+### Live (Directos)
+- Real-time broadcasts/streaming
+- WebSocket infrastructure
+
 ### Messages
 - 1:1 direct messages
 - Group chats
@@ -91,7 +108,19 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 | PATCH | /api/notifications/read-all | Mark all read |
 | POST | /api/reports | Report content |
 | POST | /api/ai/chat | AI chat (streaming SSE) — OpenAI gpt-4o |
+| GET | /api/content | Curated articles by category |
+| GET | /api/content/:id | Article detail |
 | POST | /api/upload | Upload file |
+
+### Research API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/research/quote/:symbol | Stock quote (Yahoo Finance) |
+| GET | /api/research/search | Symbol search |
+| GET | /api/research/fundamentals/:symbol | Company fundamentals |
+| GET | /api/research/news | News feed |
+| GET | /api/research/history/:symbol | Historical prices |
+| POST | /api/research/ai-insights | AI analysis (OpenAI) |
 
 ### Anti-Inflation Financial System (Ahorro Tab)
 - **Valor Real del Dinero**: Real-time inflation dashboard showing savings purchasing power loss, Spain/Eurozone/World/Food inflation rates, category breakdown, and 10-year historical chart. Data from INE, Eurostat, WorldBank APIs with 1-hour cache.

@@ -377,13 +377,6 @@ const feedQuerySchema = z.object({
   category: z.string().optional(),
 });
 
-contentRouter.get("/:id", (c) => {
-  const { id } = c.req.param();
-  const item = ALL_CONTENT.find((i) => i.id === id);
-  if (!item) return c.json({ error: { message: "Not found", code: "NOT_FOUND" } }, 404);
-  return c.json({ data: item });
-});
-
 contentRouter.get(
   "/feed",
   zValidator("query", feedQuerySchema),
@@ -420,5 +413,12 @@ contentRouter.get(
     });
   }
 );
+
+contentRouter.get("/:id", (c) => {
+  const { id } = c.req.param();
+  const item = ALL_CONTENT.find((i) => i.id === id);
+  if (!item) return c.json({ error: { message: "Not found", code: "NOT_FOUND" } }, 404);
+  return c.json({ data: item });
+});
 
 export default contentRouter;

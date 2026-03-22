@@ -156,6 +156,7 @@ export default function AppLayout() {
       <Tabs.Screen name="progress" options={{ href: null }} />
       <Tabs.Screen name="journal" options={{ href: null }} />
       <Tabs.Screen name="life-goals" options={{ href: null }} />
+      <Tabs.Screen name="article-detail" options={{ href: null }} />
     </Tabs>
   );
 }

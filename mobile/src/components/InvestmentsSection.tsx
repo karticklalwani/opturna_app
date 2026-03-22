@@ -1556,7 +1556,7 @@ export function InvestmentsSection() {
                   { label: "MÍNIMO", value: formatPriceRaw(analysis.low) },
                 ].map((item, idx) => (
                   <View
-                    key={idx}
+                    key={`price-${item.label}`}
                     style={{
                       flex: 1,
                       borderRightWidth: idx < 2 ? 1 : 0,
@@ -1902,7 +1902,7 @@ export function InvestmentsSection() {
                   </Text>
                   {(analysis.supportLevels || []).slice(0, 3).map((lvl, idx) => (
                     <View
-                      key={idx}
+                      key={`support-${lvl}-${idx}`}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -1940,7 +1940,7 @@ export function InvestmentsSection() {
                   </Text>
                   {(analysis.resistanceLevels || []).slice(0, 3).map((lvl, idx) => (
                     <View
-                      key={idx}
+                      key={`resist-${lvl}-${idx}`}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",

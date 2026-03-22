@@ -493,7 +493,7 @@ export default function GestorPatrimonio() {
                     const Icon = getRecommendationIcon(rec.title);
                     return (
                       <View
-                        key={idx}
+                        key={`rec-${rec.title}-${idx}`}
                         style={{
                           backgroundColor: colors.bg3,
                           borderRadius: 14,
@@ -552,7 +552,7 @@ export default function GestorPatrimonio() {
                   {result.monthlyPlan.description}
                 </Text>
                 {(result.monthlyPlan.steps ?? []).map((step, idx) => (
-                  <View key={idx} style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
+                  <View key={`step-${idx}-${step.slice(0, 20)}`} style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
                     <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "700" }}>
                       {idx + 1}.
                     </Text>
@@ -587,7 +587,7 @@ export default function GestorPatrimonio() {
                   {result.yearlyPlan.description}
                 </Text>
                 {(result.yearlyPlan.goals ?? []).map((goal, idx) => (
-                  <View key={idx} style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
+                  <View key={`goal-${idx}-${goal.slice(0, 20)}`} style={{ flexDirection: "row", gap: 8, marginBottom: 6 }}>
                     <Text style={{ color: colors.accent, fontSize: 12 }}>•</Text>
                     <Text style={{ color: colors.text2, fontSize: 12, flex: 1, lineHeight: 18 }}>
                       {goal}

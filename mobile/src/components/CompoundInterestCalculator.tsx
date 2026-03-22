@@ -164,7 +164,7 @@ function CompoundChart({
         const prev = contributedPoints[i - 1];
         return (
           <Line
-            key={i}
+            key={`contrib-line-${i}`}
             x1={parseFloat(prev.split(",")[0])}
             y1={parseFloat(prev.split(",")[1])}
             x2={parseFloat(pt.split(",")[0])}
@@ -221,7 +221,7 @@ function CompoundChart({
       {/* Y axis labels */}
       {yLabels.map((v, i) => (
         <SvgText
-          key={i}
+          key={`ylabel-${v.toFixed(2)}`}
           x={paddingLeft - 4}
           y={toY(v) + 4}
           fill={colors.text3}

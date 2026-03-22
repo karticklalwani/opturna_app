@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, BookOpen, Calendar } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
+import { api } from "@/lib/api/api";
 
 type ContentItem = {
   id: string;
@@ -47,15 +48,12 @@ function formatDate(dateStr: string) {
 export default function ArticleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
-  const baseUrl = process.env.EXPO_PUBLIC_BACKEND_URL!;
+  const nav = useRouter();
+  const [imageError, setImageError] = useState(false);
 
   const { data: item, isLoading, isError } = useQuery<ContentItem>({
-    queryKey: ["content-item", id, baseUrl],
-    queryFn: async () => {
-      const res = await fetch(`${baseUrl}/api/content/${id}`);
-      const json = await res.json();
-      return json.data as ContentItem;
-    },
+    queryKey: ["content-item", id],
+    queryFn: () => api.get<ContentItem>(`/api/content/${id}`),
     enabled: !!id,
   });
 
@@ -66,24 +64,27 @@ export default function ArticleDetailScreen() {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Hero image */}
         <View style={{ height: 300, position: "relative" }}>
-          {item ? (
+          {item && !imageError ? (
             <ExpoImage
               source={{ uri: item.imageUrl }}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
+              onError={() => setImageError(true)}
             />
           ) : (
-            <View style={{ width: "100%", height: "100%", backgroundColor: colors.card }} />
+            <View style={{ width: "100%", height: "100%", backgroundColor: `${catColor}15`, alignItems: "center", justifyContent: "center" }}>
+              <BookOpen size={48} color={`${catColor}60`} />
+            </View>
           )}
           <LinearGradient
             colors={["rgba(0,0,0,0.45)", "transparent", "rgba(0,0,0,0.7)"]}
-            style={{ position: "absolute", inset: 0 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           />
           {/* Back button */}
           <SafeAreaView edges={["top"]} style={{ position: "absolute", top: 0, left: 0, right: 0 }}>
             <View style={{ padding: 16 }}>
               <Pressable
-                onPress={() => router.back()}
+                onPress={() => nav.back()}
                 style={{
                   width: 40,
                   height: 40,
