@@ -944,31 +944,60 @@ export default function GoalsScreen() {
             contentContainerStyle={{ paddingHorizontal: 0, gap: 10, paddingTop: 14, paddingBottom: 2 }}
           >
             {[
-              { label: "Progreso", icon: TrendingUp, route: "/(app)/progress", color: "#4ADE80" },
-              { label: "Tareas", icon: SquareCheck, route: "/(app)/tasks", color: "#FBBF24" },
-              { label: "Hábitos", icon: Flame, route: "/(app)/habits", color: "#F97316" },
-              { label: "Proyectos", icon: Layers, route: "/(app)/projects", color: "#60A5FA" },
-              { label: "Metas", icon: Star, route: "/(app)/life-goals", color: "#818CF8" },
-              { label: "Diario", icon: BookOpen, route: "/(app)/journal", color: "#F472B6" },
+              { label: "Hábitos", subtitle: "Rutinas", icon: Flame, route: "/(app)/habits", color: "#F97316" },
+              { label: "Progreso", subtitle: "Avance", icon: TrendingUp, route: "/(app)/progress", color: "#4ADE80" },
+              { label: "Metas de Vida", subtitle: "Sueños", icon: Star, route: "/(app)/life-goals", color: "#FBBF24" },
+              { label: "Tareas", subtitle: "Pendientes", icon: SquareCheck, route: "/(app)/tasks", color: "#60A5FA" },
+              { label: "Diario", subtitle: "Reflexión", icon: BookOpen, route: "/(app)/journal", color: "#F472B6" },
+              { label: "Proyectos", subtitle: "Iniciativas", icon: Layers, route: "/(app)/projects", color: "#60A5FA" },
             ].map((item) => (
               <Pressable
                 key={item.route}
                 onPress={() => router.push(item.route as any)}
                 testID={`productivity-nav-${item.label.toLowerCase()}`}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingHorizontal: 14,
-                  paddingVertical: 9,
-                  backgroundColor: `${item.color}15`,
-                  borderRadius: 20,
+                  width: 90,
+                  backgroundColor: colors.card,
+                  borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: `${item.color}30`,
+                  borderColor: colors.border,
+                  padding: 12,
+                  alignItems: "center",
+                  gap: 8,
                 }}
               >
-                <item.icon size={14} color={item.color} />
-                <Text style={{ color: item.color, fontSize: 13, fontWeight: "600" }}>{item.label}</Text>
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 100,
+                    backgroundColor: `${item.color}20`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <item.icon size={14} color={item.color} />
+                </View>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 12,
+                    fontWeight: "700",
+                    textAlign: "center",
+                  }}
+                  numberOfLines={2}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.text3,
+                    fontSize: 10,
+                    textAlign: "center",
+                  }}
+                >
+                  {item.subtitle}
+                </Text>
               </Pressable>
             ))}
           </ScrollView>

@@ -13,6 +13,7 @@ import { signalsRouter } from "./routes/signals";
 import contentRouter from "./routes/content";
 import researchRouter from "./routes/research";
 import inflationRouter from "./routes/inflation";
+import advancedFinanceRouter from "./routes/advanced-finance";
 import journal from "./routes/journal";
 import lifeGoals from "./routes/life-goals";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
@@ -1100,6 +1101,7 @@ app.route("/api/content", contentRouter);
 // ===== RESEARCH ROUTES =====
 app.route("/api/research", researchRouter);
 app.route("/api/inflation", inflationRouter);
+app.route("/api/advanced", advancedFinanceRouter);
 
 // ===== JOURNAL ROUTES =====
 app.route("/api/journal", journal);

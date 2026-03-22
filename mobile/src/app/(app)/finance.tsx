@@ -13,6 +13,11 @@ import PoderAdquisitivo from "@/components/PoderAdquisitivo";
 import InflacionPersonal from "@/components/InflacionPersonal";
 import EstabilidadFinanciera from "@/components/EstabilidadFinanciera";
 import RadarPrecios from "@/components/RadarPrecios";
+import NoticiasEconomicas from "@/components/NoticiasEconomicas";
+import IndicesInteligentes from "@/components/IndicesInteligentes";
+import PlanFinanciero from "@/components/PlanFinanciero";
+import SimuladorCasa from "@/components/SimuladorCasa";
+import AlquilarVsComprar from "@/components/AlquilarVsComprar";
 import {
   View,
   Text,
@@ -138,7 +143,11 @@ type MainTab =
   | "inversiones"
   | "ahorro"
   | "objetivos"
-  | "analisis";
+  | "analisis"
+  | "noticias"
+  | "indices"
+  | "plan"
+  | "simuladores";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -304,6 +313,10 @@ function TabBar({
     { key: "ahorro", label: "Ahorro" },
     { key: "objetivos", label: "Objetivos" },
     { key: "analisis", label: "Análisis" },
+    { key: "noticias", label: "Noticias" },
+    { key: "indices", label: "Índices" },
+    { key: "plan", label: "Plan IA" },
+    { key: "simuladores", label: "Simuladores" },
   ];
 
   return (
@@ -3776,6 +3789,33 @@ export default function FinanceScreen() {
               savings={totalSavings}
               investments={totalInvestments}
             />
+          </View>
+        ) : activeTab === "noticias" ? (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <NoticiasEconomicas />
+          </View>
+        ) : activeTab === "indices" ? (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <IndicesInteligentes
+              income={monthlyIncome}
+              expenses={monthlyExpenses}
+              savings={totalSavings}
+              investments={totalInvestments}
+            />
+          </View>
+        ) : activeTab === "plan" ? (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <PlanFinanciero
+              income={monthlyIncome}
+              expenses={monthlyExpenses}
+              savings={totalSavings}
+              investments={totalInvestments}
+            />
+          </View>
+        ) : activeTab === "simuladores" ? (
+          <View style={{ paddingHorizontal: 16, gap: 16, paddingTop: 8 }}>
+            <SimuladorCasa />
+            <AlquilarVsComprar />
           </View>
         ) : null}
       </ScrollView>
