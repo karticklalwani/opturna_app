@@ -726,9 +726,9 @@ export default function ResearchScreen() {
                 overflow: "hidden",
                 marginTop: -2,
               }}>
-                {searchResults.slice(0, 7).map((item) => (
+                {searchResults.slice(0, 7).map((item, i) => (
                   <Pressable
-                    key={`${item.symbol}-${item.exchange}`}
+                    key={`${item.symbol}-${item.exchange ?? ''}-${i}`}
                     onPress={() => selectSymbol(item.symbol)}
                     testID={`search-result-${item.symbol}`}
                     style={({ pressed }) => ({
@@ -1082,9 +1082,9 @@ export default function ResearchScreen() {
                       marginBottom: 14,
                       overflow: "hidden",
                     }}>
-                      {compareResults.slice(0, 5).map((item) => (
+                      {compareResults.slice(0, 5).map((item, i) => (
                         <Pressable
-                          key={`${item.symbol}-${item.exchange}`}
+                          key={`${item.symbol}-${item.exchange ?? ''}-${i}`}
                           onPress={() => {
                             setCompareSymbol(item.symbol);
                             setCompareSearch(item.symbol);
