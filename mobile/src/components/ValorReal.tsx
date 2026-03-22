@@ -225,7 +225,7 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
     queryFn: () => api.get<InflationRealTimeData>("/api/inflation/real-time"),
   });
 
-  const spainRate = data?.spain ?? 0;
+  const spainRate = Number(data?.spain ?? 0);
   const realValue = savings * (1 - spainRate / 100);
   const inflationLoss = savings - realValue;
 
@@ -467,13 +467,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: (data?.eurozone ?? 0) > 3 ? colors.error : colors.accent,
+                  color: Number(data?.eurozone ?? 0) > 3 ? colors.error : colors.accent,
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {(data?.eurozone ?? 0).toFixed(1)}%
+                {Number(data?.eurozone ?? 0).toFixed(1)}%
               </Text>
             </View>
 
@@ -496,13 +496,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: (data?.world ?? 0) > 5 ? colors.error : "#FFD60A",
+                  color: Number(data?.world ?? 0) > 5 ? colors.error : "#FFD60A",
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {(data?.world ?? 0).toFixed(1)}%
+                {Number(data?.world ?? 0).toFixed(1)}%
               </Text>
             </View>
 
@@ -525,13 +525,13 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
               </View>
               <Text
                 style={{
-                  color: (data?.food ?? 0) > 5 ? colors.error : "#FFD60A",
+                  color: Number(data?.food ?? 0) > 5 ? colors.error : "#FFD60A",
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {(data?.food ?? 0).toFixed(1)}%
+                {Number(data?.food ?? 0).toFixed(1)}%
               </Text>
             </View>
           </View>
