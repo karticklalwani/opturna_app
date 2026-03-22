@@ -13,6 +13,8 @@ import { signalsRouter } from "./routes/signals";
 import contentRouter from "./routes/content";
 import researchRouter from "./routes/research";
 import inflationRouter from "./routes/inflation";
+import journal from "./routes/journal";
+import lifeGoals from "./routes/life-goals";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -1098,6 +1100,12 @@ app.route("/api/content", contentRouter);
 // ===== RESEARCH ROUTES =====
 app.route("/api/research", researchRouter);
 app.route("/api/inflation", inflationRouter);
+
+// ===== JOURNAL ROUTES =====
+app.route("/api/journal", journal);
+
+// ===== LIFE GOALS ROUTES =====
+app.route("/api/life-goals", lifeGoals);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);
