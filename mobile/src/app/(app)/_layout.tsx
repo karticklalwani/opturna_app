@@ -157,6 +157,8 @@ export default function AppLayout() {
       <Tabs.Screen name="journal" options={{ href: null }} />
       <Tabs.Screen name="life-goals" options={{ href: null }} />
       <Tabs.Screen name="article-detail" options={{ href: null }} />
+      <Tabs.Screen name="creators" options={{ href: null }} />
+      <Tabs.Screen name="creator-profile" options={{ href: null }} />
     </Tabs>
   );
 }

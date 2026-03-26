@@ -16,6 +16,7 @@ import inflationRouter from "./routes/inflation";
 import advancedFinanceRouter from "./routes/advanced-finance";
 import journal from "./routes/journal";
 import lifeGoals from "./routes/life-goals";
+import { creatorsRouter } from "./routes/creators";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -1108,6 +1109,9 @@ app.route("/api/journal", journal);
 
 // ===== LIFE GOALS ROUTES =====
 app.route("/api/life-goals", lifeGoals);
+
+// ===== CREATORS / PARTNERS HUB ROUTES =====
+app.route("/api/creators", creatorsRouter);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);

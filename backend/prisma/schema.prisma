@@ -567,6 +567,166 @@ model LifeGoal {
   emoji       String?  // An emoji representing the goal
 }
 
+// ============ CREATORS / PARTNERS HUB ============
+
+model CreatorProfile {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  type            String   @default("person") // person | company | startup | partner | propfirm | brand
+  name            String
+  username        String   @unique
+  slug            String   @unique
+  avatarUrl       String?
+  bannerUrl       String?
+  shortBio        String?
+  fullBio         String?
+  category        String?  // business | finance | trading | startups | ai | creator | education | mindset | productivity | health | investing
+  subcategory     String?
+  tags            String?  // JSON array
+  verified        Boolean  @default(false)
+  featured        Boolean  @default(false)
+  officialPartner Boolean  @default(false)
+  websiteUrl      String?
+  youtubeUrl      String?
+  podcastUrl      String?
+  instagramUrl    String?
+  xUrl            String?
+  linkedinUrl     String?
+  telegramUrl     String?
+  contactEmail    String?
+  companyName     String?
+  location        String?
+  status          String   @default("published") // draft | published | archived
+  followersCount  Int      @default(0)
+
+  posts           CreatorPost[]
+  videos          CreatorVideo[]
+  interviews      CreatorInterview[]
+  lives           CreatorLive[]
+  projects        CreatorProject[]
+  collaborations  Collaboration[]
+  follows         CreatorFollow[]
+  bookmarks       CreatorBookmark[]
+}
+
+model CreatorPost {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title           String?
+  content         String
+  excerpt         String?
+  coverImageUrl   String?
+  mediaType       String?        // image | video | link
+  mediaUrl        String?
+  externalUrl     String?
+  isPinned        Boolean        @default(false)
+  isFeatured      Boolean        @default(false)
+  visibility      String         @default("public") // public | followers | premium
+  publishedAt     DateTime       @default(now())
+}
+
+model CreatorVideo {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  thumbnailUrl    String?
+  videoUrl        String
+  sourcePlatform  String         @default("youtube") // youtube | vimeo | direct
+  duration        String?
+  category        String?
+  publishedAt     DateTime       @default(now())
+  featured        Boolean        @default(false)
+}
+
+model CreatorInterview {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  thumbnailUrl    String?
+  mediaUrl        String?
+  interviewType   String         @default("video") // podcast | video | article | live
+  partnerName     String?
+  publishedAt     DateTime       @default(now())
+  featured        Boolean        @default(false)
+}
+
+model CreatorLive {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  thumbnailUrl    String?
+  streamUrl       String?
+  status          String         @default("upcoming") // upcoming | live | ended
+  scheduledAt     DateTime?
+  endedAt         DateTime?
+  featured        Boolean        @default(false)
+}
+
+model CreatorProject {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  logoUrl         String?
+  websiteUrl      String?
+  category        String?
+  status          String         @default("active") // active | stealth | launched | archived
+  featured        Boolean        @default(false)
+}
+
+model Collaboration {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  collaborationType String       @default("featured_profile") // interview | media | featured_profile | startup_partner | affiliate | event | education
+  status          String         @default("active") // planned | active | completed | archived
+  startDate       DateTime?
+  endDate         DateTime?
+  landingPageUrl  String?
+  ctaLabel        String?
+  ctaUrl          String?
+  featured        Boolean        @default(false)
+}
+
+model CreatorFollow {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  userId          String
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, creatorProfileId])
+}
+
+model CreatorBookmark {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  userId          String
+  creatorProfileId String
+  creator         CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, creatorProfileId])
+}
+
 // ============ INVESTMENT SIGNALS ============
 model Signal {
   id              String   @id @default(cuid())

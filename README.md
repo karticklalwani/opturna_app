@@ -49,6 +49,19 @@ A premium social network and intelligence platform for ambitious people focused 
 - In-app article detail view (no external browser needed)
 - Search by title, user, hashtags
 
+### Creators / Partners Hub
+- Premium discovery section for creators, founders, investors, traders, companies, prop firms, and brands
+- Verified profiles with badges (verified, partner official)
+- Category filters: business, finance, trading, startups, AI, creator, education, mindset, productivity, investing
+- Featured creators carousel + official partners section
+- Creator profile pages with tabs: Posts, Videos, Entrevistas, Directos, Proyectos, Colabs
+- Social links (web, YouTube, podcast, Instagram, X, LinkedIn, Telegram)
+- Embedded interviews and videos
+- Upcoming lives / scheduled events
+- Collaboration showcase with CTA buttons
+- Seed demo data: 5 profiles (Alejandro Martín, Sofía Vega, Carlos Rueda, NexoFin, Apex Prop Trading)
+- Accessible from Discover tab → Creators Hub banner
+
 ### Research (Stock Market)
 - Yahoo Finance stock/market data integration
 - Quote engine with price, change %, market cap, P/E ratio
@@ -77,6 +90,15 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | /api/creators | List creators (filters: category, type, featured, partner, search) |
+| GET | /api/creators/categories | Creator categories list |
+| GET | /api/creators/interviews | Featured interviews |
+| GET | /api/creators/lives | Upcoming and live sessions |
+| GET | /api/creators/:slug | Full creator profile with all content |
+| GET | /api/creators/:slug/posts | Creator posts |
+| GET | /api/creators/:slug/videos | Creator videos |
+| GET | /api/creators/:slug/interviews | Creator interviews |
+| POST | /api/creators/seed | Seed demo creator data |
 | GET | /api/me | Current user profile |
 | PATCH | /api/me | Update profile |
 | GET | /api/users/:id | User profile |
