@@ -49,6 +49,18 @@ A premium social network and intelligence platform for ambitious people focused 
 - In-app article detail view (no external browser needed)
 - Search by title, user, hashtags
 
+### Media / Reels / Stories
+- TikTok-style vertical video feed with full-screen paging (WebView-based player)
+- Stories bar (24h TTL, image/video, Instagram-style gradient ring avatars)
+- Media Discover screen: trending carousel, 3-col reels grid, recent list
+- Upload screen with expo-image-picker (video & image support, progress bar)
+- Real engagement: likes, comments, saves, views — all persisted in SQLite
+- Proprietary algorithm: score = views + likes×3 + comments×5 + saves×4 + watchTime×2
+- 7 demo posts with real video URLs (Google CDN samples)
+- 4 active stories (24h auto-expiry)
+- Accessible from Discover tab → Media & Reels banner
+- File storage: backend/uploads/ served statically via GET /uploads/*
+
 ### Creators / Partners Hub
 - Premium discovery section for creators, founders, investors, traders, companies, prop firms, and brands
 - Verified profiles with badges (verified, partner official)

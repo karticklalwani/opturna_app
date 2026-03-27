@@ -727,6 +727,122 @@ model CreatorBookmark {
   @@unique([userId, creatorProfileId])
 }
 
+// ============ MEDIA / REELS / STORIES ============
+
+model MediaPost {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  userId         String
+  type           String   @default("video") // video | image | reel
+  url            String
+  thumbnailUrl   String?
+  caption        String?
+  duration       Int?     // seconds
+  width          Int?     @default(1080)
+  height         Int?     @default(1920)
+  fileSize       Int?
+  mimeType       String?
+  views          Int      @default(0)
+  likesCount     Int      @default(0)
+  commentsCount  Int      @default(0)
+  sharesCount    Int      @default(0)
+  savesCount     Int      @default(0)
+  category       String?
+  tags           String?  // JSON array
+  isPublic       Boolean  @default(true)
+  score          Float    @default(0)
+  authorName     String?
+  authorAvatar   String?
+  authorUsername String?
+
+  likes          MediaLike[]
+  comments       MediaComment[]
+  saves          MediaSave[]
+  viewLogs       MediaView[]
+  algorithm      MediaAlgorithmScore?
+}
+
+model MediaLike {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  userId    String
+  postId    String
+  post      MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model MediaComment {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  userId       String
+  postId       String
+  post         MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  content      String
+  authorName   String?
+  authorAvatar String?
+}
+
+model MediaSave {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  userId    String
+  postId    String
+  post      MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model MediaView {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  userId    String?
+  postId    String
+  post      MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  watchTime Int?
+  completed Boolean   @default(false)
+}
+
+model Story {
+  id             String      @id @default(cuid())
+  createdAt      DateTime    @default(now())
+  expiresAt      DateTime
+  userId         String
+  url            String
+  type           String      @default("image") // image | video
+  caption        String?
+  authorName     String?
+  authorAvatar   String?
+  authorUsername String?
+  views          Int         @default(0)
+
+  storyViews     StoryView[]
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+}
+
+model MediaAlgorithmScore {
+  id              String    @id @default(cuid())
+  postId          String    @unique
+  post            MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  score           Float     @default(0)
+  engagementScore Float     @default(0)
+  watchScore      Float     @default(0)
+  likeScore       Float     @default(0)
+  commentScore    Float     @default(0)
+  saveScore       Float     @default(0)
+  updatedAt       DateTime  @updatedAt
+}
+
 // ============ INVESTMENT SIGNALS ============
 model Signal {
   id              String   @id @default(cuid())

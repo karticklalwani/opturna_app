@@ -17,6 +17,7 @@ import advancedFinanceRouter from "./routes/advanced-finance";
 import journal from "./routes/journal";
 import lifeGoals from "./routes/life-goals";
 import { creatorsRouter } from "./routes/creators";
+import { mediaRouter } from "./routes/media";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -75,6 +76,26 @@ app.use("*", cors({
   allowHeaders: ["Content-Type", "Authorization"],
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));
+
+// Serve uploaded media files
+app.get("/uploads/*", async (c) => {
+  const filePath = c.req.path.slice(9); // Remove "/uploads/"
+  const fullPath = `/home/user/workspace/backend/uploads/${filePath}`;
+  try {
+    const file = Bun.file(fullPath);
+    const exists = await file.exists();
+    if (!exists) return c.json({ error: { message: "File not found" } }, 404);
+    const ab = await file.arrayBuffer();
+    return new Response(ab, {
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+        "Cache-Control": "public, max-age=31536000",
+      },
+    });
+  } catch {
+    return c.json({ error: { message: "File not found" } }, 404);
+  }
+});
 
 // Rate limiting middleware
 app.use("*", async (c, next) => {
@@ -1112,6 +1133,9 @@ app.route("/api/life-goals", lifeGoals);
 
 // ===== CREATORS / PARTNERS HUB ROUTES =====
 app.route("/api/creators", creatorsRouter);
+
+// ===== MEDIA / REELS / STORIES ROUTES =====
+app.route("/api/media", mediaRouter);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);
