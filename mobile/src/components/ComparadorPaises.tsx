@@ -35,10 +35,16 @@ interface CountriesResponse {
   countries: CountryInfo[];
 }
 
+interface InflationMetric {
+  current: number;
+  previous: number;
+  trend: string;
+}
+
 interface InflationRealTimeData {
-  spain: number;
-  eurozone: number;
-  world: number;
+  spain: InflationMetric;
+  eurozone: InflationMetric;
+  world: InflationMetric;
   lastUpdated: string;
 }
 
@@ -119,7 +125,7 @@ export default function ComparadorPaises() {
     return list.sort((a, b) => b.rate - a.rate);
   }, [countries, selectedRegion, searchQuery]);
 
-  const spainRate = realTimeData?.spain ?? 0;
+  const spainRate = realTimeData?.spain?.current ?? 0;
 
   if (loadingCountries) {
     return (
@@ -181,13 +187,13 @@ export default function ComparadorPaises() {
               </Text>
               <Text
                 style={{
-                  color: getRateColor(realTimeData?.eurozone ?? 0),
+                  color: getRateColor(realTimeData?.eurozone?.current ?? 0),
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {(realTimeData?.eurozone ?? 0).toFixed(1)}%
+                {(realTimeData?.eurozone?.current ?? 0).toFixed(1)}%
               </Text>
             </View>
 
@@ -207,13 +213,13 @@ export default function ComparadorPaises() {
               </Text>
               <Text
                 style={{
-                  color: getRateColor(realTimeData?.world ?? 0),
+                  color: getRateColor(realTimeData?.world?.current ?? 0),
                   fontSize: 20,
                   fontWeight: "800",
                   letterSpacing: -0.5,
                 }}
               >
-                {(realTimeData?.world ?? 0).toFixed(1)}%
+                {(realTimeData?.world?.current ?? 0).toFixed(1)}%
               </Text>
             </View>
 
