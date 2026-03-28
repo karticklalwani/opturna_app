@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "opturna-web",
+  "buildCommand": "cd mobile && bun install && bunx expo export --platform web",
+  "outputDirectory": "mobile/dist",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
+  "env": {
+    "EXPO_PUBLIC_BACKEND_URL": "@expo_public_backend_url"
+  }
+}
