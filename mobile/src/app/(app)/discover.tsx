@@ -1304,237 +1304,179 @@ export default function DiscoverScreen() {
         ) : (
           /* ─────────────────── EXPLORE VIEW ──────────────────── */
           <>
-            {/* ── Creators Hub Banner ── */}
+            {/* ── Quick Access Cards ── */}
             <Animated.View
               entering={FadeInDown.duration(300).delay(0).springify()}
               style={{ paddingHorizontal: 20, marginTop: 12, marginBottom: 20 }}
             >
+              {/* Creators Hub */}
               <Pressable
                 onPress={() => router.push("/creators" as any)}
                 testID="creators-hub-banner"
                 style={{
-                  borderRadius: 18,
-                  overflow: "hidden",
+                  backgroundColor: colors.card,
+                  borderRadius: 20,
+                  padding: 18,
+                  marginBottom: 12,
                   borderWidth: 1,
-                  borderColor: "rgba(74,222,128,0.25)",
+                  borderColor: colors.border,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
                 }}
               >
-                <LinearGradient
-                  colors={["rgba(74,222,128,0.12)", "rgba(74,222,128,0.04)", "#0F0F0F"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ padding: 18 }}
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: `${colors.accent}15`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: "rgba(74,222,128,0.15)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 1,
-                        borderColor: "rgba(74,222,128,0.3)",
-                      }}
-                    >
-                      <Users size={20} color="#4ADE80" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          color: "#F5F5F5",
-                          fontSize: 16,
-                          fontWeight: "800",
-                          letterSpacing: -0.4,
-                        }}
-                      >
-                        Creators Hub
-                      </Text>
-                      <Text style={{ color: "#737373", fontSize: 12, marginTop: 2 }}>
-                        Líderes, Fundadores y Partners
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        backgroundColor: "#4ADE80",
-                        paddingHorizontal: 12,
-                        paddingVertical: 7,
-                        borderRadius: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#000",
-                          fontSize: 12,
-                          fontWeight: "700",
-                        }}
-                      >
-                        Explorar
-                      </Text>
-                      <ChevronRight size={12} color="#000" strokeWidth={2.5} />
-                    </View>
-                  </View>
-                </LinearGradient>
+                  <Star size={22} color={colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: "800",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    Creators Hub
+                  </Text>
+                  <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
+                    Lideres, Fundadores y Partners
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: colors.accent,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text style={{ color: "#000", fontSize: 12, fontWeight: "700" }}>
+                    Abrir
+                  </Text>
+                </View>
               </Pressable>
-            </Animated.View>
 
-            {/* ── Media & Reels Banner ── */}
-            <Animated.View
-              entering={FadeInDown.duration(300).delay(60).springify()}
-              style={{ paddingHorizontal: 20, marginBottom: 20 }}
-            >
+              {/* Contenido & Videos */}
               <Pressable
                 onPress={() => router.push("/media-discover" as any)}
                 testID="media-reels-banner"
                 style={{
-                  borderRadius: 18,
-                  overflow: "hidden",
+                  backgroundColor: colors.card,
+                  borderRadius: 20,
+                  padding: 18,
+                  marginBottom: 12,
                   borderWidth: 1,
-                  borderColor: "rgba(74,222,128,0.18)",
+                  borderColor: colors.border,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
                 }}
               >
-                <LinearGradient
-                  colors={["rgba(74,222,128,0.08)", "rgba(59,130,246,0.06)", "#0F0F0F"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ padding: 18 }}
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: "rgba(59,130,246,0.12)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: "rgba(74,222,128,0.12)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 1,
-                        borderColor: "rgba(74,222,128,0.25)",
-                      }}
-                    >
-                      <Zap size={20} color="#4ADE80" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          color: "#F5F5F5",
-                          fontSize: 16,
-                          fontWeight: "800",
-                          letterSpacing: -0.4,
-                        }}
-                      >
-                        Media & Reels
-                      </Text>
-                      <Text style={{ color: "#737373", fontSize: 12, marginTop: 2 }}>
-                        Videos · Stories · Tendencias
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        backgroundColor: "#4ADE80",
-                        paddingHorizontal: 12,
-                        paddingVertical: 7,
-                        borderRadius: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#000",
-                          fontSize: 12,
-                          fontWeight: "700",
-                        }}
-                      >
-                        Ver
-                      </Text>
-                      <ChevronRight size={12} color="#000" strokeWidth={2.5} />
-                    </View>
-                  </View>
-                </LinearGradient>
+                  <Zap size={22} color="#3B82F6" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: "800",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    Contenido
+                  </Text>
+                  <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
+                    Videos, Stories y Tendencias
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: "#3B82F6",
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+                    Abrir
+                  </Text>
+                </View>
               </Pressable>
-            </Animated.View>
 
-            {/* ── Comunidades Banner ── */}
-            <Animated.View
-              entering={FadeInDown.duration(300).delay(90).springify()}
-              style={{ paddingHorizontal: 20, marginBottom: 20 }}
-            >
+              {/* Comunidades */}
               <Pressable
                 onPress={() => router.push("/communities" as any)}
                 testID="communities-banner"
                 style={{
-                  borderRadius: 18,
-                  overflow: "hidden",
+                  backgroundColor: colors.card,
+                  borderRadius: 20,
+                  padding: 18,
                   borderWidth: 1,
-                  borderColor: "rgba(167,139,250,0.18)",
+                  borderColor: colors.border,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
                 }}
               >
-                <LinearGradient
-                  colors={["rgba(167,139,250,0.08)", "rgba(74,222,128,0.06)", colors.card]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ padding: 18 }}
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: "rgba(167,139,250,0.12)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: "rgba(167,139,250,0.12)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 1,
-                        borderColor: "rgba(167,139,250,0.25)",
-                      }}
-                    >
-                      <Users size={20} color="#A78BFA" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          color: colors.text,
-                          fontSize: 16,
-                          fontWeight: "800",
-                          letterSpacing: -0.4,
-                        }}
-                      >
-                        Comunidades
-                      </Text>
-                      <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
-                        Grupos · Chat · Networking
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        backgroundColor: "#A78BFA",
-                        paddingHorizontal: 12,
-                        paddingVertical: 7,
-                        borderRadius: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#000",
-                          fontSize: 12,
-                          fontWeight: "700",
-                        }}
-                      >
-                        Ver
-                      </Text>
-                      <ChevronRight size={12} color="#000" strokeWidth={2.5} />
-                    </View>
-                  </View>
-                </LinearGradient>
+                  <Users size={22} color="#A78BFA" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: "800",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    Comunidades
+                  </Text>
+                  <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
+                    Grupos, Chat y Networking
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: "#A78BFA",
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+                    Abrir
+                  </Text>
+                </View>
               </Pressable>
             </Animated.View>
 

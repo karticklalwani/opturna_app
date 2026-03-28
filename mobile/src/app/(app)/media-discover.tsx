@@ -24,6 +24,7 @@ import {
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/lib/theme";
 import type { MediaPost, Story } from "@/types/media";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -39,6 +40,7 @@ function formatCount(n: number): string {
 // ─── Stories Bar ──────────────────────────────────────────────────────────────
 function StoriesBar({ stories }: { stories: Story[] }) {
   const router = useRouter();
+  const colors = useTheme((s) => s.colors);
 
   return (
     <ScrollView
@@ -58,22 +60,22 @@ function StoriesBar({ stories }: { stories: Story[] }) {
             width: 64,
             height: 64,
             borderRadius: 32,
-            backgroundColor: "#111111",
+            backgroundColor: colors.bg3,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Plus size={24} color="#4ADE80" strokeWidth={2} />
+          <Plus size={24} color={colors.accent} strokeWidth={2} />
         </View>
-        <Text style={{ color: "#A3A3A3", fontSize: 11 }}>Tu historia</Text>
+        <Text style={{ color: colors.text2, fontSize: 11 }}>Tu historia</Text>
       </Pressable>
 
       {stories.map((story) => (
         <Pressable key={story.id} style={{ alignItems: "center", gap: 6 }}>
           <LinearGradient
-            colors={["#4ADE80", "#3B82F6", "#A78BFA"]}
+            colors={[colors.accent, "#3B82F6", "#A78BFA"]}
             style={{
               width: 68,
               height: 68,
@@ -92,8 +94,8 @@ function StoriesBar({ stories }: { stories: Story[] }) {
                 borderRadius: 31,
                 overflow: "hidden",
                 borderWidth: 2,
-                borderColor: "#080808",
-                backgroundColor: "#1A1A1A",
+                borderColor: colors.bg,
+                backgroundColor: colors.bg4,
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -105,13 +107,13 @@ function StoriesBar({ stories }: { stories: Story[] }) {
                   contentFit="cover"
                 />
               ) : (
-                <Text style={{ color: "#F5F5F5", fontSize: 20, fontWeight: "700" }}>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
                   {(story.authorName || "?")[0]}
                 </Text>
               )}
             </View>
           </LinearGradient>
-          <Text style={{ color: "#A3A3A3", fontSize: 11 }} numberOfLines={1}>
+          <Text style={{ color: colors.text2, fontSize: 11 }} numberOfLines={1}>
             {story.authorName?.split(" ")[0] ?? "Usuario"}
           </Text>
         </Pressable>
@@ -130,6 +132,7 @@ function GridVideoItem({
   index: number;
   onPress: () => void;
 }) {
+  const colors = useTheme((s) => s.colors);
   const isVideo = item.type === "video" || item.type === "reel";
   return (
     <Animated.View entering={FadeInDown.delay(index * 40).springify()}>
@@ -140,7 +143,7 @@ function GridVideoItem({
           height: THUMB_SIZE * 1.4,
           borderRadius: 10,
           overflow: "hidden",
-          backgroundColor: "#1A1A1A",
+          backgroundColor: colors.bg4,
         }}
         testID="grid-video-item"
       >
@@ -155,7 +158,7 @@ function GridVideoItem({
         />
         {isVideo ? (
           <View style={{ position: "absolute", top: 6, left: 6 }}>
-            <Play size={12} color="#F5F5F5" fill="#F5F5F5" strokeWidth={2} />
+            <Play size={12} color={colors.text} fill={colors.text} strokeWidth={2} />
           </View>
         ) : null}
         <View
@@ -168,8 +171,8 @@ function GridVideoItem({
             gap: 3,
           }}
         >
-          <Heart size={10} color="#F5F5F5" strokeWidth={2} />
-          <Text style={{ color: "#F5F5F5", fontSize: 10, fontWeight: "600" }}>
+          <Heart size={10} color={colors.text} strokeWidth={2} />
+          <Text style={{ color: colors.text, fontSize: 10, fontWeight: "600" }}>
             {formatCount(item.likesCount)}
           </Text>
         </View>
@@ -180,6 +183,7 @@ function GridVideoItem({
 
 // ─── Trending Card ────────────────────────────────────────────────────────────
 function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void }) {
+  const colors = useTheme((s) => s.colors);
   const isVideo = item.type === "video" || item.type === "reel";
   return (
     <Pressable
@@ -189,7 +193,7 @@ function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void 
         marginRight: 12,
         borderRadius: 14,
         overflow: "hidden",
-        backgroundColor: "#111111",
+        backgroundColor: colors.bg3,
       }}
       testID="trending-card"
     >
@@ -217,7 +221,7 @@ function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void 
               justifyContent: "center",
             }}
           >
-            <Play size={12} color="#F5F5F5" fill="#F5F5F5" strokeWidth={2} />
+            <Play size={12} color={colors.text} fill={colors.text} strokeWidth={2} />
           </View>
         ) : null}
         <View style={{ position: "absolute", bottom: 8, left: 8, right: 8 }}>
@@ -228,7 +232,7 @@ function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void 
                 height: 20,
                 borderRadius: 10,
                 overflow: "hidden",
-                backgroundColor: "#2A2A2A",
+                backgroundColor: colors.bg4,
               }}
             >
               {item.authorAvatar ? (
@@ -240,7 +244,7 @@ function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void 
               ) : null}
             </View>
             <Text
-              style={{ color: "#F5F5F5", fontSize: 11, fontWeight: "600" }}
+              style={{ color: colors.text, fontSize: 11, fontWeight: "600" }}
               numberOfLines={1}
             >
               {item.authorName ?? ""}
@@ -250,19 +254,19 @@ function TrendingCard({ item, onPress }: { item: MediaPost; onPress: () => void 
       </View>
       <View style={{ padding: 8 }}>
         <Text
-          style={{ color: "#F5F5F5", fontSize: 12, fontWeight: "600", lineHeight: 16 }}
+          style={{ color: colors.text, fontSize: 12, fontWeight: "600", lineHeight: 16 }}
           numberOfLines={2}
         >
           {item.caption ?? ""}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Eye size={10} color="#737373" strokeWidth={2} />
-            <Text style={{ color: "#737373", fontSize: 10 }}>{formatCount(item.views)}</Text>
+            <Eye size={10} color={colors.text3} strokeWidth={2} />
+            <Text style={{ color: colors.text3, fontSize: 10 }}>{formatCount(item.views)}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Heart size={10} color="#737373" strokeWidth={2} />
-            <Text style={{ color: "#737373", fontSize: 10 }}>{formatCount(item.likesCount)}</Text>
+            <Heart size={10} color={colors.text3} strokeWidth={2} />
+            <Text style={{ color: colors.text3, fontSize: 10 }}>{formatCount(item.likesCount)}</Text>
           </View>
         </View>
       </View>
@@ -282,6 +286,7 @@ function SectionHeader({
   iconColor: string;
   onSeeAll?: () => void;
 }) {
+  const colors = useTheme((s) => s.colors);
   return (
     <View
       style={{
@@ -306,7 +311,7 @@ function SectionHeader({
         </View>
         <Text
           style={{
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 17,
             fontWeight: "800",
             letterSpacing: -0.5,
@@ -321,8 +326,8 @@ function SectionHeader({
           style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
           testID="see-all-button"
         >
-          <Text style={{ color: "#4ADE80", fontSize: 13, fontWeight: "600" }}>Ver todos</Text>
-          <ChevronRight size={14} color="#4ADE80" strokeWidth={2} />
+          <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>Ver todos</Text>
+          <ChevronRight size={14} color={colors.accent} strokeWidth={2} />
         </Pressable>
       ) : null}
     </View>
@@ -332,20 +337,23 @@ function SectionHeader({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function MediaDiscoverScreen() {
   const router = useRouter();
+  const colors = useTheme((s) => s.colors);
 
   const { data: storiesData } = useQuery({
     queryKey: ["media-stories"],
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/api/media/stories`);
+      if (!res.ok) throw new Error("Failed to fetch stories");
       const json = await res.json();
       return json.data as Story[];
     },
   });
 
-  const { data: discoverData, isLoading } = useQuery({
+  const { data: discoverData, isLoading, isError, refetch } = useQuery({
     queryKey: ["media-discover"],
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/api/media/discover`);
+      if (!res.ok) throw new Error("Failed to fetch discover");
       const json = await res.json();
       return json.data as { trending: MediaPost[]; recent: MediaPost[]; images: MediaPost[] };
     },
@@ -355,6 +363,7 @@ export default function MediaDiscoverScreen() {
     queryKey: ["media-reels-preview"],
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/api/media/reels?limit=9`);
+      if (!res.ok) throw new Error("Failed to fetch reels");
       const json = await res.json();
       return json.data as { posts: MediaPost[] };
     },
@@ -370,14 +379,14 @@ export default function MediaDiscoverScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="media-discover-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="media-discover-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 26,
                   fontWeight: "900",
                   letterSpacing: -1,
@@ -385,7 +394,7 @@ export default function MediaDiscoverScreen() {
               >
                 Media
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
                 Videos · Reels · Stories
               </Text>
             </View>
@@ -395,13 +404,13 @@ export default function MediaDiscoverScreen() {
                 width: 42,
                 height: 42,
                 borderRadius: 21,
-                backgroundColor: "#4ADE80",
+                backgroundColor: colors.accent,
                 alignItems: "center",
                 justifyContent: "center",
               }}
               testID="upload-button"
             >
-              <Plus size={20} color="#000" strokeWidth={2.5} />
+              <Plus size={20} color={colors.bg} strokeWidth={2.5} />
             </Pressable>
           </View>
         </View>
@@ -418,10 +427,10 @@ export default function MediaDiscoverScreen() {
                     width: 8,
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor: "#4ADE80",
+                    backgroundColor: colors.accent,
                   }}
                 />
-                <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "700" }}>
+                <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>
                   Historias activas
                 </Text>
               </View>
@@ -444,7 +453,7 @@ export default function MediaDiscoverScreen() {
                 contentFit="cover"
               />
             ) : (
-              <LinearGradient colors={["#0F0F0F", "#1A1A1A"]} style={{ flex: 1 }} />
+              <LinearGradient colors={[colors.bg2, colors.bg4]} style={{ flex: 1 }} />
             )}
             <LinearGradient
               colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.8)"]}
@@ -466,19 +475,19 @@ export default function MediaDiscoverScreen() {
                   width: 60,
                   height: 60,
                   borderRadius: 30,
-                  backgroundColor: "rgba(74,222,128,0.2)",
+                  backgroundColor: colors.accent + "33",
                   borderWidth: 2,
-                  borderColor: "#4ADE80",
+                  borderColor: colors.accent,
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 8,
                 }}
               >
-                <Play size={28} color="#4ADE80" fill="#4ADE80" strokeWidth={2} />
+                <Play size={28} color={colors.accent} fill={colors.accent} strokeWidth={2} />
               </View>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 18,
                   fontWeight: "900",
                   letterSpacing: -0.5,
@@ -486,7 +495,7 @@ export default function MediaDiscoverScreen() {
               >
                 Abrir Reels
               </Text>
-              <Text style={{ color: "#A3A3A3", fontSize: 13, marginTop: 4 }}>
+              <Text style={{ color: colors.text2, fontSize: 13, marginTop: 4 }}>
                 Feed vertical · {reels.length} videos
               </Text>
             </View>
@@ -516,7 +525,7 @@ export default function MediaDiscoverScreen() {
             <SectionHeader
               title="Reels"
               icon={Zap}
-              iconColor="#4ADE80"
+              iconColor={colors.accent}
               onSeeAll={() => openReels(0)}
             />
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
@@ -543,16 +552,16 @@ export default function MediaDiscoverScreen() {
                   style={{
                     flexDirection: "row",
                     gap: 12,
-                    backgroundColor: "#0F0F0F",
+                    backgroundColor: colors.bg2,
                     borderRadius: 14,
                     overflow: "hidden",
                     marginBottom: 10,
                     borderWidth: 1,
-                    borderColor: "#1A1A1A",
+                    borderColor: colors.bg4,
                   }}
                   testID="recent-item"
                 >
-                  <View style={{ width: 90, height: 90, backgroundColor: "#1A1A1A" }}>
+                  <View style={{ width: 90, height: 90, backgroundColor: colors.bg4 }}>
                     <Image
                       source={{ uri: item.thumbnailUrl ?? item.url }}
                       style={{ width: 90, height: 90 }}
@@ -570,14 +579,14 @@ export default function MediaDiscoverScreen() {
                           justifyContent: "center",
                         }}
                       >
-                        <Play size={16} color="#F5F5F5" fill="#F5F5F5" strokeWidth={2} />
+                        <Play size={16} color={colors.text} fill={colors.text} strokeWidth={2} />
                       </View>
                     ) : null}
                   </View>
                   <View style={{ flex: 1, padding: 10, justifyContent: "center" }}>
                     <Text
                       style={{
-                        color: "#F5F5F5",
+                        color: colors.text,
                         fontSize: 13,
                         fontWeight: "700",
                         marginBottom: 4,
@@ -593,7 +602,7 @@ export default function MediaDiscoverScreen() {
                           height: 18,
                           borderRadius: 9,
                           overflow: "hidden",
-                          backgroundColor: "#2A2A2A",
+                          backgroundColor: colors.bg4,
                         }}
                       >
                         {item.authorAvatar ? (
@@ -604,7 +613,7 @@ export default function MediaDiscoverScreen() {
                           />
                         ) : null}
                       </View>
-                      <Text style={{ color: "#737373", fontSize: 11 }}>{item.authorName ?? ""}</Text>
+                      <Text style={{ color: colors.text3, fontSize: 11 }}>{item.authorName ?? ""}</Text>
                     </View>
                     <View
                       style={{
@@ -615,14 +624,14 @@ export default function MediaDiscoverScreen() {
                       }}
                     >
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                        <Heart size={11} color="#A3A3A3" strokeWidth={2} />
-                        <Text style={{ color: "#737373", fontSize: 11 }}>
+                        <Heart size={11} color={colors.text2} strokeWidth={2} />
+                        <Text style={{ color: colors.text3, fontSize: 11 }}>
                           {formatCount(item.likesCount)}
                         </Text>
                       </View>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                        <Eye size={11} color="#A3A3A3" strokeWidth={2} />
-                        <Text style={{ color: "#737373", fontSize: 11 }}>
+                        <Eye size={11} color={colors.text2} strokeWidth={2} />
+                        <Text style={{ color: colors.text3, fontSize: 11 }}>
                           {formatCount(item.views)}
                         </Text>
                       </View>
@@ -634,19 +643,38 @@ export default function MediaDiscoverScreen() {
           </View>
         ) : null}
 
+        {/* Error state */}
+        {isError ? (
+          <View style={{ alignItems: "center", paddingVertical: 40, gap: 12 }} testID="error-view">
+            <Text style={{ color: colors.text3, fontSize: 15 }}>Error al cargar contenido</Text>
+            <Pressable
+              onPress={() => refetch()}
+              style={{
+                backgroundColor: colors.accent,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 10,
+              }}
+              testID="retry-button"
+            >
+              <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "700" }}>Reintentar</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {/* Upload prompt when empty */}
-        {!isLoading && trending.length === 0 && reels.length === 0 ? (
+        {!isLoading && !isError && trending.length === 0 && reels.length === 0 ? (
           <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
             <Pressable
               onPress={() => router.push("/media-upload" as any)}
               style={{
-                backgroundColor: "#111111",
+                backgroundColor: colors.bg3,
                 borderRadius: 18,
                 padding: 32,
                 alignItems: "center",
                 gap: 12,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
               testID="upload-prompt"
             >
@@ -655,37 +683,37 @@ export default function MediaDiscoverScreen() {
                   width: 56,
                   height: 56,
                   borderRadius: 28,
-                  backgroundColor: "rgba(74,222,128,0.1)",
+                  backgroundColor: colors.accent + "1A",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: "rgba(74,222,128,0.3)",
+                  borderColor: colors.accent + "4D",
                 }}
               >
-                <Video size={24} color="#4ADE80" strokeWidth={2} />
+                <Video size={24} color={colors.accent} strokeWidth={2} />
               </View>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 16,
                   fontWeight: "700",
                   textAlign: "center",
                 }}
               >
-                Sé el primero en publicar
+                No hay contenido todavia
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, textAlign: "center" }}>
-                Comparte un vídeo o imagen con la comunidad Opturna
+              <Text style={{ color: colors.text3, fontSize: 13, textAlign: "center" }}>
+                Comparte un video o imagen con la comunidad
               </Text>
               <View
                 style={{
-                  backgroundColor: "#4ADE80",
+                  backgroundColor: colors.accent,
                   paddingHorizontal: 20,
                   paddingVertical: 10,
                   borderRadius: 12,
                 }}
               >
-                <Text style={{ color: "#000", fontSize: 14, fontWeight: "700" }}>Subir ahora</Text>
+                <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "700" }}>Subir ahora</Text>
               </View>
             </Pressable>
           </View>
@@ -693,7 +721,7 @@ export default function MediaDiscoverScreen() {
 
         {isLoading ? (
           <View style={{ alignItems: "center", paddingVertical: 40 }} testID="loading-indicator">
-            <ActivityIndicator color="#4ADE80" />
+            <ActivityIndicator color={colors.accent} />
           </View>
         ) : null}
       </ScrollView>

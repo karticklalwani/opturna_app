@@ -525,10 +525,11 @@ export default function ReelsFeedScreen() {
   const [activeIndex, setActiveIndex] = useState<number>(parseInt(startIndex || "0"));
   const flatListRef = useRef<FlatList>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["media-reels-feed"],
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/api/media/reels?limit=20`);
+      if (!res.ok) throw new Error("Failed to fetch reels");
       const json = await res.json();
       return json.data as { posts: MediaPost[]; total: number };
     },
@@ -551,6 +552,29 @@ export default function ReelsFeedScreen() {
         testID="loading-indicator"
       >
         <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View
+        style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", gap: 12 }}
+        testID="error-view"
+      >
+        <Text style={{ color: colors.text3, fontSize: 15 }}>Error al cargar contenido</Text>
+        <Pressable
+          onPress={() => refetch()}
+          style={{
+            backgroundColor: colors.accent,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 10,
+          }}
+          testID="retry-button"
+        >
+          <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "700" }}>Reintentar</Text>
+        </Pressable>
       </View>
     );
   }
@@ -628,7 +652,7 @@ export default function ReelsFeedScreen() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: colors.text4, fontSize: 16 }}>No hay contenido disponible</Text>
+            <Text style={{ color: colors.text4, fontSize: 16 }}>No hay contenido todavia</Text>
           </View>
         }
         testID="reels-flatlist"

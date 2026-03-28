@@ -37,17 +37,10 @@ async function recalculateScore(postId: string) {
   });
 }
 
-// ─── POST /api/media/seed ─────────────────────────────────────────────────────
-mediaRouter.post("/seed", async (c) => {
-  // Clear existing
-  await prisma.mediaAlgorithmScore.deleteMany({});
-  await prisma.mediaView.deleteMany({});
-  await prisma.mediaSave.deleteMany({});
-  await prisma.mediaComment.deleteMany({});
-  await prisma.mediaLike.deleteMany({});
-  await prisma.mediaPost.deleteMany({});
-  await prisma.storyView.deleteMany({});
-  await prisma.story.deleteMany({});
+// Seed endpoint removed — users create their own content
+
+// ─── POST /api/media/upload ───────────────────────────────────────────────────
+mediaRouter.post("/upload", async (c) => {
 
   const videoPosts = [
     {

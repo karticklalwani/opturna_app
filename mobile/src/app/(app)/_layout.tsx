@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Compass, Brain, ChartBar, User } from "lucide-react-native";
+import { Home, Compass, Video, ChartBar, User } from "lucide-react-native";
 import { View, Text, Platform } from "react-native";
 import { useTheme } from "@/lib/theme";
 
@@ -10,7 +10,7 @@ type TabIconProps = {
 };
 
 function TabIcon({ Icon, focused, label }: TabIconProps) {
-  const { colors, mode } = useTheme();
+  const { colors } = useTheme();
   const activeColor = colors.accent;
   const inactiveColor = colors.text3;
 
@@ -19,17 +19,17 @@ function TabIcon({ Icon, focused, label }: TabIconProps) {
       style={{
         alignItems: "center",
         justifyContent: "center",
-        paddingTop: 8,
-        gap: 4,
-        minWidth: 56,
+        paddingTop: 6,
+        gap: 3,
+        minWidth: 64,
       }}
     >
       <View
         style={{
-          width: 48,
-          height: 30,
-          borderRadius: 15,
-          backgroundColor: focused ? `${activeColor}18` : "transparent",
+          width: 52,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: focused ? `${activeColor}20` : "transparent",
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -37,7 +37,7 @@ function TabIcon({ Icon, focused, label }: TabIconProps) {
         <Icon
           size={22}
           color={focused ? activeColor : inactiveColor}
-          strokeWidth={focused ? 2.4 : 1.8}
+          strokeWidth={focused ? 2.4 : 1.7}
         />
       </View>
       <Text
@@ -45,7 +45,7 @@ function TabIcon({ Icon, focused, label }: TabIconProps) {
           fontSize: 10,
           fontWeight: focused ? "700" : "500",
           color: focused ? activeColor : inactiveColor,
-          letterSpacing: 0.2,
+          letterSpacing: 0.1,
         }}
       >
         {label}
@@ -96,18 +96,18 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="finance"
+        name="go-live"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={ChartBar} focused={focused} label="Finanzas" />
+            <TabIcon Icon={Video} focused={focused} label="Directos" />
           ),
         }}
       />
       <Tabs.Screen
-        name="ai-assistant"
+        name="finance"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={Brain} focused={focused} label="IA" />
+            <TabIcon Icon={ChartBar} focused={focused} label="Finanzas" />
           ),
         }}
       />
@@ -122,6 +122,7 @@ export default function AppLayout() {
 
       {/* Hidden screens — still reachable via router.push() */}
       <Tabs.Screen name="live" options={{ href: null }} />
+      <Tabs.Screen name="ai-assistant" options={{ href: null }} />
       <Tabs.Screen name="goals" options={{ href: null }} />
       <Tabs.Screen name="research" options={{ href: null }} />
       <Tabs.Screen name="post-detail" options={{ href: null }} />
@@ -130,7 +131,6 @@ export default function AppLayout() {
       <Tabs.Screen name="sprints" options={{ href: null }} />
       <Tabs.Screen name="academy" options={{ href: null }} />
       <Tabs.Screen name="dashboard" options={{ href: null }} />
-      <Tabs.Screen name="go-live" options={{ href: null }} />
       <Tabs.Screen name="tasks" options={{ href: null }} />
       <Tabs.Screen name="habits" options={{ href: null }} />
       <Tabs.Screen name="projects" options={{ href: null }} />
@@ -138,7 +138,7 @@ export default function AppLayout() {
       <Tabs.Screen name="journal" options={{ href: null }} />
       <Tabs.Screen name="life-goals" options={{ href: null }} />
       <Tabs.Screen name="article-detail" options={{ href: null }} />
-      <Tabs.Screen name="creators" options={{ href: null }} />
+      <Tabs.Screen name="creators/index" options={{ href: null }} />
       <Tabs.Screen name="creator-profile" options={{ href: null }} />
       <Tabs.Screen name="reels-feed" options={{ href: null }} />
       <Tabs.Screen name="media-discover" options={{ href: null }} />

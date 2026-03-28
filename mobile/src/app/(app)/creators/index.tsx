@@ -753,7 +753,7 @@ export default function CreatorsHubScreen() {
     },
   });
 
-  const { data: creatorsData, isLoading: loadingCreators } = useQuery({
+  const { data: creatorsData, isLoading: loadingCreators, isError: creatorsError, refetch: refetchCreators } = useQuery({
     queryKey: ["creators", selectedCategory, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -762,6 +762,7 @@ export default function CreatorsHubScreen() {
       const res = await fetch(
         `${BASE_URL}/api/creators?${params.toString()}`
       );
+      if (!res.ok) throw new Error("Failed to fetch creators");
       const json = await res.json();
       return json.data as { creators: CreatorProfile[]; total: number };
     },
@@ -899,6 +900,24 @@ export default function CreatorsHubScreen() {
           <View style={{ alignItems: "center", paddingTop: 60 }}>
             <ActivityIndicator color={colors.accent} testID="creators-loading" />
           </View>
+        ) : creatorsError ? (
+          <View style={{ alignItems: "center", paddingTop: 60, gap: 12 }} testID="creators-error">
+            <Text style={{ color: colors.text3, fontSize: 15 }}>
+              Error al cargar creadores
+            </Text>
+            <Pressable
+              onPress={() => refetchCreators()}
+              style={{
+                backgroundColor: colors.accent,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 10,
+              }}
+              testID="retry-button"
+            >
+              <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "700" }}>Reintentar</Text>
+            </Pressable>
+          </View>
         ) : (
           <>
             {featured.length > 0 && !selectedCategory && !searchQuery ? (
@@ -960,8 +979,12 @@ export default function CreatorsHubScreen() {
                   style={{ alignItems: "center", paddingVertical: 40 }}
                   testID="creators-empty"
                 >
-                  <Text style={{ color: colors.text4, fontSize: 15 }}>
-                    No se encontraron perfiles
+                  <Users size={40} color={colors.text4} />
+                  <Text style={{ color: colors.text3, fontSize: 16, fontWeight: "600", marginTop: 16, textAlign: "center" }}>
+                    No hay creadores todavia
+                  </Text>
+                  <Text style={{ color: colors.text4, fontSize: 14, marginTop: 6, textAlign: "center" }}>
+                    Se el primero en publicar.
                   </Text>
                 </View>
               ) : (
