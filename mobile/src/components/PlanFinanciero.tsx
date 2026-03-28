@@ -142,7 +142,7 @@ export default function PlanFinanciero({ income, expenses, savings, investments 
   const [goal, setGoal] = useState<GoalType>("ahorro");
   const [timeframe, setTimeframe] = useState<TimeframeType>("1ano");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["plan", income, expenses, savings, investments, goal, TIMEFRAME_API_MAP[timeframe]],
     queryFn: () =>
       api.post<PlanData>("/api/advanced/plan", {
@@ -302,13 +302,29 @@ export default function PlanFinanciero({ income, expenses, savings, investments 
             borderRadius: 20,
             padding: 24,
             alignItems: "center",
-            gap: 8,
+            gap: 12,
             borderWidth: 1,
             borderColor: "#EF444430",
           }}
         >
           <AlertTriangle size={24} color="#EF4444" />
-          <Text style={{ color: colors.text3, fontSize: 13 }}>Error al generar el plan</Text>
+          <Text style={{ color: colors.text3, fontSize: 13 }}>
+            Error al generar el plan. Intentalo de nuevo.
+          </Text>
+          <Pressable
+            onPress={() => refetch()}
+            testID="plan-retry"
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              backgroundColor: "#EF444420",
+              borderRadius: 100,
+            }}
+          >
+            <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600" }}>
+              Reintentar
+            </Text>
+          </Pressable>
         </View>
       ) : null}
 

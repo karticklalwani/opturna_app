@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ActivityIndicator, useWindowDimensions } from "react-native";
+import { View, Text, ActivityIndicator, Pressable, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
@@ -139,7 +139,7 @@ export default function EstabilidadFinanciera({
   const { width: screenWidth } = useWindowDimensions();
   const circleSize = 160;
 
-  const { data, isLoading, isError } = useQuery<StabilityData>({
+  const { data, isLoading, isError, refetch } = useQuery<StabilityData>({
     queryKey: ["financial-stability", income, expenses, savings, investments],
     queryFn: () =>
       api.post<StabilityData>("/api/inflation/estabilidad-avanzada", {
@@ -185,13 +185,28 @@ export default function EstabilidadFinanciera({
           borderRadius: 16,
           padding: 24,
           alignItems: "center",
+          gap: 12,
           borderWidth: 1,
           borderColor: colors.border,
         }}
       >
         <Text style={{ color: colors.error, fontSize: 14 }}>
-          Error cargando estabilidad financiera
+          Error al cargar datos. Intentalo de nuevo.
         </Text>
+        <Pressable
+          onPress={() => refetch()}
+          testID="estabilidad-retry"
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            backgroundColor: `${colors.error}20`,
+            borderRadius: 100,
+          }}
+        >
+          <Text style={{ color: colors.error, fontSize: 13, fontWeight: "600" }}>
+            Reintentar
+          </Text>
+        </Pressable>
       </View>
     );
   }

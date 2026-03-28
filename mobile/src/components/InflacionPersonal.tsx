@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
@@ -102,7 +102,7 @@ export default function InflacionPersonal({ transactions }: Props) {
     [transactions]
   );
 
-  const { data, isLoading, isError } = useQuery<PersonalInflationData>({
+  const { data, isLoading, isError, refetch } = useQuery<PersonalInflationData>({
     queryKey: ["personal-inflation", JSON.stringify(categoryTotals)],
     queryFn: () =>
       api.post<PersonalInflationData>("/api/inflation/inflacion-personal", categoryTotals),
@@ -167,13 +167,28 @@ export default function InflacionPersonal({ transactions }: Props) {
           borderRadius: 16,
           padding: 24,
           alignItems: "center",
+          gap: 12,
           borderWidth: 1,
           borderColor: colors.border,
         }}
       >
         <Text style={{ color: colors.error, fontSize: 14 }}>
-          Error calculando inflación personal
+          Error al calcular la inflacion personal. Intentalo de nuevo.
         </Text>
+        <Pressable
+          onPress={() => refetch()}
+          testID="inflacion-personal-retry"
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            backgroundColor: `${colors.error}20`,
+            borderRadius: 100,
+          }}
+        >
+          <Text style={{ color: colors.error, fontSize: 13, fontWeight: "600" }}>
+            Reintentar
+          </Text>
+        </Pressable>
       </View>
     );
   }

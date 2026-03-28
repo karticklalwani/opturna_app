@@ -231,8 +231,9 @@ export default function ValorReal({ savings = 5000 }: ValorRealProps) {
     queryFn: () => api.get<InflationRealTimeData>("/api/inflation/real-time"),
   });
 
-  const spainRate = Number(data?.spain?.current ?? 0);
-  const realValue = savings * (1 - spainRate / 100);
+  const rawRate = Number(data?.spain?.current ?? 0);
+  const spainRate = Math.abs(rawRate) > 50 ? 3.4 : rawRate; // fallback if unrealistic
+  const realValue = savings / (1 + spainRate / 100);
   const inflationLoss = savings - realValue;
 
   if (isLoading) {

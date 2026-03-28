@@ -286,6 +286,8 @@ export default function CompoundInterestCalculator() {
   const [inflationView, setInflationView] = useState<"continent" | "country">("continent");
   const [showInflation, setShowInflation] = useState<boolean>(false);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const FREQUENCIES: Frequency[] = ["Diaria", "Semanal", "Mensual", "Anual"];
 
   // Compound interest query
@@ -618,7 +620,25 @@ export default function CompoundInterestCalculator() {
 
           {/* Calculate button */}
           <Pressable
-            onPress={() => calculate()}
+            onPress={() => {
+              const initial = parseFloat(initialAmount);
+              const period = parseInt(periodMonths);
+              const interest = parseFloat(annualInterestRate);
+              if (isNaN(initial) || initial < 0) {
+                setValidationError("Introduce un capital inicial valido.");
+                return;
+              }
+              if (isNaN(period) || period <= 0) {
+                setValidationError("Introduce un periodo mayor a 0 meses.");
+                return;
+              }
+              if (isNaN(interest) || interest < 0) {
+                setValidationError("Introduce un tipo de interes valido.");
+                return;
+              }
+              setValidationError(null);
+              calculate();
+            }}
             disabled={calculating}
             testID="calculate-button"
             style={{
@@ -647,6 +667,19 @@ export default function CompoundInterestCalculator() {
               {calculating ? "Calculando..." : "Calcular"}
             </Text>
           </Pressable>
+
+          {validationError ? (
+            <Text
+              style={{
+                color: colors.error,
+                fontSize: 12,
+                textAlign: "center",
+                marginTop: 10,
+              }}
+            >
+              {validationError}
+            </Text>
+          ) : null}
         </View>
       </Animated.View>
 
@@ -889,11 +922,27 @@ export default function CompoundInterestCalculator() {
             borderWidth: 1,
             borderColor: `${colors.error}30`,
             marginBottom: 12,
+            alignItems: "center",
+            gap: 8,
           }}
         >
           <Text style={{ color: colors.error, fontSize: 13, fontWeight: "600" }}>
-            Error al calcular. Comprueba los parámetros.
+            Error al procesar los datos. Intentalo de nuevo.
           </Text>
+          <Pressable
+            onPress={() => calculate()}
+            testID="calc-retry"
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              backgroundColor: `${colors.error}20`,
+              borderRadius: 100,
+            }}
+          >
+            <Text style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}>
+              Reintentar
+            </Text>
+          </Pressable>
         </View>
       ) : null}
 

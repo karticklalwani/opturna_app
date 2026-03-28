@@ -273,11 +273,16 @@ inflationRouter.get("/real-time", async (c) => {
 // ─── POST /simulate ──────────────────────────────────────────────────────────
 
 const simulateSchema = z.object({
-  savings: z.number().min(0),
+  savingsAmount: z.number().min(0).optional(),
+  savings: z.number().min(0).optional(),
   inflationRate: z.number().min(0).max(100),
   years: z.number().int().min(1).max(50),
+  includeInvestment: z.boolean().optional(),
   investmentReturn: z.number().min(0).max(100).optional(),
+  includePignorar: z.boolean().optional(),
   country: z.string().optional(),
+}).refine(data => (data.savingsAmount ?? data.savings) !== undefined, {
+  message: "Either savingsAmount or savings must be provided",
 });
 
 interface SimulationYearPoint {
@@ -289,7 +294,9 @@ interface SimulationYearPoint {
 }
 
 inflationRouter.post("/simulate", zValidator("json", simulateSchema), (c) => {
-  const { savings, inflationRate, years, investmentReturn } = c.req.valid("json");
+  const body = c.req.valid("json");
+  const savings = body.savingsAmount ?? body.savings ?? 0;
+  const { inflationRate, years, investmentReturn } = body;
 
   const inflationDecimal = inflationRate / 100;
   const investReturnDecimal = investmentReturn ? investmentReturn / 100 : null;
@@ -313,27 +320,21 @@ inflationRouter.post("/simulate", zValidator("json", simulateSchema), (c) => {
   }
 
   const finalReal = chartData[chartData.length - 1]!;
+  const finalInvestmentValue = finalReal.investmentValue;
 
-  const summary = {
-    initialSavings: savings,
-    inflationRate,
-    years,
-    futureNominalValue: savings,
-    futureRealValue: finalReal.realValue,
-    totalInflationLoss: finalReal.inflationLoss,
-    purchasingPowerLostPct: parseFloat(((finalReal.inflationLoss / savings) * 100).toFixed(1)),
-    investmentReturn: investmentReturn ?? null,
-    investmentFinalValue: finalReal.investmentValue,
-    investmentGain: finalReal.investmentValue !== null
-      ? parseFloat((finalReal.investmentValue - savings).toFixed(2))
-      : null,
-    investmentVsInflation: finalReal.investmentValue !== null
-      ? parseFloat((finalReal.investmentValue - finalReal.realValue).toFixed(2))
-      : null,
-    message: `En ${years} años, tus ${savings.toLocaleString("es-ES")}€ tendrán un poder adquisitivo de ${finalReal.realValue.toLocaleString("es-ES")}€. Perderás ${finalReal.inflationLoss.toLocaleString("es-ES")}€ en poder de compra.`,
-  };
-
-  return c.json({ data: { summary, chartData } });
+  return c.json({ data: {
+    nominalValue: savings,
+    realValue: finalReal.realValue,
+    inflationLoss: finalReal.inflationLoss,
+    investmentGain: finalInvestmentValue !== null ? parseFloat((finalInvestmentValue - savings).toFixed(2)) : undefined,
+    totalContributed: savings,
+    chartData: chartData.map(point => ({
+      year: point.year,
+      nominal: point.nominalValue,
+      real: point.realValue,
+      contributed: savings,
+    })),
+  }});
 });
 
 // ─── POST /pignorar ──────────────────────────────────────────────────────────

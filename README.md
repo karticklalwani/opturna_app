@@ -156,13 +156,17 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 | GET | /api/research/history/:symbol | Historical prices |
 | POST | /api/research/ai-insights | AI analysis (OpenAI) |
 
-### Anti-Inflation Financial System (Ahorro Tab)
-- **Valor Real del Dinero**: Real-time inflation dashboard showing savings purchasing power loss, Spain/Eurozone/World/Food inflation rates, category breakdown, and 10-year historical chart. Data from INE, Eurostat, WorldBank APIs with 1-hour cache.
-- **Simulador Anti-Inflacion**: Calculate future value of money, inflation loss, compare savings vs investment, year-by-year SVG projection charts.
+### Finance Module
+- **Transaction CRUD**: Full create/delete for income and expenses with per-item delete button, automatic balance/income/expenses/savings recalculation, AsyncStorage persistence.
+- **Input Validation**: All numeric inputs validated before submission with user-friendly error messages in Spanish. No undefined values or string-to-number crashes.
+- **Valor Real del Dinero**: Real-time inflation dashboard with corrected formula (savings / (1 + rate)) for purchasing power loss. Spain/Eurozone/World/Food rates, category breakdown, 10-year historical chart. Data from INE, Eurostat, WorldBank APIs with 1-hour cache. Unrealistic values (>50%) fall back to defaults.
+- **Simulador Anti-Inflacion**: Calculate future value of money with input validation (savings > 0, inflation 0-50%, return 0-100%). Backend and frontend data contract aligned. User-friendly error messages instead of technical JSON.
 - **Comparador de Paises**: 31 countries with inflation rates, region filter, color-coded rates, trend indicators, detail comparison vs Spain.
 - **Pignorar**: Pledge/collateral simulator - calculate liquidity, costs, risk assessment. Compare vs selling, traditional loans, inflation impact.
 - **Gestor de Patrimonio**: Financial health analyzer (0-100 score), savings rate, debt-to-income ratio, emergency fund coverage, personalized recommendations.
 - **IA Liquidez Inteligente**: Specialized AI financial advisor for liquidity, pignorar, inflation strategies. Uses OpenAI when available, rule-based fallback.
+- **Error Handling**: All finance components show user-friendly Spanish error messages with retry buttons. No technical errors, JSON, or stack traces shown to users.
+- **Theme Consistency**: BalanceCard and Ahorro tab use theme-aware colors (light/dark mode) instead of hardcoded dark values.
 
 ### Inflation API
 | Method | Path | Description |

@@ -237,6 +237,7 @@ export default function SimuladorInflacion() {
   const [investmentReturn, setInvestmentReturn] = useState<string>("7");
   const [includePignorar, setIncludePignorar] = useState<boolean>(false);
   const [showCountrySelector, setShowCountrySelector] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>("Espana");
 
   // Fetch real-time inflation to pre-fill
@@ -562,7 +563,26 @@ export default function SimuladorInflacion() {
           {/* Simulate Button */}
           <Pressable
             testID="sim-calculate-button"
-            onPress={() => simulation.mutate()}
+            onPress={() => {
+              const parsedSavings = parseFloat(savingsAmount);
+              const parsedInflation = parseFloat(inflationRate);
+              const parsedReturn = includeInvestment ? parseFloat(investmentReturn) : 0;
+
+              if (isNaN(parsedSavings) || parsedSavings <= 0) {
+                setValidationError("Introduce una cantidad de ahorro valida");
+                return;
+              }
+              if (isNaN(parsedInflation) || parsedInflation < 0 || parsedInflation > 50) {
+                setValidationError("Tasa de inflacion no valida (0-50%)");
+                return;
+              }
+              if (includeInvestment && (isNaN(parsedReturn) || parsedReturn < 0 || parsedReturn > 100)) {
+                setValidationError("Rentabilidad no valida (0-100%)");
+                return;
+              }
+              setValidationError(null);
+              simulation.mutate();
+            }}
             disabled={simulation.isPending}
             style={{
               backgroundColor: colors.accent,
@@ -584,9 +604,14 @@ export default function SimuladorInflacion() {
             )}
           </Pressable>
 
+          {validationError ? (
+            <Text style={{ color: colors.error, fontSize: 12, marginTop: 8, textAlign: "center" }}>
+              {validationError}
+            </Text>
+          ) : null}
           {simulation.isError ? (
             <Text style={{ color: colors.error, fontSize: 12, marginTop: 8, textAlign: "center" }}>
-              Error al simular: {simulation.error?.message ?? "Desconocido"}
+              Error al procesar la simulacion. Verifica los datos e intentalo de nuevo.
             </Text>
           ) : null}
         </View>

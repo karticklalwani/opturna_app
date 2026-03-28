@@ -364,16 +364,40 @@ export default function AlquilarVsComprar() {
         </Pressable>
 
         {mutation.isError ? (
-          <Text
+          <View
             style={{
-              color: "#EF4444",
-              fontSize: 12,
-              textAlign: "center",
+              backgroundColor: "#EF444415",
+              borderRadius: 12,
+              padding: 14,
               marginTop: 10,
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            Error al comparar. Verifica los datos.
-          </Text>
+            <Text
+              style={{
+                color: "#EF4444",
+                fontSize: 12,
+                textAlign: "center",
+              }}
+            >
+              Error al procesar los datos. Intentalo de nuevo.
+            </Text>
+            <Pressable
+              onPress={() => { mutation.reset(); handleComparar(); }}
+              testID="alqvscmp-retry"
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: "#EF444420",
+                borderRadius: 100,
+              }}
+            >
+              <Text style={{ color: "#EF4444", fontSize: 12, fontWeight: "600" }}>
+                Reintentar
+              </Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import Svg, { Circle } from "react-native-svg";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react-native";
@@ -193,7 +193,7 @@ function IndexCard({ name, data }: { name: string; data: IndexScore }) {
 export default function IndicesInteligentes({ income, expenses, savings, investments }: Props) {
   const { colors } = useTheme();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["indices", income, expenses, savings, investments],
     queryFn: () =>
       api.post<IndicesData>("/api/advanced/indices", {
@@ -243,11 +243,27 @@ export default function IndicesInteligentes({ income, expenses, savings, investm
           borderColor: "#EF444430",
           padding: 24,
           alignItems: "center",
-          gap: 8,
+          gap: 12,
         }}
       >
         <AlertTriangle size={24} color="#EF4444" />
-        <Text style={{ color: colors.text3, fontSize: 13 }}>Error al calcular índices</Text>
+        <Text style={{ color: colors.text3, fontSize: 13 }}>
+          Error al cargar los indices. Intentalo de nuevo.
+        </Text>
+        <Pressable
+          onPress={() => refetch()}
+          testID="indices-retry"
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            backgroundColor: "#EF444420",
+            borderRadius: 100,
+          }}
+        >
+          <Text style={{ color: "#EF4444", fontSize: 13, fontWeight: "600" }}>
+            Reintentar
+          </Text>
+        </Pressable>
       </View>
     );
   }

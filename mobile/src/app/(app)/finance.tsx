@@ -60,6 +60,7 @@ import {
   Brain,
   Banknote,
   LineChart,
+  Trash2,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -380,11 +381,11 @@ function BalanceCard({
     >
       <View
         style={{
-          backgroundColor: "#0A0A0A",
+          backgroundColor: colors.bg2,
           borderRadius: 28,
           padding: 24,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           shadowColor: colors.accent,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.12,
@@ -403,7 +404,7 @@ function BalanceCard({
         >
           <Text
             style={{
-              color: "#737373",
+              color: colors.text3,
               fontSize: 12,
               fontWeight: "600",
               letterSpacing: 1.2,
@@ -433,7 +434,7 @@ function BalanceCard({
         {/* Balance amount */}
         <Text
           style={{
-            color: isPositive ? "#F5F5F5" : colors.error,
+            color: isPositive ? colors.text : colors.error,
             fontSize: 44,
             fontWeight: "800",
             letterSpacing: -1.5,
@@ -518,7 +519,7 @@ function BalanceCard({
             </View>
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 18,
                 fontWeight: "800",
                 letterSpacing: -0.5,
@@ -560,7 +561,7 @@ function BalanceCard({
             </View>
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 18,
                 fontWeight: "800",
                 letterSpacing: -0.5,
@@ -578,9 +579,11 @@ function BalanceCard({
 function TransactionCard({
   transaction,
   colors,
+  onDelete,
 }: {
   transaction: Transaction;
   colors: ThemeColors;
+  onDelete?: (id: string) => void;
 }) {
   const isIncome = transaction.type === "income";
   const color = isIncome ? colors.success : colors.error;
@@ -648,6 +651,25 @@ function TransactionCard({
       >
         {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)} €
       </Text>
+
+      {onDelete ? (
+        <Pressable
+          testID={`delete-tx-${transaction.id}`}
+          onPress={() => onDelete(transaction.id)}
+          hitSlop={8}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            backgroundColor: `${colors.error}14`,
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: 4,
+          }}
+        >
+          <Trash2 size={14} color={colors.error} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -671,6 +693,7 @@ function AddTransactionModal({
     "Comida"
   );
   const [description, setDescription] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const [dateStr, setDateStr] = useState<string>(
     new Date().toISOString().slice(0, 10)
   );
@@ -685,7 +708,11 @@ function AddTransactionModal({
 
   const handleSave = () => {
     const parsed = parseFloat(amount.replace(",", "."));
-    if (isNaN(parsed) || parsed <= 0) return;
+    if (isNaN(parsed) || parsed <= 0) {
+      setError("Introduce una cantidad v\u00E1lida");
+      return;
+    }
+    setError(null);
     const isoDate = new Date(dateStr + "T12:00:00").toISOString();
     onSave({ type, amount: parsed, category, description, date: isoDate });
     setAmount("");
@@ -967,6 +994,11 @@ function AddTransactionModal({
           />
 
           {/* Save button */}
+          {error ? (
+            <Text style={{ color: colors.error, fontSize: 13, textAlign: "center", marginBottom: 12 }}>
+              {error}
+            </Text>
+          ) : null}
           <Pressable
             onPress={handleSave}
             disabled={!canSave}
@@ -1011,6 +1043,7 @@ function AddInvestmentModal({
   const [assetClass, setAssetClass] = useState<InvestmentAssetClass>("Acciones");
   const [value, setValue] = useState<string>("");
   const [changePercent, setChangePercent] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const canSave =
     name.trim().length > 0 &&
@@ -1018,7 +1051,11 @@ function AddInvestmentModal({
     parseFloat(value) > 0;
 
   const handleSave = () => {
-    if (!canSave) return;
+    if (!canSave) {
+      setError("Introduce una cantidad v\u00E1lida");
+      return;
+    }
+    setError(null);
     onSave({
       name: name.trim(),
       assetClass,
@@ -1246,6 +1283,11 @@ function AddInvestmentModal({
             testID="investment-change-input"
           />
 
+          {error ? (
+            <Text style={{ color: colors.error, fontSize: 13, textAlign: "center", marginBottom: 12 }}>
+              {error}
+            </Text>
+          ) : null}
           <Pressable
             onPress={handleSave}
             disabled={!canSave}
@@ -1284,12 +1326,17 @@ function AddSavingsGoalModal({
   const [targetAmount, setTargetAmount] = useState<string>("");
   const [currentAmount, setCurrentAmount] = useState<string>("");
   const [colorIdx, setColorIdx] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
 
   const canSave =
     title.trim().length > 0 && !isNaN(parseFloat(targetAmount)) && parseFloat(targetAmount) > 0;
 
   const handleSave = () => {
-    if (!canSave) return;
+    if (!canSave) {
+      setError("Introduce una cantidad v\u00E1lida");
+      return;
+    }
+    setError(null);
     onSave({
       title: title.trim(),
       targetAmount: parseFloat(targetAmount),
@@ -1454,6 +1501,11 @@ function AddSavingsGoalModal({
             ))}
           </View>
 
+          {error ? (
+            <Text style={{ color: colors.error, fontSize: 13, textAlign: "center", marginBottom: 12 }}>
+              {error}
+            </Text>
+          ) : null}
           <Pressable
             onPress={handleSave}
             disabled={!canSave}
@@ -2179,11 +2231,13 @@ function TransactionsTab({
   transactions,
   type,
   onAddTransaction,
+  onDeleteTransaction,
   colors,
 }: {
   transactions: Transaction[];
   type: TransactionType;
   onAddTransaction: () => void;
+  onDeleteTransaction: (id: string) => void;
   colors: ThemeColors;
 }) {
   const filtered = transactions
@@ -2277,7 +2331,7 @@ function TransactionsTab({
           ) : (
             filtered.map((tx, idx) => (
               <View key={tx.id}>
-                <TransactionCard transaction={tx} colors={colors} />
+                <TransactionCard transaction={tx} colors={colors} onDelete={onDeleteTransaction} />
               </View>
             ))
           )}
@@ -2446,10 +2500,10 @@ function InversionesTab({
         {showSignalAnalysis ? (
           <View
             style={{
-              backgroundColor: "#0A0A0A",
+              backgroundColor: colors.bg2,
               borderWidth: 1,
               borderTopWidth: 0,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderBottomLeftRadius: 16,
               borderBottomRightRadius: 16,
               padding: 16,
@@ -2983,13 +3037,13 @@ function AhorroTab({
           onPress={() => setShowCalculator(!showCalculator)}
           testID="toggle-compound-calculator"
           style={{
-            backgroundColor: "#0F0F0F",
+            backgroundColor: colors.card,
             borderRadius: showCalculator ? 16 : 16,
             borderBottomLeftRadius: showCalculator ? 0 : 16,
             borderBottomRightRadius: showCalculator ? 0 : 16,
             padding: 16,
             borderWidth: 1,
-            borderColor: "#1F1F1F",
+            borderColor: colors.border,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -3026,10 +3080,10 @@ function AhorroTab({
         {showCalculator ? (
           <View
             style={{
-              backgroundColor: "#0A0A0A",
+              backgroundColor: colors.bg2,
               borderWidth: 1,
               borderTopWidth: 0,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               borderBottomLeftRadius: 16,
               borderBottomRightRadius: 16,
               padding: 16,
@@ -3588,6 +3642,17 @@ export default function FinanceScreen() {
     [persistSavingsGoals]
   );
 
+  const handleDeleteTransaction = useCallback(
+    (id: string) => {
+      setTransactions((prev) => {
+        const updated = prev.filter((t) => t.id !== id);
+        persistTransactions(updated);
+        return updated;
+      });
+    },
+    [persistTransactions]
+  );
+
   const handleAddFinancialGoal = useCallback(
     (fg: Omit<FinancialGoal, "id">) => {
       const newFg: FinancialGoal = { ...fg, id: `fg_${Date.now()}` };
@@ -3748,6 +3813,7 @@ export default function FinanceScreen() {
             transactions={transactions}
             type="income"
             onAddTransaction={() => setShowTransactionModal(true)}
+            onDeleteTransaction={handleDeleteTransaction}
             colors={colors}
           />
         ) : activeTab === "gastos" ? (
@@ -3755,6 +3821,7 @@ export default function FinanceScreen() {
             transactions={transactions}
             type="expense"
             onAddTransaction={() => setShowTransactionModal(true)}
+            onDeleteTransaction={handleDeleteTransaction}
             colors={colors}
           />
         ) : activeTab === "inversiones" ? (
