@@ -19,6 +19,7 @@ import lifeGoals from "./routes/life-goals";
 import { creatorsRouter } from "./routes/creators";
 import { mediaRouter } from "./routes/media";
 import { communitiesRouter } from "./routes/communities";
+import opturnaAI from "./routes/opturna-ai";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -1139,6 +1140,9 @@ app.route("/api/creators", creatorsRouter);
 // ===== MEDIA / REELS / STORIES ROUTES =====
 app.route("/api/media", mediaRouter);
 app.route("/api/communities", communitiesRouter);
+
+// ===== OPTURNA AI ROUTES =====
+app.route("/api/opturna-ai", opturnaAI);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);

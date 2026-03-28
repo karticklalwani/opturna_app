@@ -65,6 +65,7 @@ import {
   RotateCcw,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -3647,6 +3648,7 @@ function ResetConfirmModal({
 
 export default function FinanceScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // ── Tabs ──
@@ -3955,6 +3957,49 @@ export default function FinanceScreen() {
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Opturna AI entry card */}
+      <Pressable
+        onPress={() => router.push("/(app)/opturna-ai")}
+        testID="opturna-ai-entry"
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 12,
+          backgroundColor: colors.bg3,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: `${colors.accent}15`,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Brain size={20} color={colors.accent} />
+          </View>
+          <View>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: colors.text }}>
+              Opturna AI
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.text3, marginTop: 1 }}>
+              Sistema de Decisión Inteligente
+            </Text>
+          </View>
+        </View>
+        <ChevronRight size={18} color={colors.text3} />
+      </Pressable>
 
       {/* Tab bar */}
       <View style={{ paddingBottom: 12 }}>

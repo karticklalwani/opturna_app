@@ -144,6 +144,7 @@ export default function AppLayout() {
       <Tabs.Screen name="media-discover" options={{ href: null }} />
       <Tabs.Screen name="media-upload" options={{ href: null }} />
       <Tabs.Screen name="communities" options={{ href: null }} />
+      <Tabs.Screen name="opturna-ai" options={{ href: null }} />
     </Tabs>
   );
 }
