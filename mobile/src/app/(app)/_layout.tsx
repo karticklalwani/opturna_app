@@ -1,8 +1,7 @@
 import { Tabs } from "expo-router";
-import { Home, Compass, Radio, Brain, ChartBar, Target, User, FlaskConical } from "lucide-react-native";
-import { View, Text } from "react-native";
+import { Home, Compass, Brain, ChartBar, User } from "lucide-react-native";
+import { View, Text, Platform } from "react-native";
 import { useTheme } from "@/lib/theme";
-import { useI18n } from "@/lib/i18n";
 
 type TabIconProps = {
   Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
@@ -11,43 +10,42 @@ type TabIconProps = {
 };
 
 function TabIcon({ Icon, focused, label }: TabIconProps) {
-  const { colors } = useTheme();
-  const activeColor = "#4ADE80";
-  const inactiveColor = "#404040";
+  const { colors, mode } = useTheme();
+  const activeColor = colors.accent;
+  const inactiveColor = colors.text3;
 
   return (
     <View
       style={{
         alignItems: "center",
         justifyContent: "center",
-        width: 52,
-        paddingTop: 2,
+        paddingTop: 8,
         gap: 4,
+        minWidth: 56,
       }}
     >
-      {focused ? (
-        <View
-          style={{
-            position: "absolute",
-            top: -6,
-            width: 24,
-            height: 2,
-            borderRadius: 1,
-            backgroundColor: activeColor,
-          }}
+      <View
+        style={{
+          width: 48,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: focused ? `${activeColor}18` : "transparent",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Icon
+          size={22}
+          color={focused ? activeColor : inactiveColor}
+          strokeWidth={focused ? 2.4 : 1.8}
         />
-      ) : null}
-      <Icon
-        size={21}
-        color={focused ? activeColor : inactiveColor}
-        strokeWidth={focused ? 2.2 : 1.6}
-      />
+      </View>
       <Text
         style={{
           fontSize: 10,
-          fontWeight: focused ? "600" : "400",
+          fontWeight: focused ? "700" : "500",
           color: focused ? activeColor : inactiveColor,
-          letterSpacing: 0.1,
+          letterSpacing: 0.2,
         }}
       >
         {label}
@@ -57,23 +55,27 @@ function TabIcon({ Icon, focused, label }: TabIconProps) {
 }
 
 export default function AppLayout() {
-  const { colors } = useTheme();
-  const { t } = useI18n();
+  const { colors, mode } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.bg,
+          backgroundColor: mode === "dark" ? `${colors.bg}F2` : `${colors.bg}F8`,
           borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: 88,
-          paddingBottom: 30,
-          paddingTop: 6,
+          borderTopWidth: 0.5,
+          height: Platform.OS === "ios" ? 88 : 72,
+          paddingBottom: Platform.OS === "ios" ? 28 : 8,
+          paddingTop: 4,
+          elevation: 0,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
         },
-        tabBarActiveTintColor: "#4ADE80",
-        tabBarInactiveTintColor: "#404040",
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.text3,
         tabBarShowLabel: false,
       }}
     >
@@ -94,10 +96,10 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="live"
+        name="finance"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={Radio} focused={focused} label="Directos" />
+            <TabIcon Icon={ChartBar} focused={focused} label="Finanzas" />
           ),
         }}
       />
@@ -110,39 +112,18 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="finance"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={ChartBar} focused={focused} label="Finanzas" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="goals"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={Target} focused={focused} label="Objetivos" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="research"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={FlaskConical} focused={focused} label="Research" />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={User} focused={focused} label={t("profile")} />
+            <TabIcon Icon={User} focused={focused} label="Perfil" />
           ),
         }}
       />
 
-      {/* Hidden screens — still reachable as routes */}
+      {/* Hidden screens — still reachable via router.push() */}
+      <Tabs.Screen name="live" options={{ href: null }} />
+      <Tabs.Screen name="goals" options={{ href: null }} />
+      <Tabs.Screen name="research" options={{ href: null }} />
       <Tabs.Screen name="post-detail" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
@@ -162,6 +143,7 @@ export default function AppLayout() {
       <Tabs.Screen name="reels-feed" options={{ href: null }} />
       <Tabs.Screen name="media-discover" options={{ href: null }} />
       <Tabs.Screen name="media-upload" options={{ href: null }} />
+      <Tabs.Screen name="communities" options={{ href: null }} />
     </Tabs>
   );
 }

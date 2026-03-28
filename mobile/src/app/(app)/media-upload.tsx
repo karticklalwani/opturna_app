@@ -15,11 +15,13 @@ import {
   ChevronLeft,
   Image as ImageIcon,
   Video,
+  Camera,
   X,
   Check,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "@/lib/theme";
 
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL!;
 const DEMO_USER_ID = "current-user";
@@ -41,6 +43,7 @@ function FeedbackModal({
   message: string;
   actions: { label: string; onPress: () => void; primary?: boolean }[];
 }) {
+  const { colors } = useTheme();
   if (!visible) return null;
   return (
     <View
@@ -58,19 +61,19 @@ function FeedbackModal({
     >
       <View
         style={{
-          backgroundColor: "#111111",
+          backgroundColor: colors.card,
           borderRadius: 20,
           padding: 24,
           marginHorizontal: 32,
           borderWidth: 1,
-          borderColor: "#1F1F1F",
+          borderColor: colors.border,
           gap: 12,
         }}
       >
-        <Text style={{ color: "#F5F5F5", fontSize: 17, fontWeight: "800", textAlign: "center" }}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800", textAlign: "center" }}>
           {title}
         </Text>
-        <Text style={{ color: "#737373", fontSize: 14, textAlign: "center", lineHeight: 20 }}>
+        <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 20 }}>
           {message}
         </Text>
         <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
@@ -82,13 +85,13 @@ function FeedbackModal({
                 flex: 1,
                 paddingVertical: 12,
                 borderRadius: 12,
-                backgroundColor: action.primary ? "#4ADE80" : "#1F1F1F",
+                backgroundColor: action.primary ? colors.accent : colors.border,
                 alignItems: "center",
               }}
             >
               <Text
                 style={{
-                  color: action.primary ? "#000" : "#F5F5F5",
+                  color: action.primary ? "#000" : colors.text,
                   fontSize: 14,
                   fontWeight: "700",
                 }}
@@ -106,6 +109,7 @@ function FeedbackModal({
 export default function MediaUploadScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors } = useTheme();
   const [selectedAsset, setSelectedAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [caption, setCaption] = useState<string>("");
   const [mediaType, setMediaType] = useState<MediaType>("reel");
@@ -132,7 +136,7 @@ export default function MediaUploadScreen() {
     if (status !== "granted") {
       showModal(
         "Permiso necesario",
-        "Necesitamos acceso a tu galería para seleccionar medios.",
+        "Necesitamos acceso a tu galeria para seleccionar medios.",
         [{ label: "OK", onPress: hideModal, primary: true }]
       );
       return;
@@ -151,6 +155,31 @@ export default function MediaUploadScreen() {
     if (!result.canceled && result.assets[0]) {
       setSelectedAsset(result.assets[0]);
       setMediaType(type === "video" ? "reel" : "image");
+    }
+  };
+
+  const takePhotoOrVideo = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      showModal(
+        "Permiso necesario",
+        "Necesitamos acceso a tu camara para tomar fotos o videos.",
+        [{ label: "OK", onPress: hideModal, primary: true }]
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 0.9,
+      videoMaxDuration: 300,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setSelectedAsset(asset);
+      setMediaType(asset.type === "video" ? "reel" : "image");
     }
   };
 
@@ -246,7 +275,7 @@ export default function MediaUploadScreen() {
     },
     onError: () => {
       setUploadProgress(0);
-      showModal("Error", "No se pudo publicar el contenido. Inténtalo de nuevo.", [
+      showModal("Error", "No se pudo publicar el contenido. Intentalo de nuevo.", [
         { label: "Cerrar", onPress: hideModal, primary: true },
       ]);
     },
@@ -255,8 +284,8 @@ export default function MediaUploadScreen() {
   const isUploading = uploadMutation.isPending;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="media-upload-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="media-upload-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View
           style={{
             flexDirection: "row",
@@ -267,9 +296,9 @@ export default function MediaUploadScreen() {
           }}
         >
           <Pressable onPress={() => router.back()} testID="back-button">
-            <ChevronLeft size={24} color="#F5F5F5" strokeWidth={2} />
+            <ChevronLeft size={24} color={colors.text} strokeWidth={2} />
           </Pressable>
-          <Text style={{ color: "#F5F5F5", fontSize: 17, fontWeight: "700" }}>
+          <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>
             Nuevo contenido
           </Text>
           <Pressable
@@ -277,7 +306,7 @@ export default function MediaUploadScreen() {
             disabled={selectedAsset === null || isUploading}
             style={{
               backgroundColor:
-                selectedAsset === null || isUploading ? "#1A1A1A" : "#4ADE80",
+                selectedAsset === null || isUploading ? colors.bg4 : colors.accent,
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: 10,
@@ -289,7 +318,7 @@ export default function MediaUploadScreen() {
             ) : (
               <Text
                 style={{
-                  color: selectedAsset === null ? "#404040" : "#000",
+                  color: selectedAsset === null ? colors.text4 : "#000",
                   fontSize: 14,
                   fontWeight: "700",
                 }}
@@ -308,7 +337,7 @@ export default function MediaUploadScreen() {
             <View
               style={{
                 height: 4,
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
                 borderRadius: 2,
                 overflow: "hidden",
               }}
@@ -316,13 +345,13 @@ export default function MediaUploadScreen() {
               <View
                 style={{
                   height: 4,
-                  backgroundColor: "#4ADE80",
+                  backgroundColor: colors.accent,
                   borderRadius: 2,
                   width: `${uploadProgress}%`,
                 }}
               />
             </View>
-            <Text style={{ color: "#737373", fontSize: 12, marginTop: 6 }}>
+            <Text style={{ color: colors.text3, fontSize: 12, marginTop: 6 }}>
               Subiendo... {uploadProgress}%
             </Text>
           </View>
@@ -336,7 +365,7 @@ export default function MediaUploadScreen() {
                 height: 400,
                 borderRadius: 16,
                 overflow: "hidden",
-                backgroundColor: "#111111",
+                backgroundColor: colors.card,
                 position: "relative",
               }}
             >
@@ -367,7 +396,7 @@ export default function MediaUploadScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    <Video size={28} color="#F5F5F5" strokeWidth={2} />
+                    <Video size={28} color="#FFFFFF" strokeWidth={2} />
                   </View>
                 </View>
               ) : null}
@@ -386,7 +415,7 @@ export default function MediaUploadScreen() {
                 }}
                 testID="remove-asset-button"
               >
-                <X size={16} color="#F5F5F5" strokeWidth={2} />
+                <X size={16} color="#FFFFFF" strokeWidth={2} />
               </Pressable>
 
               {/* Selected indicator */}
@@ -404,9 +433,9 @@ export default function MediaUploadScreen() {
                   borderRadius: 20,
                 }}
               >
-                <Check size={12} color="#4ADE80" strokeWidth={2.5} />
-                <Text style={{ color: "#4ADE80", fontSize: 12, fontWeight: "600" }}>
-                  {selectedAsset.type === "video" ? "Vídeo seleccionado" : "Imagen seleccionada"}
+                <Check size={12} color={colors.accent} strokeWidth={2.5} />
+                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: "600" }}>
+                  {selectedAsset.type === "video" ? "Video seleccionado" : "Imagen seleccionada"}
                 </Text>
               </View>
             </View>
@@ -419,10 +448,10 @@ export default function MediaUploadScreen() {
                 style={{
                   flex: 1,
                   height: 120,
-                  backgroundColor: "#111111",
+                  backgroundColor: colors.card,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
@@ -452,10 +481,10 @@ export default function MediaUploadScreen() {
                     borderColor: "rgba(74,222,128,0.2)",
                   }}
                 >
-                  <Video size={22} color="#4ADE80" strokeWidth={2} />
+                  <Video size={22} color={colors.accent} strokeWidth={2} />
                 </View>
-                <Text style={{ color: "#737373", fontSize: 13, fontWeight: "600" }}>
-                  Vídeo / Reel
+                <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "600" }}>
+                  Video / Reel
                 </Text>
               </Pressable>
 
@@ -464,10 +493,10 @@ export default function MediaUploadScreen() {
                 style={{
                   flex: 1,
                   height: 120,
-                  backgroundColor: "#111111",
+                  backgroundColor: colors.card,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
@@ -499,23 +528,59 @@ export default function MediaUploadScreen() {
                 >
                   <ImageIcon size={22} color="#A78BFA" strokeWidth={2} />
                 </View>
-                <Text style={{ color: "#737373", fontSize: 13, fontWeight: "600" }}>Imagen</Text>
+                <Text style={{ color: colors.text3, fontSize: 13, fontWeight: "600" }}>Imagen</Text>
               </Pressable>
             </View>
 
+            {/* Camera button */}
+            <Pressable
+              onPress={takePhotoOrVideo}
+              style={{
+                height: 56,
+                backgroundColor: colors.card,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                marginBottom: 12,
+              }}
+              testID="take-camera-button"
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: "rgba(251,191,36,0.1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "rgba(251,191,36,0.2)",
+                }}
+              >
+                <Camera size={18} color="#FBBF24" strokeWidth={2} />
+              </View>
+              <Text style={{ color: colors.text3, fontSize: 14, fontWeight: "600" }}>
+                Tomar foto o video
+              </Text>
+            </Pressable>
+
             <View
               style={{
-                backgroundColor: "#111111",
+                backgroundColor: colors.card,
                 borderRadius: 14,
                 padding: 16,
                 borderWidth: 1,
-                borderColor: "#1A1A1A",
+                borderColor: colors.bg4,
               }}
             >
-              <Text style={{ color: "#737373", fontSize: 12, lineHeight: 18 }}>
-                Formatos soportados: MP4, MOV, WebM para vídeos · JPG, PNG, WebP para
-                imágenes{"\n"}
-                Duración máxima: 5 minutos · Tamaño máximo: 100MB (vídeo) / 10MB (imagen)
+              <Text style={{ color: colors.text3, fontSize: 12, lineHeight: 18 }}>
+                Formatos soportados: MP4, MOV, WebM para videos{" "}{"\u00B7"}{" "}JPG, PNG, WebP para
+                imagenes{"\n"}
+                Duracion maxima: 5 minutos{" "}{"\u00B7"}{" "}Tamano maximo: 100MB (video) / 10MB (imagen)
               </Text>
             </View>
           </View>
@@ -523,32 +588,32 @@ export default function MediaUploadScreen() {
 
         {/* Caption */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "700", marginBottom: 10 }}>
-            Descripción
+          <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginBottom: 10 }}>
+            Descripcion
           </Text>
           <TextInput
             value={caption}
             onChangeText={setCaption}
-            placeholder="Escribe un texto, añade #hashtags..."
-            placeholderTextColor="#404040"
+            placeholder="Escribe un texto, anade #hashtags..."
+            placeholderTextColor={colors.text4}
             multiline
             maxLength={2200}
             style={{
-              backgroundColor: "#111111",
+              backgroundColor: colors.card,
               borderRadius: 14,
               padding: 14,
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 15,
               lineHeight: 22,
               minHeight: 100,
               textAlignVertical: "top",
               borderWidth: 1,
-              borderColor: "#1A1A1A",
+              borderColor: colors.bg4,
             }}
             testID="caption-input"
           />
           <Text
-            style={{ color: "#404040", fontSize: 11, marginTop: 6, textAlign: "right" }}
+            style={{ color: colors.text4, fontSize: 11, marginTop: 6, textAlign: "right" }}
           >
             {caption.length}/2200
           </Text>
@@ -556,8 +621,8 @@ export default function MediaUploadScreen() {
 
         {/* Type selector */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "700", marginBottom: 10 }}>
-            Tipo de publicación
+          <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginBottom: 10 }}>
+            Tipo de publicacion
           </Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {(["reel", "image"] as MediaType[]).map((type) => (
@@ -568,16 +633,16 @@ export default function MediaUploadScreen() {
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 10,
-                  backgroundColor: mediaType === type ? "#4ADE80" : "#111111",
+                  backgroundColor: mediaType === type ? colors.accent : colors.card,
                   borderWidth: 1,
-                  borderColor: mediaType === type ? "#4ADE80" : "#1F1F1F",
+                  borderColor: mediaType === type ? colors.accent : colors.border,
                   alignItems: "center",
                 }}
                 testID={`type-${type}`}
               >
                 <Text
                   style={{
-                    color: mediaType === type ? "#000" : "#737373",
+                    color: mediaType === type ? "#000" : colors.text3,
                     fontSize: 14,
                     fontWeight: "600",
                   }}

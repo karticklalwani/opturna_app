@@ -1460,6 +1460,84 @@ export default function DiscoverScreen() {
               </Pressable>
             </Animated.View>
 
+            {/* ── Comunidades Banner ── */}
+            <Animated.View
+              entering={FadeInDown.duration(300).delay(90).springify()}
+              style={{ paddingHorizontal: 20, marginBottom: 20 }}
+            >
+              <Pressable
+                onPress={() => router.push("/communities" as any)}
+                testID="communities-banner"
+                style={{
+                  borderRadius: 18,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: "rgba(167,139,250,0.18)",
+                }}
+              >
+                <LinearGradient
+                  colors={["rgba(167,139,250,0.08)", "rgba(74,222,128,0.06)", colors.card]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ padding: 18 }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        backgroundColor: "rgba(167,139,250,0.12)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderWidth: 1,
+                        borderColor: "rgba(167,139,250,0.25)",
+                      }}
+                    >
+                      <Users size={20} color="#A78BFA" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontSize: 16,
+                          fontWeight: "800",
+                          letterSpacing: -0.4,
+                        }}
+                      >
+                        Comunidades
+                      </Text>
+                      <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
+                        Grupos · Chat · Networking
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        backgroundColor: "#A78BFA",
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        borderRadius: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#000",
+                          fontSize: 12,
+                          fontWeight: "700",
+                        }}
+                      >
+                        Ver
+                      </Text>
+                      <ChevronRight size={12} color="#000" strokeWidth={2.5} />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+
             {/* ── Trending Posts ── */}
             <Animated.View
               entering={FadeInDown.duration(320).delay(0).springify()}

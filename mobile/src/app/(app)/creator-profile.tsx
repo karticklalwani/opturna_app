@@ -31,6 +31,7 @@ import {
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/lib/theme";
 import type {
   CreatorProfile,
   CreatorPost,
@@ -63,13 +64,14 @@ function formatCount(n: number): string {
 }
 
 function VerifiedBadge({ size = 14 }: { size?: number }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
         width: size + 4,
         height: size + 4,
         borderRadius: (size + 4) / 2,
-        backgroundColor: "#4ADE80",
+        backgroundColor: colors.accent,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -132,6 +134,7 @@ type FullCreatorProfile = CreatorProfile & {
 export default function CreatorProfileScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>("Posts");
 
   const { data: creator, isLoading } = useQuery({
@@ -149,18 +152,18 @@ export default function CreatorProfileScreen() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#080808",
+          backgroundColor: colors.bg,
           alignItems: "center",
           justifyContent: "center",
         }}
         testID="creator-profile-loading"
       >
-        <ActivityIndicator color="#4ADE80" size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
-  const catColor = CATEGORY_COLORS[creator.category || ""] || "#4ADE80";
+  const catColor = CATEGORY_COLORS[creator.category || ""] || colors.accent;
   const tags: string[] = creator.tags ? JSON.parse(creator.tags) : [];
 
   const openLink = (url: string | null) => {
@@ -204,7 +207,7 @@ export default function CreatorProfileScreen() {
 
   return (
     <View
-      style={{ flex: 1, backgroundColor: "#080808" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       testID="creator-profile-screen"
     >
       <ScrollView
@@ -221,7 +224,7 @@ export default function CreatorProfileScreen() {
             />
           ) : (
             <LinearGradient
-              colors={[catColor + "44", "#080808"]}
+              colors={[catColor + "44", colors.bg]}
               style={{ flex: 1 }}
             />
           )}
@@ -248,7 +251,7 @@ export default function CreatorProfileScreen() {
                 justifyContent: "center",
               }}
             >
-              <ChevronLeft size={20} color="#F5F5F5" />
+              <ChevronLeft size={20} color={colors.text} />
             </Pressable>
           </SafeAreaView>
         </View>
@@ -269,9 +272,9 @@ export default function CreatorProfileScreen() {
                 height: 80,
                 borderRadius: 40,
                 borderWidth: 3,
-                borderColor: "#080808",
+                borderColor: colors.bg,
                 overflow: "hidden",
-                backgroundColor: "#1A1A1A",
+                backgroundColor: colors.bg4,
               }}
             >
               {creator.avatarUrl ? (
@@ -290,7 +293,7 @@ export default function CreatorProfileScreen() {
                 >
                   <Text
                     style={{
-                      color: "#F5F5F5",
+                      color: colors.text,
                       fontSize: 28,
                       fontWeight: "900",
                     }}
@@ -305,21 +308,21 @@ export default function CreatorProfileScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 4,
-                backgroundColor: "#111111",
+                backgroundColor: colors.card,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: 10,
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             >
-              <Users size={12} color="#A3A3A3" />
+              <Users size={12} color={colors.text2} />
               <Text
-                style={{ color: "#A3A3A3", fontSize: 13, fontWeight: "600" }}
+                style={{ color: colors.text2, fontSize: 13, fontWeight: "600" }}
               >
                 {formatCount(creator._count?.follows ?? creator.followersCount)}
               </Text>
-              <Text style={{ color: "#404040", fontSize: 11 }}>seguidores</Text>
+              <Text style={{ color: colors.text4, fontSize: 11 }}>seguidores</Text>
             </View>
           </View>
 
@@ -333,7 +336,7 @@ export default function CreatorProfileScreen() {
           >
             <Text
               style={{
-                color: "#F5F5F5",
+                color: colors.text,
                 fontSize: 22,
                 fontWeight: "900",
                 letterSpacing: -0.8,
@@ -352,15 +355,15 @@ export default function CreatorProfileScreen() {
               marginBottom: 8,
             }}
           >
-            <Text style={{ color: "#737373", fontSize: 14 }}>
+            <Text style={{ color: colors.text3, fontSize: 14 }}>
               @{creator.username}
             </Text>
             {creator.location ? (
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
-                <MapPin size={12} color="#404040" />
-                <Text style={{ color: "#404040", fontSize: 13 }}>
+                <MapPin size={12} color={colors.text4} />
+                <Text style={{ color: colors.text4, fontSize: 13 }}>
                   {creator.location}
                 </Text>
               </View>
@@ -403,15 +406,15 @@ export default function CreatorProfileScreen() {
               <View
                 key={tag}
                 style={{
-                  backgroundColor: "#111111",
+                  backgroundColor: colors.card,
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 8,
                   borderWidth: 1,
-                  borderColor: "#1F1F1F",
+                  borderColor: colors.border,
                 }}
               >
-                <Text style={{ color: "#737373", fontSize: 12 }}>{tag}</Text>
+                <Text style={{ color: colors.text3, fontSize: 12 }}>{tag}</Text>
               </View>
             ))}
           </View>
@@ -419,7 +422,7 @@ export default function CreatorProfileScreen() {
           {creator.shortBio ? (
             <Text
               style={{
-                color: "#A3A3A3",
+                color: colors.text2,
                 fontSize: 15,
                 lineHeight: 22,
                 marginBottom: 16,
@@ -446,26 +449,26 @@ export default function CreatorProfileScreen() {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 6,
-                      backgroundColor: "#111111",
+                      backgroundColor: colors.card,
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 10,
                       borderWidth: 1,
-                      borderColor: "#1F1F1F",
+                      borderColor: colors.border,
                       marginRight: 8,
                     }}
                   >
                     <Icon size={14} color={link.color} />
                     <Text
                       style={{
-                        color: "#A3A3A3",
+                        color: colors.text2,
                         fontSize: 13,
                         fontWeight: "500",
                       }}
                     >
                       {link.label}
                     </Text>
-                    <ExternalLink size={10} color="#404040" />
+                    <ExternalLink size={10} color={colors.text4} />
                   </Pressable>
                 );
               })}
@@ -493,17 +496,17 @@ export default function CreatorProfileScreen() {
                 key={stat.label}
                 style={{
                   flex: 1,
-                  backgroundColor: "#111111",
+                  backgroundColor: colors.card,
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
                   borderWidth: 1,
-                  borderColor: "#1A1A1A",
+                  borderColor: colors.bg4,
                 }}
               >
                 <Text
                   style={{
-                    color: "#F5F5F5",
+                    color: colors.text,
                     fontSize: 18,
                     fontWeight: "800",
                   }}
@@ -511,7 +514,7 @@ export default function CreatorProfileScreen() {
                   {stat.value}
                 </Text>
                 <Text
-                  style={{ color: "#737373", fontSize: 11, marginTop: 2 }}
+                  style={{ color: colors.text3, fontSize: 11, marginTop: 2 }}
                 >
                   {stat.label}
                 </Text>
@@ -522,7 +525,7 @@ export default function CreatorProfileScreen() {
           <View
             style={{
               height: 1,
-              backgroundColor: "#1A1A1A",
+              backgroundColor: colors.bg4,
               marginBottom: 20,
             }}
           />
@@ -543,14 +546,14 @@ export default function CreatorProfileScreen() {
                   borderRadius: 20,
                   marginRight: 8,
                   backgroundColor:
-                    activeTab === tab ? "#4ADE80" : "#111111",
+                    activeTab === tab ? colors.accent : colors.card,
                   borderWidth: 1,
-                  borderColor: activeTab === tab ? "#4ADE80" : "#1F1F1F",
+                  borderColor: activeTab === tab ? colors.accent : colors.border,
                 }}
               >
                 <Text
                   style={{
-                    color: activeTab === tab ? "#000" : "#737373",
+                    color: activeTab === tab ? "#000" : colors.text3,
                     fontSize: 13,
                     fontWeight: activeTab === tab ? "700" : "500",
                   }}
@@ -567,7 +570,7 @@ export default function CreatorProfileScreen() {
               {(creator.posts ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -579,12 +582,12 @@ export default function CreatorProfileScreen() {
                   <View
                     key={post.id}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       padding: 16,
                       marginBottom: 12,
                       borderWidth: 1,
-                      borderColor: "#1A1A1A",
+                      borderColor: colors.bg4,
                     }}
                   >
                     {post.isPinned ? (
@@ -598,7 +601,7 @@ export default function CreatorProfileScreen() {
                       >
                         <Text
                           style={{
-                            color: "#4ADE80",
+                            color: colors.accent,
                             fontSize: 11,
                             fontWeight: "700",
                           }}
@@ -610,7 +613,7 @@ export default function CreatorProfileScreen() {
                     {post.title ? (
                       <Text
                         style={{
-                          color: "#F5F5F5",
+                          color: colors.text,
                           fontSize: 16,
                           fontWeight: "700",
                           marginBottom: 8,
@@ -621,7 +624,7 @@ export default function CreatorProfileScreen() {
                     ) : null}
                     <Text
                       style={{
-                        color: "#A3A3A3",
+                        color: colors.text2,
                         fontSize: 14,
                         lineHeight: 22,
                       }}
@@ -630,7 +633,7 @@ export default function CreatorProfileScreen() {
                     </Text>
                     <Text
                       style={{
-                        color: "#404040",
+                        color: colors.text4,
                         fontSize: 12,
                         marginTop: 10,
                       }}
@@ -652,7 +655,7 @@ export default function CreatorProfileScreen() {
               {(creator.videos ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -665,12 +668,12 @@ export default function CreatorProfileScreen() {
                     key={video.id}
                     onPress={() => openLink(video.videoUrl)}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       marginBottom: 12,
                       overflow: "hidden",
                       borderWidth: 1,
-                      borderColor: "#1A1A1A",
+                      borderColor: colors.bg4,
                     }}
                   >
                     {video.thumbnailUrl ? (
@@ -710,10 +713,10 @@ export default function CreatorProfileScreen() {
                               flex: 1,
                             }}
                           >
-                            <Play size={14} color="#F5F5F5" />
+                            <Play size={14} color={colors.text} />
                             {video.duration ? (
                               <Text
-                                style={{ color: "#A3A3A3", fontSize: 12 }}
+                                style={{ color: colors.text2, fontSize: 12 }}
                               >
                                 {video.duration}
                               </Text>
@@ -725,7 +728,7 @@ export default function CreatorProfileScreen() {
                     <View style={{ padding: 14 }}>
                       <Text
                         style={{
-                          color: "#F5F5F5",
+                          color: colors.text,
                           fontSize: 15,
                           fontWeight: "700",
                           marginBottom: 4,
@@ -736,7 +739,7 @@ export default function CreatorProfileScreen() {
                       {video.description ? (
                         <Text
                           style={{
-                            color: "#737373",
+                            color: colors.text3,
                             fontSize: 13,
                             lineHeight: 20,
                           }}
@@ -757,7 +760,7 @@ export default function CreatorProfileScreen() {
               {(creator.interviews ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -770,12 +773,12 @@ export default function CreatorProfileScreen() {
                     key={interview.id}
                     onPress={() => openLink(interview.mediaUrl)}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       marginBottom: 12,
                       overflow: "hidden",
                       borderWidth: 1,
-                      borderColor: "#1A1A1A",
+                      borderColor: colors.bg4,
                     }}
                   >
                     {interview.thumbnailUrl ? (
@@ -799,14 +802,14 @@ export default function CreatorProfileScreen() {
                         {interview.interviewType === "podcast" ? (
                           <Mic size={12} color="#A78BFA" />
                         ) : (
-                          <Play size={12} color="#4ADE80" />
+                          <Play size={12} color={colors.accent} />
                         )}
                         <Text
                           style={{
                             color:
                               interview.interviewType === "podcast"
                                 ? "#A78BFA"
-                                : "#4ADE80",
+                                : colors.accent,
                             fontSize: 11,
                             fontWeight: "700",
                             textTransform: "uppercase",
@@ -816,7 +819,7 @@ export default function CreatorProfileScreen() {
                         </Text>
                         {interview.partnerName ? (
                           <Text
-                            style={{ color: "#404040", fontSize: 11 }}
+                            style={{ color: colors.text4, fontSize: 11 }}
                           >
                             × {interview.partnerName}
                           </Text>
@@ -824,7 +827,7 @@ export default function CreatorProfileScreen() {
                       </View>
                       <Text
                         style={{
-                          color: "#F5F5F5",
+                          color: colors.text,
                           fontSize: 15,
                           fontWeight: "700",
                           marginBottom: 4,
@@ -835,7 +838,7 @@ export default function CreatorProfileScreen() {
                       {interview.description ? (
                         <Text
                           style={{
-                            color: "#737373",
+                            color: colors.text3,
                             fontSize: 13,
                             lineHeight: 20,
                           }}
@@ -856,7 +859,7 @@ export default function CreatorProfileScreen() {
               {(creator.lives ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -868,7 +871,7 @@ export default function CreatorProfileScreen() {
                   <View
                     key={live.id}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       padding: 14,
                       marginBottom: 12,
@@ -876,7 +879,7 @@ export default function CreatorProfileScreen() {
                       borderColor:
                         live.status === "live"
                           ? "rgba(74,222,128,0.3)"
-                          : "#1A1A1A",
+                          : colors.bg4,
                     }}
                   >
                     <View
@@ -904,12 +907,12 @@ export default function CreatorProfileScreen() {
                               width: 6,
                               height: 6,
                               borderRadius: 3,
-                              backgroundColor: "#EF4444",
+                              backgroundColor: colors.error,
                             }}
                           />
                           <Text
                             style={{
-                              color: "#EF4444",
+                              color: colors.error,
                               fontSize: 11,
                               fontWeight: "700",
                             }}
@@ -937,14 +940,14 @@ export default function CreatorProfileScreen() {
                               fontWeight: "700",
                             }}
                           >
-                            PRÓXIMO
+                            PROXIMO
                           </Text>
                         </View>
                       )}
                     </View>
                     <Text
                       style={{
-                        color: "#F5F5F5",
+                        color: colors.text,
                         fontSize: 15,
                         fontWeight: "700",
                         marginBottom: 4,
@@ -955,7 +958,7 @@ export default function CreatorProfileScreen() {
                     {live.description ? (
                       <Text
                         style={{
-                          color: "#737373",
+                          color: colors.text3,
                           fontSize: 13,
                           lineHeight: 20,
                         }}
@@ -967,7 +970,7 @@ export default function CreatorProfileScreen() {
                     {live.scheduledAt ? (
                       <Text
                         style={{
-                          color: "#404040",
+                          color: colors.text4,
                           fontSize: 12,
                           marginTop: 8,
                         }}
@@ -995,7 +998,7 @@ export default function CreatorProfileScreen() {
               {(creator.projects ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -1008,12 +1011,12 @@ export default function CreatorProfileScreen() {
                     key={project.id}
                     onPress={() => openLink(project.websiteUrl)}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       padding: 14,
                       marginBottom: 12,
                       borderWidth: 1,
-                      borderColor: "#1A1A1A",
+                      borderColor: colors.bg4,
                       flexDirection: "row",
                       gap: 12,
                       alignItems: "center",
@@ -1025,7 +1028,7 @@ export default function CreatorProfileScreen() {
                         height: 44,
                         borderRadius: 10,
                         overflow: "hidden",
-                        backgroundColor: "#1A1A1A",
+                        backgroundColor: colors.bg4,
                       }}
                     >
                       {project.logoUrl ? (
@@ -1042,14 +1045,14 @@ export default function CreatorProfileScreen() {
                             justifyContent: "center",
                           }}
                         >
-                          <Briefcase size={18} color="#737373" />
+                          <Briefcase size={18} color={colors.text3} />
                         </View>
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text
                         style={{
-                          color: "#F5F5F5",
+                          color: colors.text,
                           fontSize: 15,
                           fontWeight: "700",
                         }}
@@ -1058,7 +1061,7 @@ export default function CreatorProfileScreen() {
                       </Text>
                       {project.description ? (
                         <Text
-                          style={{ color: "#737373", fontSize: 13 }}
+                          style={{ color: colors.text3, fontSize: 13 }}
                           numberOfLines={2}
                         >
                           {project.description}
@@ -1066,7 +1069,7 @@ export default function CreatorProfileScreen() {
                       ) : null}
                     </View>
                     {project.websiteUrl ? (
-                      <ExternalLink size={14} color="#404040" />
+                      <ExternalLink size={14} color={colors.text4} />
                     ) : null}
                   </Pressable>
                 ))
@@ -1079,7 +1082,7 @@ export default function CreatorProfileScreen() {
               {(creator.collaborations ?? []).length === 0 ? (
                 <Text
                   style={{
-                    color: "#404040",
+                    color: colors.text4,
                     textAlign: "center",
                     paddingVertical: 30,
                   }}
@@ -1091,7 +1094,7 @@ export default function CreatorProfileScreen() {
                   <View
                     key={collab.id}
                     style={{
-                      backgroundColor: "#0F0F0F",
+                      backgroundColor: colors.bg2,
                       borderRadius: 14,
                       padding: 16,
                       marginBottom: 12,
@@ -1099,7 +1102,7 @@ export default function CreatorProfileScreen() {
                       borderColor:
                         collab.status === "active"
                           ? "rgba(74,222,128,0.25)"
-                          : "#1A1A1A",
+                          : colors.bg4,
                     }}
                   >
                     <View
@@ -1115,7 +1118,7 @@ export default function CreatorProfileScreen() {
                           backgroundColor:
                             collab.status === "active"
                               ? "rgba(74,222,128,0.15)"
-                              : "#1A1A1A",
+                              : colors.bg4,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
                           borderRadius: 6,
@@ -1125,8 +1128,8 @@ export default function CreatorProfileScreen() {
                           style={{
                             color:
                               collab.status === "active"
-                                ? "#4ADE80"
-                                : "#737373",
+                                ? colors.accent
+                                : colors.text3,
                             fontSize: 11,
                             fontWeight: "700",
                             textTransform: "uppercase",
@@ -1137,7 +1140,7 @@ export default function CreatorProfileScreen() {
                       </View>
                       <Text
                         style={{
-                          color: "#404040",
+                          color: colors.text4,
                           fontSize: 11,
                           textTransform: "uppercase",
                         }}
@@ -1147,7 +1150,7 @@ export default function CreatorProfileScreen() {
                     </View>
                     <Text
                       style={{
-                        color: "#F5F5F5",
+                        color: colors.text,
                         fontSize: 15,
                         fontWeight: "700",
                         marginBottom: 6,
@@ -1158,7 +1161,7 @@ export default function CreatorProfileScreen() {
                     {collab.description ? (
                       <Text
                         style={{
-                          color: "#737373",
+                          color: colors.text3,
                           fontSize: 13,
                           lineHeight: 20,
                           marginBottom: 12,
@@ -1174,7 +1177,7 @@ export default function CreatorProfileScreen() {
                           flexDirection: "row",
                           alignItems: "center",
                           gap: 6,
-                          backgroundColor: "#4ADE80",
+                          backgroundColor: colors.accent,
                           paddingHorizontal: 14,
                           paddingVertical: 10,
                           borderRadius: 10,

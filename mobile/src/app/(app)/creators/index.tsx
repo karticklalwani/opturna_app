@@ -36,6 +36,7 @@ import {
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/lib/theme";
 import type {
   CreatorProfile,
   CreatorInterview,
@@ -90,13 +91,14 @@ function formatScheduledDate(dateStr: string | null): string {
 }
 
 function VerifiedBadge({ size = 14 }: { size?: number }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
         width: size + 4,
         height: size + 4,
         borderRadius: (size + 4) / 2,
-        backgroundColor: "#4ADE80",
+        backgroundColor: colors.accent,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -143,7 +145,8 @@ function FeaturedCreatorCard({
   creator: CreatorProfile;
   onPress: () => void;
 }) {
-  const catColor = CATEGORY_COLORS[creator.category || ""] || "#4ADE80";
+  const { colors } = useTheme();
+  const catColor = CATEGORY_COLORS[creator.category || ""] || colors.accent;
   const tags: string[] = creator.tags ? JSON.parse(creator.tags) : [];
 
   return (
@@ -155,12 +158,12 @@ function FeaturedCreatorCard({
         marginRight: 12,
         borderRadius: 16,
         overflow: "hidden",
-        backgroundColor: "#111111",
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
       }}
     >
-      <View style={{ height: 70, backgroundColor: "#1A1A1A", position: "relative" }}>
+      <View style={{ height: 70, backgroundColor: colors.bg4, position: "relative" }}>
         {creator.bannerUrl ? (
           <Image
             source={{ uri: creator.bannerUrl }}
@@ -169,7 +172,7 @@ function FeaturedCreatorCard({
           />
         ) : (
           <LinearGradient
-            colors={[catColor + "33", "#0F0F0F"]}
+            colors={[catColor + "33", colors.bg2]}
             style={{ flex: 1 }}
           />
         )}
@@ -196,9 +199,9 @@ function FeaturedCreatorCard({
               height: 44,
               borderRadius: 22,
               borderWidth: 2,
-              borderColor: "#080808",
+              borderColor: colors.bg,
               overflow: "hidden",
-              backgroundColor: "#1A1A1A",
+              backgroundColor: colors.bg4,
             }}
           >
             {creator.avatarUrl ? (
@@ -212,7 +215,7 @@ function FeaturedCreatorCard({
                 style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
               >
                 <Text
-                  style={{ color: "#F5F5F5", fontSize: 16, fontWeight: "700" }}
+                  style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}
                 >
                   {creator.name[0]}
                 </Text>
@@ -220,8 +223,8 @@ function FeaturedCreatorCard({
             )}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Users size={10} color="#737373" />
-            <Text style={{ color: "#737373", fontSize: 11 }}>
+            <Users size={10} color={colors.text3} />
+            <Text style={{ color: colors.text3, fontSize: 11 }}>
               {formatCount(creator.followersCount)}
             </Text>
           </View>
@@ -237,7 +240,7 @@ function FeaturedCreatorCard({
         >
           <Text
             style={{
-              color: "#F5F5F5",
+              color: colors.text,
               fontSize: 14,
               fontWeight: "700",
               flex: 1,
@@ -250,7 +253,7 @@ function FeaturedCreatorCard({
         </View>
 
         <Text
-          style={{ color: "#737373", fontSize: 12, lineHeight: 16 }}
+          style={{ color: colors.text3, fontSize: 12, lineHeight: 16 }}
           numberOfLines={2}
         >
           {creator.shortBio}
@@ -293,7 +296,8 @@ function CreatorListCard({
   onPress: () => void;
   index: number;
 }) {
-  const catColor = CATEGORY_COLORS[creator.category || ""] || "#4ADE80";
+  const { colors } = useTheme();
+  const catColor = CATEGORY_COLORS[creator.category || ""] || colors.accent;
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
@@ -304,12 +308,12 @@ function CreatorListCard({
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
-          backgroundColor: "#0F0F0F",
+          backgroundColor: colors.bg2,
           borderRadius: 14,
           padding: 14,
           marginBottom: 10,
           borderWidth: 1,
-          borderColor: "#1A1A1A",
+          borderColor: colors.bg4,
         }}
       >
         <View
@@ -318,9 +322,9 @@ function CreatorListCard({
             height: 52,
             borderRadius: 26,
             overflow: "hidden",
-            backgroundColor: "#1A1A1A",
+            backgroundColor: colors.bg4,
             borderWidth: 1,
-            borderColor: "#2A2A2A",
+            borderColor: colors.border,
           }}
         >
           {creator.avatarUrl ? (
@@ -334,7 +338,7 @@ function CreatorListCard({
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
             >
               <Text
-                style={{ color: "#F5F5F5", fontSize: 18, fontWeight: "700" }}
+                style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}
               >
                 {creator.name[0]}
               </Text>
@@ -352,7 +356,7 @@ function CreatorListCard({
             }}
           >
             <Text
-              style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "700" }}
+              style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}
               numberOfLines={1}
             >
               {creator.name}
@@ -361,7 +365,7 @@ function CreatorListCard({
             {creator.officialPartner ? <PartnerBadge /> : null}
           </View>
           <Text
-            style={{ color: "#737373", fontSize: 13 }}
+            style={{ color: colors.text3, fontSize: 13 }}
             numberOfLines={1}
           >
             {creator.shortBio}
@@ -390,13 +394,13 @@ function CreatorListCard({
                 </Text>
               </View>
             ) : null}
-            <Text style={{ color: "#404040", fontSize: 11 }}>
+            <Text style={{ color: colors.text4, fontSize: 11 }}>
               {formatCount(creator.followersCount)} seguidores
             </Text>
           </View>
         </View>
 
-        <ChevronRight size={16} color="#404040" />
+        <ChevronRight size={16} color={colors.text4} />
       </Pressable>
     </Animated.View>
   );
@@ -409,6 +413,7 @@ function InterviewCard({
   item: CreatorInterview;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -418,13 +423,13 @@ function InterviewCard({
         marginRight: 12,
         borderRadius: 14,
         overflow: "hidden",
-        backgroundColor: "#111111",
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#1F1F1F",
+        borderColor: colors.border,
       }}
     >
       <View
-        style={{ height: 130, backgroundColor: "#1A1A1A", position: "relative" }}
+        style={{ height: 130, backgroundColor: colors.bg4, position: "relative" }}
       >
         {item.thumbnailUrl ? (
           <Image
@@ -434,10 +439,10 @@ function InterviewCard({
           />
         ) : (
           <LinearGradient
-            colors={["#1A1A1A", "#0F0F0F"]}
+            colors={[colors.bg4, colors.bg2]}
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
           >
-            <Play size={32} color="#4ADE80" />
+            <Play size={32} color={colors.accent} />
           </LinearGradient>
         )}
         <LinearGradient
@@ -465,13 +470,13 @@ function InterviewCard({
           }}
         >
           {item.interviewType === "podcast" ? (
-            <Mic size={10} color="#4ADE80" />
+            <Mic size={10} color={colors.accent} />
           ) : (
-            <Play size={10} color="#4ADE80" />
+            <Play size={10} color={colors.accent} />
           )}
           <Text
             style={{
-              color: "#4ADE80",
+              color: colors.accent,
               fontSize: 9,
               fontWeight: "700",
               textTransform: "uppercase",
@@ -497,7 +502,7 @@ function InterviewCard({
                 height: 20,
                 borderRadius: 10,
                 overflow: "hidden",
-                backgroundColor: "#2A2A2A",
+                backgroundColor: colors.border,
               }}
             >
               {item.creator.avatarUrl ? (
@@ -508,7 +513,7 @@ function InterviewCard({
                 />
               ) : null}
             </View>
-            <Text style={{ color: "#A3A3A3", fontSize: 11 }}>
+            <Text style={{ color: colors.text2, fontSize: 11 }}>
               {item.creator.name}
             </Text>
             {item.creator.verified ? <VerifiedBadge size={10} /> : null}
@@ -516,7 +521,7 @@ function InterviewCard({
         ) : null}
         <Text
           style={{
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 13,
             fontWeight: "600",
             lineHeight: 18,
@@ -531,19 +536,20 @@ function InterviewCard({
 }
 
 function LiveCard({ item }: { item: CreatorLive }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        backgroundColor: "#0F0F0F",
+        backgroundColor: colors.bg2,
         borderRadius: 14,
         padding: 12,
         marginBottom: 10,
         borderWidth: 1,
         borderColor:
-          item.status === "live" ? "rgba(74,222,128,0.3)" : "#1A1A1A",
+          item.status === "live" ? "rgba(74,222,128,0.3)" : colors.bg4,
       }}
     >
       <View
@@ -552,7 +558,7 @@ function LiveCard({ item }: { item: CreatorLive }) {
           height: 48,
           borderRadius: 24,
           overflow: "hidden",
-          backgroundColor: "#1A1A1A",
+          backgroundColor: colors.bg4,
         }}
       >
         {item.thumbnailUrl ? (
@@ -567,7 +573,7 @@ function LiveCard({ item }: { item: CreatorLive }) {
           >
             <Radio
               size={20}
-              color={item.status === "live" ? "#4ADE80" : "#737373"}
+              color={item.status === "live" ? colors.accent : colors.text3}
             />
           </View>
         )}
@@ -598,10 +604,10 @@ function LiveCard({ item }: { item: CreatorLive }) {
                   width: 5,
                   height: 5,
                   borderRadius: 2.5,
-                  backgroundColor: "#EF4444",
+                  backgroundColor: colors.error,
                 }}
               />
-              <Text style={{ color: "#EF4444", fontSize: 10, fontWeight: "700" }}>
+              <Text style={{ color: colors.error, fontSize: 10, fontWeight: "700" }}>
                 EN VIVO
               </Text>
             </View>
@@ -618,23 +624,23 @@ function LiveCard({ item }: { item: CreatorLive }) {
               }}
             >
               <Text style={{ color: "#60A5FA", fontSize: 10, fontWeight: "700" }}>
-                PRÓXIMO
+                PROXIMO
               </Text>
             </View>
           )}
         </View>
         <Text
-          style={{ color: "#F5F5F5", fontSize: 13, fontWeight: "600" }}
+          style={{ color: colors.text, fontSize: 13, fontWeight: "600" }}
           numberOfLines={1}
         >
           {item.title}
         </Text>
         {item.creator ? (
-          <Text style={{ color: "#737373", fontSize: 11, marginTop: 2 }}>
+          <Text style={{ color: colors.text3, fontSize: 11, marginTop: 2 }}>
             {item.creator.name}
           </Text>
         ) : null}
-        <Text style={{ color: "#404040", fontSize: 11, marginTop: 2 }}>
+        <Text style={{ color: colors.text4, fontSize: 11, marginTop: 2 }}>
           {formatScheduledDate(item.scheduledAt)}
         </Text>
       </View>
@@ -651,7 +657,8 @@ function CategoryPill({
   selected: boolean;
   onPress: () => void;
 }) {
-  const color = CATEGORY_COLORS[category.slug] || "#4ADE80";
+  const { colors } = useTheme();
+  const color = CATEGORY_COLORS[category.slug] || colors.accent;
   const Icon = CATEGORY_ICONS[category.slug] || Star;
   return (
     <Pressable
@@ -665,15 +672,15 @@ function CategoryPill({
         paddingVertical: 7,
         borderRadius: 20,
         marginRight: 8,
-        backgroundColor: selected ? color + "22" : "#111111",
+        backgroundColor: selected ? color + "22" : colors.card,
         borderWidth: 1,
-        borderColor: selected ? color + "55" : "#1F1F1F",
+        borderColor: selected ? color + "55" : colors.border,
       }}
     >
-      <Icon size={12} color={selected ? color : "#737373"} />
+      <Icon size={12} color={selected ? color : colors.text3} />
       <Text
         style={{
-          color: selected ? color : "#737373",
+          color: selected ? color : colors.text3,
           fontSize: 12,
           fontWeight: selected ? "700" : "500",
         }}
@@ -693,6 +700,7 @@ function SectionHeader({
   subtitle?: string;
   onSeeAll?: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View
       style={{
@@ -705,7 +713,7 @@ function SectionHeader({
       <View>
         <Text
           style={{
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 18,
             fontWeight: "800",
             letterSpacing: -0.5,
@@ -714,14 +722,14 @@ function SectionHeader({
           {title}
         </Text>
         {subtitle ? (
-          <Text style={{ color: "#737373", fontSize: 12, marginTop: 2 }}>
+          <Text style={{ color: colors.text3, fontSize: 12, marginTop: 2 }}>
             {subtitle}
           </Text>
         ) : null}
       </View>
       {onSeeAll ? (
         <Pressable onPress={onSeeAll} testID="see-all-button">
-          <Text style={{ color: "#4ADE80", fontSize: 13, fontWeight: "600" }}>
+          <Text style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
             Ver todos
           </Text>
         </Pressable>
@@ -732,6 +740,7 @@ function SectionHeader({
 
 export default function CreatorsHubScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -788,8 +797,8 @@ export default function CreatorsHubScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#080808" }} testID="creators-hub-screen">
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#080808" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="creators-hub-screen">
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 16 }}>
           <View
             style={{
@@ -802,7 +811,7 @@ export default function CreatorsHubScreen() {
             <View>
               <Text
                 style={{
-                  color: "#F5F5F5",
+                  color: colors.text,
                   fontSize: 26,
                   fontWeight: "900",
                   letterSpacing: -1,
@@ -810,8 +819,8 @@ export default function CreatorsHubScreen() {
               >
                 Creators Hub
               </Text>
-              <Text style={{ color: "#737373", fontSize: 13, marginTop: 2 }}>
-                Líderes, fundadores y partners
+              <Text style={{ color: colors.text3, fontSize: 13, marginTop: 2 }}>
+                Lideres, fundadores y partners
               </Text>
             </View>
             <View
@@ -819,14 +828,14 @@ export default function CreatorsHubScreen() {
                 width: 38,
                 height: 38,
                 borderRadius: 19,
-                backgroundColor: "#111111",
+                backgroundColor: colors.card,
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: "#1F1F1F",
+                borderColor: colors.border,
               }}
             >
-              <Users size={18} color="#4ADE80" />
+              <Users size={18} color={colors.accent} />
             </View>
           </View>
 
@@ -835,22 +844,22 @@ export default function CreatorsHubScreen() {
               flexDirection: "row",
               alignItems: "center",
               gap: 10,
-              backgroundColor: "#111111",
+              backgroundColor: colors.card,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: "#1F1F1F",
+              borderColor: colors.border,
               paddingHorizontal: 12,
               paddingVertical: 10,
               marginTop: 12,
             }}
           >
-            <Search size={16} color="#404040" />
+            <Search size={16} color={colors.text4} />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Buscar creadores, empresas..."
-              placeholderTextColor="#404040"
-              style={{ flex: 1, color: "#F5F5F5", fontSize: 14 }}
+              placeholderTextColor={colors.text4}
+              style={{ flex: 1, color: colors.text, fontSize: 14 }}
               testID="creator-search-input"
             />
           </View>
@@ -888,7 +897,7 @@ export default function CreatorsHubScreen() {
       >
         {loadingCreators ? (
           <View style={{ alignItems: "center", paddingTop: 60 }}>
-            <ActivityIndicator color="#4ADE80" testID="creators-loading" />
+            <ActivityIndicator color={colors.accent} testID="creators-loading" />
           </View>
         ) : (
           <>
@@ -951,7 +960,7 @@ export default function CreatorsHubScreen() {
                   style={{ alignItems: "center", paddingVertical: 40 }}
                   testID="creators-empty"
                 >
-                  <Text style={{ color: "#404040", fontSize: 15 }}>
+                  <Text style={{ color: colors.text4, fontSize: 15 }}>
                     No se encontraron perfiles
                   </Text>
                 </View>

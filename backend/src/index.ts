@@ -18,6 +18,7 @@ import journal from "./routes/journal";
 import lifeGoals from "./routes/life-goals";
 import { creatorsRouter } from "./routes/creators";
 import { mediaRouter } from "./routes/media";
+import { communitiesRouter } from "./routes/communities";
 import { joinRoom, leaveRoom, broadcastToRoom } from "./live-ws";
 import { joinChatRoom, leaveChatRoom, broadcastToChatRoom, broadcastNewMessage } from "./chat-ws";
 import type { ChatWSClient } from "./chat-ws";
@@ -903,10 +904,10 @@ app.post("/api/events/:id/rsvp", async (c) => {
   return c.json({ data: rsvp });
 });
 
-// ===== CIRCLES ROUTES =====
+// ===== CIRCLES ROUTES (legacy, use /api/communities instead) =====
 app.get("/api/circles", async (c) => {
   const circles = await prisma.circle.findMany({
-    where: { isPrivate: false },
+    where: { isPublic: true },
     include: { _count: { select: { members: true } } },
     orderBy: { createdAt: "desc" }
   });
@@ -917,15 +918,16 @@ app.post("/api/circles", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ error: { message: "Unauthorized" } }, 401);
   const body = await c.req.json() as {
-    name: string; description?: string; topic?: string; city?: string; isPrivate?: boolean;
+    name: string; description?: string; topic?: string; city?: string; isPublic?: boolean;
   };
   const circle = await prisma.circle.create({
     data: {
+      creatorId: user.id,
       name: body.name,
       description: body.description,
       topic: body.topic,
       city: body.city,
-      isPrivate: body.isPrivate ?? false,
+      isPublic: body.isPublic ?? true,
       members: { create: { userId: user.id, role: "admin" } }
     }
   });
@@ -1136,6 +1138,7 @@ app.route("/api/creators", creatorsRouter);
 
 // ===== MEDIA / REELS / STORIES ROUTES =====
 app.route("/api/media", mediaRouter);
+app.route("/api/communities", communitiesRouter);
 
 const port = Number(env.PORT) || 3000;
 console.log(`Opturna API running on port ${port}`);

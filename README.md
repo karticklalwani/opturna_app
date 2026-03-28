@@ -81,9 +81,22 @@ A premium social network and intelligence platform for ambitious people focused 
 - News feeds per stock
 - AI-powered company insights (OpenAI)
 
-### Live (Directos)
-- Real-time broadcasts/streaming
-- WebSocket infrastructure
+### Live / Directos (Video Rooms)
+- Zoom-style multi-user video rooms with room creation and join-by-code
+- Local camera feed via expo-camera with mic/camera toggles
+- Grid layout for participants (2x2/dynamic)
+- Real-time text chat within rooms via WebSocket
+- Duration timer, participant count, room code sharing
+- Ready for real WebRTC/Agora SDK integration
+
+### Communities
+- Browse and search public communities by category (Finanzas, Negocios, Trading, Tecnologia, Desarrollo Personal)
+- Create communities (name, description, category, public/private)
+- Join/leave communities
+- Real-time community chat with message history
+- File/image sharing in chat via expo-image-picker
+- Member count, admin roles, category badges
+- Accessible from Discover tab
 
 ### Messages
 - 1:1 direct messages
@@ -145,6 +158,17 @@ Base URL from `EXPO_PUBLIC_BACKEND_URL`
 | GET | /api/content | Curated articles by category |
 | GET | /api/content/:id | Article detail |
 | POST | /api/upload | Upload file |
+
+### Communities API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/communities | List communities (search, category, limit, offset) |
+| POST | /api/communities | Create community |
+| GET | /api/communities/:id | Community details with members |
+| POST | /api/communities/:id/join | Join community |
+| POST | /api/communities/:id/leave | Leave community |
+| GET | /api/communities/:id/messages | Get messages (cursor pagination) |
+| POST | /api/communities/:id/messages | Send message (text + optional file) |
 
 ### Research API
 | Method | Path | Description |

@@ -61,6 +61,8 @@ import {
   Banknote,
   LineChart,
   Trash2,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react-native";
 import { useTheme, DARK } from "@/lib/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -2815,6 +2817,7 @@ function AhorroTab({
   monthlyExpenses,
   savingsRate,
   onAddSavingsGoal,
+  onDeleteSavingsGoal,
   colors,
 }: {
   savingsGoals: SavingsGoal[];
@@ -2823,6 +2826,7 @@ function AhorroTab({
   monthlyExpenses: number;
   savingsRate: number;
   onAddSavingsGoal: () => void;
+  onDeleteSavingsGoal: (id: string) => void;
   colors: ThemeColors;
 }) {
   const totalSaved = savingsGoals.reduce((s, g) => s + g.currentAmount, 0);
@@ -2976,6 +2980,20 @@ function AhorroTab({
                     <Text style={{ color: goal.color, fontSize: 13, fontWeight: "700" }}>
                       {pct.toFixed(0)}%
                     </Text>
+                    <Pressable
+                      onPress={() => onDeleteSavingsGoal(goal.id)}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        backgroundColor: `${colors.error}14`,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginLeft: 6,
+                      }}
+                    >
+                      <Trash2 size={14} color={colors.error} />
+                    </Pressable>
                   </View>
                   <ProgressBar
                     progress={pct}
@@ -3195,6 +3213,7 @@ function ObjetivosTab({
   goalsLoading,
   onAddFinancialGoal,
   onAddBackendGoal,
+  onDeleteFinancialGoal,
   colors,
 }: {
   financialGoals: FinancialGoal[];
@@ -3202,6 +3221,7 @@ function ObjetivosTab({
   goalsLoading: boolean;
   onAddFinancialGoal: () => void;
   onAddBackendGoal: () => void;
+  onDeleteFinancialGoal: (id: string) => void;
   colors: ThemeColors;
 }) {
   const getGoalColor = (index: number) =>
@@ -3303,17 +3323,32 @@ function ObjetivosTab({
                         </Text>
                       ) : null}
                     </View>
-                    <View
-                      style={{
-                        backgroundColor: `${goal.color}18`,
-                        borderRadius: 8,
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                      }}
-                    >
-                      <Text style={{ color: goal.color, fontSize: 12, fontWeight: "700" }}>
-                        {pct.toFixed(0)}%
-                      </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View
+                        style={{
+                          backgroundColor: `${goal.color}18`,
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text style={{ color: goal.color, fontSize: 12, fontWeight: "700" }}>
+                          {pct.toFixed(0)}%
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => onDeleteFinancialGoal(goal.id)}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 8,
+                          backgroundColor: `${colors.error}14`,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Trash2 size={14} color={colors.error} />
+                      </Pressable>
                     </View>
                   </View>
                   <ProgressBar
@@ -3529,6 +3564,87 @@ function ObjetivosTab({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
+function ResetConfirmModal({
+  visible,
+  onClose,
+  onConfirm,
+  colors,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  colors: ThemeColors;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", justifyContent: "center" }}
+        onPress={onClose}
+      >
+        <View
+          style={{
+            backgroundColor: colors.bg2,
+            borderRadius: 24,
+            padding: 28,
+            marginHorizontal: 40,
+            borderWidth: 1,
+            borderColor: colors.border,
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: `${colors.error}14`,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+            }}
+          >
+            <AlertTriangle size={28} color={colors.error} />
+          </View>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "800", marginBottom: 8, textAlign: "center" }}>
+            Resetear datos financieros
+          </Text>
+          <Text style={{ color: colors.text3, fontSize: 14, textAlign: "center", lineHeight: 20, marginBottom: 24 }}>
+            Se eliminarán todas las transacciones, inversiones, metas de ahorro y objetivos. Esta acción no se puede deshacer.
+          </Text>
+          <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
+            <Pressable
+              onPress={onClose}
+              style={{
+                flex: 1,
+                paddingVertical: 14,
+                borderRadius: 14,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700" }}>Cancelar</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => { onConfirm(); onClose(); }}
+              style={{
+                flex: 1,
+                paddingVertical: 14,
+                borderRadius: 14,
+                backgroundColor: colors.error,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Resetear</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function FinanceScreen() {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
@@ -3542,6 +3658,7 @@ export default function FinanceScreen() {
   const [showSavingsGoalModal, setShowSavingsGoalModal] = useState<boolean>(false);
   const [showFinancialGoalModal, setShowFinancialGoalModal] = useState<boolean>(false);
   const [showCreateGoalModal, setShowCreateGoalModal] = useState<boolean>(false);
+  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
 
   // ── Local data state ──
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -3653,6 +3770,52 @@ export default function FinanceScreen() {
     [persistTransactions]
   );
 
+  const handleDeleteInvestment = useCallback(
+    (id: string) => {
+      setInvestments((prev) => {
+        const updated = prev.filter((i) => i.id !== id);
+        persistInvestments(updated);
+        return updated;
+      });
+    },
+    [persistInvestments]
+  );
+
+  const handleDeleteSavingsGoal = useCallback(
+    (id: string) => {
+      setSavingsGoals((prev) => {
+        const updated = prev.filter((g) => g.id !== id);
+        persistSavingsGoals(updated);
+        return updated;
+      });
+    },
+    [persistSavingsGoals]
+  );
+
+  const handleDeleteFinancialGoal = useCallback(
+    (id: string) => {
+      setFinancialGoals((prev) => {
+        const updated = prev.filter((g) => g.id !== id);
+        persistFinancialGoals(updated);
+        return updated;
+      });
+    },
+    [persistFinancialGoals]
+  );
+
+  const handleResetAllData = useCallback(async () => {
+    setTransactions([]);
+    setInvestments([]);
+    setSavingsGoals([]);
+    setFinancialGoals([]);
+    await Promise.all([
+      AsyncStorage.removeItem("finance_transactions_v2"),
+      AsyncStorage.removeItem("finance_investments_v2"),
+      AsyncStorage.removeItem("finance_savings_goals_v2"),
+      AsyncStorage.removeItem("finance_financial_goals_v2"),
+    ]).catch(() => {});
+  }, []);
+
   const handleAddFinancialGoal = useCallback(
     (fg: Omit<FinancialGoal, "id">) => {
       const newFg: FinancialGoal = { ...fg, id: `fg_${Date.now()}` };
@@ -3758,19 +3921,38 @@ export default function FinanceScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }} testID="finance-screen">
       <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.bg }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 }}>
-          <Text
-            style={{
-              fontSize: 28,
-              fontWeight: "800",
-              color: colors.text,
-              letterSpacing: -0.6,
-            }}
-          >
-            Finance
-          </Text>
-          <Text style={{ fontSize: 14, color: colors.text3, marginTop: 2, fontWeight: "400" }}>
-            Your financial intelligence hub
-          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View>
+              <Text
+                style={{
+                  fontSize: 28,
+                  fontWeight: "800",
+                  color: colors.text,
+                  letterSpacing: -0.6,
+                }}
+              >
+                Finanzas
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.text3, marginTop: 2, fontWeight: "400" }}>
+                Tu centro de inteligencia financiera
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setShowResetConfirm(true)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <RotateCcw size={18} color={colors.text3} />
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
 
@@ -3834,6 +4016,7 @@ export default function FinanceScreen() {
             monthlyExpenses={monthlyExpenses}
             savingsRate={savingsRate}
             onAddSavingsGoal={() => setShowSavingsGoalModal(true)}
+            onDeleteSavingsGoal={handleDeleteSavingsGoal}
             colors={colors}
           />
         ) : activeTab === "objetivos" ? (
@@ -3843,6 +4026,7 @@ export default function FinanceScreen() {
             goalsLoading={goalsLoading}
             onAddFinancialGoal={() => setShowFinancialGoalModal(true)}
             onAddBackendGoal={() => setShowCreateGoalModal(true)}
+            onDeleteFinancialGoal={handleDeleteFinancialGoal}
             colors={colors}
           />
         ) : activeTab === "analisis" ? (
@@ -3923,6 +4107,13 @@ export default function FinanceScreen() {
           createGoalMutation.mutate({ title, description: description || undefined })
         }
         isPending={createGoalMutation.isPending}
+        colors={colors}
+      />
+
+      <ResetConfirmModal
+        visible={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleResetAllData}
         colors={colors}
       />
     </View>

@@ -387,24 +387,43 @@ model Circle {
   id          String         @id @default(cuid())
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  creatorId   String
   name        String
   description String?
   image       String?
+  category    String?        // business | finance | trading | startups | ai | creator | education | mindset | productivity | health | investing | general
   topic       String?
   city        String?
-  isPrivate   Boolean        @default(false)
+  isPublic    Boolean        @default(true)
   members     CircleMember[]
+  messages    CircleMessage[]
 }
 
 model CircleMember {
-  id       String @id @default(cuid())
+  id       String   @id @default(cuid())
   circleId String
-  circle   Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  circle   Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
   userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role     String @default("member") // admin | member
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("member") // admin | member
+  joinedAt DateTime @default(now())
 
   @@unique([circleId, userId])
+}
+
+model CircleMessage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  circleId  String
+  circle    Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String
+  fileUrl   String?
+  fileType  String?  // image | video | audio | file
+  userName  String?
+  userImage String?
+
+  @@index([circleId, createdAt])
 }
 
 // ============ NOTIFICATIONS ============

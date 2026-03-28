@@ -33,6 +33,7 @@ import {
 } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTheme } from "@/lib/theme";
 import type { MediaPost, MediaComment } from "@/types/media";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -102,8 +103,8 @@ function ActionButton({
   count,
   onPress,
   active = false,
-  color = "#F5F5F5",
-  activeColor = "#EF4444",
+  color,
+  activeColor,
 }: {
   icon: React.ComponentType<{ size: number; color: string; strokeWidth: number; fill: string }>;
   count?: number;
@@ -112,7 +113,10 @@ function ActionButton({
   color?: string;
   activeColor?: string;
 }) {
+  const colors = useTheme((s) => s.colors);
   const scale = useSharedValue(1);
+  const resolvedColor = color ?? colors.text;
+  const resolvedActiveColor = activeColor ?? colors.error;
 
   const handlePress = () => {
     scale.value = withSequence(withSpring(1.3), withSpring(1));
@@ -126,15 +130,15 @@ function ActionButton({
       <Animated.View style={animStyle}>
         <Icon
           size={30}
-          color={active ? activeColor : color}
+          color={active ? resolvedActiveColor : resolvedColor}
           strokeWidth={active ? 2.5 : 2}
-          fill={active ? activeColor : "transparent"}
+          fill={active ? resolvedActiveColor : "transparent"}
         />
       </Animated.View>
       {count !== undefined && (
         <Text
           style={{
-            color: "#F5F5F5",
+            color: colors.text,
             fontSize: 12,
             fontWeight: "700",
             textShadowColor: "rgba(0,0,0,0.5)",
@@ -151,6 +155,7 @@ function ActionButton({
 
 // ─── Comments Sheet ───────────────────────────────────────────────────────────
 function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => void }) {
+  const colors = useTheme((s) => s.colors);
   const { data } = useQuery({
     queryKey: ["media-comments", postId],
     queryFn: async () => {
@@ -170,7 +175,7 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
         left: 0,
         right: 0,
         height: SCREEN_HEIGHT * 0.65,
-        backgroundColor: "#111111",
+        backgroundColor: colors.bg2,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
       }}
@@ -179,17 +184,17 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
         style={{
           padding: 16,
           borderBottomWidth: 1,
-          borderBottomColor: "#1F1F1F",
+          borderBottomColor: colors.border,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ color: "#F5F5F5", fontSize: 16, fontWeight: "700" }}>
+        <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>
           Comentarios ({comments.length})
         </Text>
         <Pressable onPress={onClose}>
-          <Text style={{ color: "#737373", fontSize: 14 }}>Cerrar</Text>
+          <Text style={{ color: colors.text3, fontSize: 14 }}>Cerrar</Text>
         </Pressable>
       </View>
       <FlatList
@@ -202,7 +207,7 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
               gap: 10,
               padding: 16,
               borderBottomWidth: 1,
-              borderBottomColor: "#0F0F0F",
+              borderBottomColor: colors.bg2,
             }}
           >
             <View
@@ -211,7 +216,7 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
                 height: 36,
                 borderRadius: 18,
                 overflow: "hidden",
-                backgroundColor: "#2A2A2A",
+                backgroundColor: colors.bg4,
               }}
             >
               {item.authorAvatar ? (
@@ -223,16 +228,16 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
               ) : null}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "600", marginBottom: 2 }}>
+              <Text style={{ color: colors.text2, fontSize: 12, fontWeight: "600", marginBottom: 2 }}>
                 {item.authorName || "Usuario"}
               </Text>
-              <Text style={{ color: "#F5F5F5", fontSize: 14, lineHeight: 20 }}>{item.content}</Text>
+              <Text style={{ color: colors.text, fontSize: 14, lineHeight: 20 }}>{item.content}</Text>
             </View>
           </View>
         )}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: "center" }}>
-            <Text style={{ color: "#404040" }}>Sin comentarios aún</Text>
+            <Text style={{ color: colors.text4 }}>Sin comentarios aún</Text>
           </View>
         }
       />
@@ -242,6 +247,7 @@ function CommentsSheet({ postId, onClose }: { postId: string; onClose: () => voi
 
 // ─── Single Post Item ─────────────────────────────────────────────────────────
 function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
+  const colors = useTheme((s) => s.colors);
   const [liked, setLiked] = useState<boolean>(false);
   const [likesCount, setLikesCount] = useState<number>(item.likesCount);
   const [saved, setSaved] = useState<boolean>(false);
@@ -292,7 +298,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
   };
 
   return (
-    <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: "#000" }} testID="post-item">
+    <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: colors.bg }} testID="post-item">
       {/* Media Content */}
       {isVideo && isActive ? (
         <VideoPlayer url={item.url} isActive={isActive} muted={muted} />
@@ -325,7 +331,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
                   justifyContent: "center",
                 }}
               >
-                <Play size={28} color="#F5F5F5" fill="#F5F5F5" strokeWidth={2} />
+                <Play size={28} color={colors.text} fill={colors.text} strokeWidth={2} />
               </View>
             </View>
           ) : null}
@@ -357,9 +363,9 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
               height: 48,
               borderRadius: 24,
               borderWidth: 2,
-              borderColor: "#F5F5F5",
+              borderColor: colors.text,
               overflow: "hidden",
-              backgroundColor: "#1A1A1A",
+              backgroundColor: colors.bg4,
             }}
           >
             {item.authorAvatar ? (
@@ -370,7 +376,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
               />
             ) : (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: "#F5F5F5", fontSize: 18, fontWeight: "700" }}>
+                <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
                   {(item.authorName || "?")[0]}
                 </Text>
               </View>
@@ -384,12 +390,12 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
               width: 20,
               height: 20,
               borderRadius: 10,
-              backgroundColor: "#4ADE80",
+              backgroundColor: colors.accent,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#000", fontSize: 14, fontWeight: "900" }}>+</Text>
+            <Text style={{ color: colors.bg, fontSize: 14, fontWeight: "900" }}>+</Text>
           </View>
         </View>
 
@@ -399,7 +405,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
           count={likesCount}
           onPress={() => likeMutation.mutate()}
           active={liked}
-          activeColor="#EF4444"
+          activeColor={colors.error}
         />
 
         {/* Comment */}
@@ -415,7 +421,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
           count={item.savesCount}
           onPress={() => saveMutation.mutate()}
           active={saved}
-          activeColor="#4ADE80"
+          activeColor={colors.accent}
         />
 
         {/* Share */}
@@ -429,9 +435,9 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
             testID="mute-toggle"
           >
             {muted ? (
-              <VolumeX size={26} color="#F5F5F5" strokeWidth={2} />
+              <VolumeX size={26} color={colors.text} strokeWidth={2} />
             ) : (
-              <Volume2 size={26} color="#F5F5F5" strokeWidth={2} />
+              <Volume2 size={26} color={colors.text} strokeWidth={2} />
             )}
           </Pressable>
         ) : null}
@@ -449,7 +455,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
       >
         {/* Author */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Text style={{ color: "#F5F5F5", fontSize: 15, fontWeight: "800" }}>
+          <Text style={{ color: colors.text, fontSize: 15, fontWeight: "800" }}>
             @{item.authorUsername || "usuario"}
           </Text>
           <View
@@ -457,19 +463,19 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
               width: 16,
               height: 16,
               borderRadius: 8,
-              backgroundColor: "#4ADE80",
+              backgroundColor: colors.accent,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#000", fontSize: 9, fontWeight: "900" }}>✓</Text>
+            <Text style={{ color: colors.bg, fontSize: 9, fontWeight: "900" }}>✓</Text>
           </View>
         </View>
 
         {/* Caption */}
         {item.caption ? (
           <Text
-            style={{ color: "#F5F5F5", fontSize: 14, lineHeight: 20, maxWidth: "90%" }}
+            style={{ color: colors.text, fontSize: 14, lineHeight: 20, maxWidth: "90%" }}
             numberOfLines={3}
           >
             {item.caption}
@@ -480,7 +486,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
         {tags.length > 0 && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
             {tags.slice(0, 3).map((tag: string) => (
-              <Text key={tag} style={{ color: "#4ADE80", fontSize: 13, fontWeight: "600" }}>
+              <Text key={tag} style={{ color: colors.accent, fontSize: 13, fontWeight: "600" }}>
                 #{tag.replace(/\s/g, "")}{" "}
               </Text>
             ))}
@@ -489,8 +495,8 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
 
         {/* Music / category */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Music2 size={12} color="#A3A3A3" strokeWidth={2} />
-          <Text style={{ color: "#A3A3A3", fontSize: 12 }}>
+          <Music2 size={12} color={colors.text2} strokeWidth={2} />
+          <Text style={{ color: colors.text2, fontSize: 12 }}>
             {item.category || "Opturna"}
             {item.views > 0 ? ` · ${formatCount(item.views)} vistas` : ""}
           </Text>
@@ -514,6 +520,7 @@ function PostItem({ item, isActive }: { item: MediaPost; isActive: boolean }) {
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ReelsFeedScreen() {
   const router = useRouter();
+  const colors = useTheme((s) => s.colors);
   const { startIndex } = useLocalSearchParams<{ startIndex?: string }>();
   const [activeIndex, setActiveIndex] = useState<number>(parseInt(startIndex || "0"));
   const flatListRef = useRef<FlatList>(null);
@@ -540,16 +547,16 @@ export default function ReelsFeedScreen() {
   if (isLoading) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: "#000", alignItems: "center", justifyContent: "center" }}
+        style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }}
         testID="loading-indicator"
       >
-        <ActivityIndicator color="#4ADE80" size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000" }} testID="reels-feed-screen">
+    <View style={{ flex: 1, backgroundColor: colors.bg }} testID="reels-feed-screen">
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Back button */}
@@ -585,9 +592,9 @@ export default function ReelsFeedScreen() {
             }}
             testID="back-button"
           >
-            <ChevronLeft size={20} color="#F5F5F5" strokeWidth={2} />
+            <ChevronLeft size={20} color={colors.text} strokeWidth={2} />
           </Pressable>
-          <Text style={{ color: "#F5F5F5", fontSize: 16, fontWeight: "700" }}>Reels</Text>
+          <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>Reels</Text>
           <View style={{ width: 36 }} />
         </View>
       </SafeAreaView>
@@ -621,7 +628,7 @@ export default function ReelsFeedScreen() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#404040", fontSize: 16 }}>No hay contenido disponible</Text>
+            <Text style={{ color: colors.text4, fontSize: 16 }}>No hay contenido disponible</Text>
           </View>
         }
         testID="reels-flatlist"
