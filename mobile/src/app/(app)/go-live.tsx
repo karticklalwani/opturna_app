@@ -10,6 +10,7 @@ import {
   Dimensions,
   ActivityIndicator,
   FlatList,
+  Share,
 } from "react-native";
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +30,7 @@ import {
   Copy,
   Plus,
   LogIn,
+  Share2,
 } from "lucide-react-native";
 import Animated, {
   FadeInDown,
@@ -73,14 +75,6 @@ type ChatMessage = {
 };
 
 type RoomPhase = "setup" | "room";
-
-// ─── Mock Participants ──────────────────────────────────────────────────────────
-
-const MOCK_PARTICIPANTS: Participant[] = [
-  { id: "p2", name: "Maria Lopez", isMuted: false, isCameraOn: false, isLocal: false },
-  { id: "p3", name: "Carlos Ruiz", isMuted: true, isCameraOn: false, isLocal: false },
-  { id: "p4", name: "Ana Torres", isMuted: false, isCameraOn: false, isLocal: false },
-];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -513,7 +507,7 @@ function RoomView({
     isLocal: true,
   };
 
-  const allParticipants = [localParticipant, ...MOCK_PARTICIPANTS];
+  const allParticipants = [localParticipant];
   const participantCount = allParticipants.length;
 
   // Calculate grid layout
@@ -632,6 +626,32 @@ function RoomView({
               {participantCount}
             </Text>
           </View>
+
+          {/* Share code button */}
+          <Pressable
+            testID="share-room-code-button"
+            onPress={async () => {
+              try {
+                await Share.share({
+                  message: `Únete a mi sala de video en Opturna.\nCódigo: ${roomCode}\n\nDescarga Opturna y únete con el código: ${roomCode}`,
+                  title: `Sala: ${roomTitle}`,
+                });
+              } catch {}
+            }}
+            style={({ pressed }) => ({
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: pressed ? colors.bg4 : colors.bg3,
+              borderWidth: 1,
+              borderColor: colors.border,
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: 8,
+            })}
+          >
+            <Share2 size={16} color={colors.text2} />
+          </Pressable>
         </View>
       </SafeAreaView>
 
@@ -854,11 +874,20 @@ export default function GoLiveScreen() {
   const currentUserId = session?.user?.id ?? "local-user";
   const currentUserName = session?.user?.name ?? "Invitado";
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     if (!roomTitle.trim()) return;
     const code = generateRoomCode();
     setRoomCode(code);
     setPhase("room");
+    // Share after a brief delay to allow UI transition
+    setTimeout(async () => {
+      try {
+        await Share.share({
+          message: `Te invito a unirte a mi sala de video en Opturna. Título: ${roomTitle.trim()} | Código de sala: ${code}\n\nDescarga Opturna y únete con el código: ${code}`,
+          title: `Únete a mi sala: ${roomTitle.trim()}`,
+        });
+      } catch {}
+    }, 500);
   };
 
   const handleJoinRoom = () => {
@@ -873,7 +902,6 @@ export default function GoLiveScreen() {
     setRoomTitle("");
     setJoinCode("");
     setRoomCode("");
-    router.back();
   };
 
   // ── Room Phase ──
@@ -908,7 +936,11 @@ export default function GoLiveScreen() {
         >
           <Pressable
             testID="go-live-back-button"
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              }
+            }}
             style={({ pressed }) => ({
               width: 40,
               height: 40,
@@ -1335,47 +1367,6 @@ export default function GoLiveScreen() {
               </Animated.View>
             )}
 
-            {/* Info note */}
-            <Animated.View
-              entering={FadeInDown.duration(400).delay(200)}
-              style={{ marginTop: 28 }}
-            >
-              <View
-                style={{
-                  backgroundColor: `${colors.info}10`,
-                  borderRadius: 14,
-                  padding: 16,
-                  borderWidth: 1,
-                  borderColor: `${colors.info}20`,
-                  flexDirection: "row",
-                  gap: 12,
-                  alignItems: "flex-start",
-                }}
-              >
-                <Users size={18} color={colors.info} style={{ marginTop: 1 }} />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.text2,
-                      fontSize: 13,
-                      fontWeight: "700",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Videollamada grupal
-                  </Text>
-                  <Text
-                    style={{
-                      color: colors.text3,
-                      fontSize: 12,
-                      lineHeight: 18,
-                    }}
-                  >
-                    Crea una sala o unete con un codigo. Comparte el codigo con otros para que se unan a la llamada.
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
