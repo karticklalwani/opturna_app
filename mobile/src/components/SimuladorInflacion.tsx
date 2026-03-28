@@ -50,11 +50,17 @@ interface SimulateResult {
   chartData: SimulateChartPoint[];
 }
 
+interface InflationMetric {
+  current: number;
+  previous: number;
+  trend: string;
+}
+
 interface InflationRealTimeData {
-  spain: number;
-  eurozone: number;
-  world: number;
-  food: number;
+  spain: InflationMetric;
+  eurozone: InflationMetric;
+  world: InflationMetric;
+  food: InflationMetric;
   lastUpdated: string;
 }
 
@@ -248,7 +254,7 @@ export default function SimuladorInflacion() {
 
   useEffect(() => {
     if (realTimeData?.spain != null) {
-      setInflationRate(realTimeData.spain.toFixed(1));
+      setInflationRate(realTimeData.spain.current.toFixed(1));
     }
   }, [realTimeData]);
 
