@@ -249,3 +249,5 @@ The AI Assistant (`/api/ai/chat`) uses OpenAI gpt-4o with a comprehensive system
 ## Database Models
 
 Users, Sessions, Accounts, Verification, Posts, Comments, Reactions, Follows, SavedPosts, Collections, Goals, Tasks, Habits, HabitCheckIns, Projects, Sprints, SprintMembers, CheckIns, Chats, ChatMembers, Messages, Courses, Lessons, Enrollments, UploadedFiles, Events, EventRsvps, Circles, CircleMembers, Notifications, Reports
+
+Last deploy trigger: 2026-03-29
